@@ -1,0 +1,181 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Graphic';
+  src: url('https://fonts.cdnfonts.com/css/graphik') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+:root {
+  --accent-primary: 111, 76, 255;    /* #6F4CFF */
+  --accent-secondary: 77, 156, 255;  /* #4D9CFF */
+  --accent-tertiary: 253, 126, 255;  /* #FD7EFF */
+  --background-dark: 30, 30, 30;     /* #1E1E1E */
+}
+
+body {
+  font-family: 'Graphic', sans-serif;
+  @apply bg-dark-background text-white;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 4px; /* Thinner horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a4a4a;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5a5a5a;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hidden {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+/* Gradient text effects */
+.gradient-text {
+  background: linear-gradient(
+    to right,
+    rgb(var(--accent-primary)),
+    rgb(var(--accent-secondary)),
+    rgb(var(--accent-tertiary))
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.gradient-text-secondary {
+  background: linear-gradient(
+    to right,
+    rgb(var(--accent-secondary)),
+    rgb(var(--accent-tertiary)),
+    rgb(var(--accent-primary))
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.gradient-text-accent {
+  background: linear-gradient(
+    to right,
+    rgb(var(--accent-tertiary)),
+    rgb(var(--accent-primary)),
+    rgb(var(--accent-secondary))
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Pulsating glow effect */
+.glow-pulse {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 5px -5px #6366f1;
+  }
+  to {
+    box-shadow: 0 0 20px -5px #6366f1;
+  }
+}
+
+/* width of Code Mirror line number */
+:root {
+  --linenumber-width: 3.5ch;
+}
+
+.cm-gutters {
+  --linenumber-width: 3.5ch;
+}
+
+.cm-lineNumbers {
+  width: var(--linenumber-width) !important;
+  min-width: var(--linenumber-width) !important;
+  max-width: var(--linenumber-width) !important;
+  text-align: right !important;
+}
+
+.cm-lineNumbers .cm-gutterElement {
+  display: block;
+  text-align: right;
+  padding-right: 0.25ch;
+}
+
+/* Voice SDK Orb Animations */
+.orb {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.orb-active {
+  background: rgba(77, 156, 255, 0.3);
+  box-shadow: 0 0 20px rgba(77, 156, 255, 0.5);
+}
+
+.orb-inactive {
+  background: rgba(75, 85, 99, 0.3);
+  box-shadow: 0 0 10px rgba(75, 85, 99, 0.3);
+}
+
+@keyframes orb {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+}
+
+@keyframes orbSlow {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+}
+
+.animate-orb {
+  animation: orb 2s ease-in-out infinite;
+}
+
+.animate-orb-slow {
+  animation: orbSlow 3s ease-in-out infinite;
+}
