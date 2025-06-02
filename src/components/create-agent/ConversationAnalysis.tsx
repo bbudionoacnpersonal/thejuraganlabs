@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, ClockIcon, ChatBubbleLeftRightIcon, BeakerIcon, WrenchScrewdriverIcon, ChevronDownIcon, ChevronUpIcon, LanguageIcon } from '@heroicons/react/24/outline';
 import Button from '@/components/ui/Button';
+import TranscriptHandler from './TranscriptHandler';
 
 interface ConversationAnalysisProps {
   isVisible: boolean;
@@ -135,6 +136,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
   const [data, setData] = useState<ConversationData | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
   const [showLLMUsage, setShowLLMUsage] = useState(false);
+  const [showTranscriptHandler, setShowTranscriptHandler] = useState(false);
 
   useEffect(() => {
     if (!isVisible || !conversationId) return;
@@ -210,13 +212,22 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                 <ChatBubbleLeftRightIcon className="h-4 w-4 text-secondary-600" />
                 <h2 className="text-lg font-semibold text-white">Conversation Analysis</h2>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-              >
-                <XMarkIcon className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowTranscriptHandler(true)}
+                >
+                  Generate Config
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClose}
+                >
+                  <XMarkIcon className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Content */}
@@ -428,6 +439,12 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           </motion.div>
         </motion.div>
       )}
+
+      <TranscriptHandler
+        isVisible={showTranscriptHandler}
+        onClose={() => setShowTranscriptHandler(false)}
+        conversationId={conversationId}
+      />
     </AnimatePresence>
   );
 };
