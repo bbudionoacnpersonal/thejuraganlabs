@@ -95,7 +95,10 @@ const Chatbox = forwardRef<ChatboxHandle, ChatboxProps>(({
 
   return (
     <div className="flex flex-col h-full bg-dark-background border-l border-t border-b border-dark-border/60 rounded-l-lg">
-      <div className="flex-1 overflow-y-auto mt-2 space-y-2 px-2 max-h-[calc(100vh-290px)] min-h-[calc(100vh-290px)] scrollbar-hidden">
+      <div className="flex-1 overflow-y-auto mt-2 space-y-2 px-2 max-h-[calc(100vh-290px)] min-h-[calc(100vh-290px)] scrollbar-hidden relative">
+        {/* Glass effect overlay at top */}
+        <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-dark-background via-dark-background/80 to-transparent pointer-events-none z-10" />
+        
         {messages.map((message, index) => (
           <div key={index} className={`flex ${message.role === 'assistant' ? 'justify-end' : ''}`}>
             <div className={`w-full p-2 rounded-lg text-sm ${
@@ -115,6 +118,9 @@ const Chatbox = forwardRef<ChatboxHandle, ChatboxProps>(({
           </div>
         ))}
         <div ref={messagesEndRef} />
+        
+        {/* Glass effect overlay at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-dark-background via-dark-background/80 to-transparent pointer-events-none z-10" />
       </div>
 
       <div className="px-2 pt-2 pb-1 mt-auto backdrop-blur-md bg-dark-surface/30">
