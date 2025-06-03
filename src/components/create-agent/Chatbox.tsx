@@ -120,7 +120,7 @@ const Chatbox = forwardRef<ChatboxHandle, ChatboxProps>(({
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="px-2 pt-2 pb-1 mt-auto backdrop-blur-md bg-dark-surface/30">
+      <div className="px-2 pt-2 pb-1 mt-auto backdrop-blur-md bg-dark-surface/30 to-transparent backdrop-blur-sm ">
         <form onSubmit={handleSubmit} className="relative">
           <textarea
             ref={textareaRef}
