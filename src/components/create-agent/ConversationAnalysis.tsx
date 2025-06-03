@@ -13,6 +13,7 @@ interface ConversationAnalysisProps {
 interface ToolResult {
   tool_name: string;
   result_value: string;
+  params_as_json?: Record<string, any>;
 }
 
 interface TranscriptEntry {
@@ -23,6 +24,7 @@ interface TranscriptEntry {
     name: string;
     arguments: Record<string, any>;
     output?: any;
+    params_as_json?: Record<string, any>;
   }>;
   tool_results?: ToolResult[];
   feedback?: {
@@ -117,6 +119,7 @@ interface ConversationData {
       client: string;
       result: string;
       duration_ms: number;
+      params_as_json?: Record<string, any>;
     };
     evaluation_criteria_results?: Record<string, {
       criteria_id: string;
@@ -332,6 +335,14 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                             </div>
                             <div className="space-y-2">
                               <div className="text-sm text-gray-300">{data.analysis.task_generator.message}</div>
+                              {data.analysis.task_generator.params_as_json && (
+                                <div className="bg-dark-400/50 p-2 rounded">
+                                  <div className="text-xs text-gray-400">Parameters:</div>
+                                  <pre className="text-xs text-gray-300 mt-1 overflow-x-auto">
+                                    {JSON.stringify(data.analysis.task_generator.params_as_json, null, 2)}
+                                  </pre>
+                                </div>
+                              )}
                               <div className="flex items-center justify-between text-xs text-gray-400">
                                 <span>Client: {data.analysis.task_generator.client}</span>
                                 <span>Duration: {data.analysis.task_generator.duration_ms}ms</span>
@@ -353,7 +364,14 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                   <div key={toolIndex} className="border-t border-dark-border pt-2 first:border-t-0 first:pt-0">
                                     <div className="text-sm font-medium text-gray-300">{tool.tool_name}</div>
                                     <div className="text-sm text-gray-400 mt-1">{tool.result_value}</div>
-                                        <div className="text-sm text-gray-400 mt-1"></div>
+                                    {tool.params_as_json && (
+                                      <div className="bg-dark-400/50 p-2 rounded mt-1">
+                                        <div className="text-xs text-gray-400">Parameters:</div>
+                                        <pre className="text-xs text-gray-300 mt-1 overflow-x-auto">
+                                          {JSON.stringify(tool.params_as_json, null, 2)}
+                                        </pre>
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>
@@ -413,9 +431,19 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                   </div>
                                   {entry.tool_calls.map((tool, idx) => (
                                     <div key={idx} className="text-xs text-gray-300 mt-1">
-                                      <span className="text-primary-400">{tool.tool_name}</span>
-                                      {tool.result_value && (
-                                        <span className="ml-1">→ {JSON.stringify(tool.result_value)}</span>
+                                      <span className="text-primary-400">{tool.name}</span>
+                                      {tool.params_as_json && (
+                                        <div className="bg-dark-400/50 p-1 rounded mt-1">
+                                          <pre className="text-xs text-gray-300 overflow-x-auto">
+                                            {JSON.stringify(tool.params_as_json, null, 2)}
+                                          </pre>
+                                        </div>
+                                      )}
+                                      {tool.output && (
+                                        <div className="mt-1">
+                                          <span className="text-gray-400">Output:</span>
+                                          <span className="ml-1 text-gray-300">{JSON.stringify(tool.output)}</span>
+                                        </div>
                                       )}
                                     </div>
                                   ))}
