@@ -326,31 +326,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                           <p className="text-sm text-gray-300">{data.analysis.transcript_summary}</p>
                         </div>
 
-                        {/* Task Generator Output */}
-                        {data.analysis.task_generator && (
-                          <div className="bg-dark-surface/50 p-2 rounded mt-2">
-                            <div className="flex items-center gap-2 mb-2">
-                              <SparklesIcon className="h-3 w-3 text-secondary-600" />
-                              <h4 className="text-sm font-medium text-white">Task Generator</h4>
-                            </div>
-                            <div className="space-y-2">
-                              <div className="text-sm text-gray-300">{data.analysis.task_generator.message}</div>
-                              {data.analysis.task_generator.params_as_json && (
-                                <div className="bg-dark-400/50 p-2 rounded">
-                                  <div className="text-xs text-gray-400">Parameters:</div>
-                                  <pre className="text-xs text-gray-300 mt-1 overflow-x-auto">
-                                    {JSON.stringify(data.analysis.task_generator.params_as_json, null, 2)}
-                                  </pre>
-                                </div>
-                              )}
-                              <div className="flex items-center justify-between text-xs text-gray-400">
-                                <span>Client: {data.analysis.task_generator.client}</span>
-                                <span>Duration: {data.analysis.task_generator.duration_ms}ms</span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
+                   
                         {/* Tool Results */}
                         {data.transcript.map((entry, index) => (
                           entry.tool_results && entry.tool_results.length > 0 && (
