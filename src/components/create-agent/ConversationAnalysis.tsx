@@ -412,7 +412,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                   </div>
                                   {entry.tool_calls.map((tool, idx) => (
                                     <div key={idx} className="text-xs text-gray-300 mt-1">
-                                      <span className="text-primary-400">{tool.name}</span>
+                                      <span className="text-primary-400">{tool.tool_name}</span>
                                       {tool.result_value && (
                                         <span className="ml-1">→ {JSON.stringify(tool.result_value)}</span>
                                       )}
