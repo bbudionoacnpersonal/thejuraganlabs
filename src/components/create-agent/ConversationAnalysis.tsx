@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { XMarkIcon, ClockIcon, ChatBubbleLeftRightIcon, BeakerIcon, WrenchScrewdriverIcon, ChevronDownIcon, ChevronUpIcon, LanguageIcon } from '@heroicons/react/24/outline';
 import Button from '@/components/ui/Button';
+import { XMarkIcon, ChatBubbleLeftRightIcon, BeakerIcon, ClockIcon, SparklesIcon, DocumentTextIcon, LanguageIcon } from '@heroicons/react/24/outline';
 import TranscriptHandler from './TranscriptHandler';
 
 interface ConversationAnalysisProps {
@@ -112,6 +112,11 @@ interface ConversationData {
   analysis?: {
     call_successful: 'success' | 'failure' | 'unknown';
     transcript_summary: string;
+    task_generator?: {
+      task: string;
+      confidence: number;
+      generated_at: number;
+    };
     evaluation_criteria_results?: Record<string, {
       criteria_id: string;
       result: 'success' | 'failure' | 'unknown';
@@ -307,7 +312,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                   {/* Analysis Summary */}
                   {data.analysis && (
                     <div className="bg-dark-400 rounded-lg p-2">
-                      <h3 className="text-sm font-medium text-white mb-2">Transcript Summary</h3>
+                      <h3 className="text-sm font-medium text-white mb-2">Analysis</h3>
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="text-gray-400 text-sm">Status:</span>
@@ -321,7 +326,26 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                             {data.analysis.call_successful}
                           </span>
                         </div>
-                        <p className="text-sm text-white">{data.analysis.transcript_summary}</p>
+                        
+                        {/* Transcript Summary */}
+                        <div className="bg-dark-surface/50 p-2 rounded">
+                          <h4 className="text-sm font-medium text-white mb-1">Transcript Summary</h4>
+                          <p className="text-sm text-gray-300">{data.analysis.transcript_summary}</p>
+                        </div>
+
+                        {/* Task Generator Output */}
+                        {data.analysis.task_generator && (
+                          <div className="bg-dark-surface/50 p-2 rounded mt-2">
+                            <h4 className="text-sm font-medium text-white mb-1">Generated Task</h4>
+                            <div className="space-y-1">
+                              <p className="text-sm text-gray-300">{data.analysis.task_generator.task}</p>
+                              <div className="flex items-center gap-4 text-xs text-gray-400">
+                                <span>Confidence: {(data.analysis.task_generator.confidence * 100).toFixed(1)}%</span>
+                                <span>Generated: {formatDate(data.analysis.task_generator.generated_at)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
