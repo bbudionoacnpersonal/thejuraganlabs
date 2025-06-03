@@ -38,8 +38,24 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
       const transcriptData = await transcriptResponse.json();
       const transcript = transcriptData.transcript.map((entry: any) => entry.message).join('\n');
 
-      // Generate task summary from transcript
-      const summary = transcriptData.analysis?.transcript_summary || 'Create an AI agent based on the conversation';
+      // Use task_generator tool to generate task
+      const taskResponse = await fetch(`https://api.elevenlabs.io/v1/convai/tools/task_generator`, {
+        method: 'POST',
+        headers: {
+          'xi-api-key': 'sk_23315796af0e04dca2d364ac3da923dc1f385c4e375a249c',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          conversation_id: conversationId,
+          transcript: transcript
+        })
+      });
+
+      if (!taskResponse.ok) {
+        throw new Error('Failed to generate task');
+      }
+
+      const taskData = await taskResponse.json();
 
       // Then, submit to autogen config generator
       const configResponse = await fetch('https://autogen-json-generator-432934902994.asia-southeast2.run.app/generate-autogen-config/', {
@@ -49,7 +65,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
         },
         body: JSON.stringify({
           prompt: transcript,
-          task: summary
+          task: taskData.task
         })
       });
 
