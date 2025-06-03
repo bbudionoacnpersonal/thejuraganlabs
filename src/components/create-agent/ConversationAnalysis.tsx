@@ -218,7 +218,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                   size="sm"
                   onClick={() => setShowTranscriptHandler(true)}
                 >
-                  Generate Config
+                  Generate AI Agent Code
                 </Button>
                 <Button
                   variant="ghost"
