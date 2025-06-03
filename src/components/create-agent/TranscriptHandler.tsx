@@ -38,6 +38,9 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
       const transcriptData = await transcriptResponse.json();
       const transcript = transcriptData.transcript.map((entry: any) => entry.message).join('\n');
 
+      // Generate task summary from transcript
+      const summary = transcriptData.analysis?.transcript_summary || 'Create an AI agent based on the conversation';
+
       // Then, submit to autogen config generator
       const configResponse = await fetch('https://autogen-json-generator-432934902994.asia-southeast2.run.app/generate-autogen-config/', {
         method: 'POST',
@@ -45,7 +48,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          prompt: transcript, 
+          prompt: transcript,
           task: summary
         })
       });
@@ -118,7 +121,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                     onClick={handleSubmitTranscript}
                     isLoading={isLoading}
                   >
-                    Generate Config
+                    Generate AI Agent Code
                   </Button>
                 </div>
               )}
