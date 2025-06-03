@@ -38,7 +38,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
       const transcriptData = await transcriptResponse.json();
       const transcript = transcriptData.transcript.map((entry: any) => entry.message).join('\n');
 
-      // Use task_generator tool to generate task
+      // Use task_generator tool
       const taskResponse = await fetch(`https://api.elevenlabs.io/v1/convai/tools/task_generator`, {
         method: 'POST',
         headers: {
@@ -56,8 +56,9 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
       }
 
       const taskData = await taskResponse.json();
+      console.log('Task Generator Response:', taskData);
 
-      // Then, submit to autogen config generator
+      // Then, submit to autogen config generator with task
       const configResponse = await fetch('https://autogen-json-generator-432934902994.asia-southeast2.run.app/generate-autogen-config/', {
         method: 'POST',
         headers: {
@@ -65,7 +66,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
         },
         body: JSON.stringify({
           prompt: transcript,
-          task: taskData.task
+          task: taskData.message
         })
       });
 
