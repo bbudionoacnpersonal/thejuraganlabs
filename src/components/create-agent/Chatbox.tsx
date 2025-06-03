@@ -123,7 +123,7 @@ const Chatbox = forwardRef<ChatboxHandle, ChatboxProps>(({
         <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-dark-background via-dark-background/40 to-transparent backdrop-blur-sm pointer-events-none z-10" />
       </div>
 
-      <div className="px-2 pt-2 pb-1 mt-auto backdrop-blur-md bg-dark-surface/30">TEST
+      <div className="px-2 pt-2 pb-1 mt-auto backdrop-blur-md bg-dark-surface/30">
         <form onSubmit={handleSubmit} className="relative">
           <textarea
             ref={textareaRef}
