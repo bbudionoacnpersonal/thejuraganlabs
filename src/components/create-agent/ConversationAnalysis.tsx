@@ -113,9 +113,10 @@ interface ConversationData {
     call_successful: 'success' | 'failure' | 'unknown';
     transcript_summary: string;
     task_generator?: {
-      task: string;
-      confidence: number;
-      generated_at: number;
+      message: string;
+      client: string;
+      result: string;
+      duration_ms: number;
     };
     evaluation_criteria_results?: Record<string, {
       criteria_id: string;
@@ -150,8 +151,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
       setIsLoading(true);
       setError(null);
 
-      console.log('ConversationAnalysis ID: ', conversationId);
-
       try {
         const response = await fetch(`https://api.elevenlabs.io/v1/convai/conversations/${conversationId}`, {
           method: 'GET',
@@ -161,7 +160,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch conversation data: ' + conversationId);
+          throw new Error('Failed to fetch conversation data');
         }
 
         const data = await response.json();
@@ -336,12 +335,15 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                         {/* Task Generator Output */}
                         {data.analysis.task_generator && (
                           <div className="bg-dark-surface/50 p-2 rounded mt-2">
-                            <h4 className="text-sm font-medium text-white mb-1">Generated Task</h4>
-                            <div className="space-y-1">
-                              <p className="text-sm text-gray-300">{data.analysis.task_generator.task}</p>
-                              <div className="flex items-center gap-4 text-xs text-gray-400">
-                                <span>Confidence: {(data.analysis.task_generator.confidence * 100).toFixed(1)}%</span>
-                                <span>Generated: {formatDate(data.analysis.task_generator.generated_at)}</span>
+                            <div className="flex items-center gap-2 mb-2">
+                              <SparklesIcon className="h-3 w-3 text-secondary-600" />
+                              <h4 className="text-sm font-medium text-white">Task Generator</h4>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="text-sm text-gray-300">{data.analysis.task_generator.message}</div>
+                              <div className="flex items-center justify-between text-xs text-gray-400">
+                                <span>Client: {data.analysis.task_generator.client}</span>
+                                <span>Duration: {data.analysis.task_generator.duration_ms}ms</span>
                               </div>
                             </div>
                           </div>
