@@ -9,6 +9,15 @@ interface ConversationAnalysisProps {
   isVisible: boolean;
   onClose: () => void;
   conversationId: string;
+  transcript: string;
+  taskData: {
+    task: string;
+    components: Array<{
+      name: string;
+      purpose: string;
+    }>;
+    description: string;
+  };
 }
 
 interface ToolResult {
