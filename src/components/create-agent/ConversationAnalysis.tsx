@@ -186,7 +186,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           });
 
         if (taskGeneratorResult?.params_as_json) {
-        console.log('Task data found:', taskGeneratorResult.params_as_json);
+           console.log('Task data found:', taskGeneratorResult.params_as_json);
           setTaskData(taskGeneratorResult.params_as_json);
         }
         
