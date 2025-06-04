@@ -10,9 +10,6 @@ interface TranscriptHandlerProps {
   transcript: string;
   taskData: {
     task: string;
-    components: Array<{
-      name: string;
-      purpose: string;
     }>;
     description: string;
   };
