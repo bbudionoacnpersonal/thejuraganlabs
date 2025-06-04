@@ -373,7 +373,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                             <div
                               className={`max-w-[70%] rounded-lg p-3 ${
                                 entry.role === 'agent'
-                                  ? 'bg-primary-500/50 text-white'
+                                  ? 'bg-primary-500/40 text-white'
                                   : 'bg-dark-surface/100 text-white'
                               }`}
                             >
