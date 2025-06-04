@@ -534,6 +534,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           </motion.div>
         </motion.div>
       )}
+      
    <TranscriptHandler
         isVisible={showTranscriptHandler}
         onClose={() => setShowTranscriptHandler(false)}
