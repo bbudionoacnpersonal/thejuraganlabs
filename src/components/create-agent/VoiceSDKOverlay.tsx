@@ -80,7 +80,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     onMessage: message => {
       console.log(message);
       const newMessage = {
-        id: Math.random().toString(),
+        id: Math.random().toString(36).substr(2, 9),
         role: message.source === 'ai' ? 'assistant' : 'user',
         content: message.message,
         timestamp: Date.now()
