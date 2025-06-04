@@ -167,7 +167,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         }
 
         const transcriptData = await transcriptResponse.json();
-        setTranscript(transcriptData);
+        setData(transcriptData);
 
          // Build transcript from conversation data
         const taskGeneratorResult = transcriptData.transcript
