@@ -35,7 +35,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
         },
         body: JSON.stringify({
           prompt: transcript,
-          task: taskData.task
+          task: taskData
         })
       });
 
