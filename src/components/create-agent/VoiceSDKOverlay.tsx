@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline';
-import { useConversation } from '@elevenlabs/react';
+import { ElevenLabsProvider, useConversation } from '@elevenlabs/react';
 import ConversationAnalysis from './ConversationAnalysis';
 import { Message } from '@/types';
 
