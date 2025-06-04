@@ -103,7 +103,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
               description: 'The task to generate'
             }
           },
-          required: ['conversation_id', 'task']
+          required: ['conversation_id', 'message']
         },
         handler: handleTaskGenerator
       }
