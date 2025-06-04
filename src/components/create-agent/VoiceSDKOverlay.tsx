@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline';
-import { ElevenLabsProvider, useConversation } from '@elevenlabs/react';
+import { useConversation } from '@elevenlabs/react';
 import ConversationAnalysis from './ConversationAnalysis';
 import { Message } from '@/types';
 
@@ -41,8 +41,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
           'xi-api-key': 'sk_23315796af0e04dca2d364ac3da923dc1f385c4e375a249c'
         },
         body: JSON.stringify({
-          conversation_id: input.conversation_id,
-          task: input.conversation_id ? input.task : input.message,
+          task: input.task,
           examples: [
             {
               input: "Create an AI agent that can analyze customer support tickets",
@@ -115,14 +114,11 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         parameters: {
           type: 'object',
           properties: {
-            conversation_id: {
-              type: 'string'
-            },
             task: {
               type: 'string'
             }
           },
-          required: ['conversation_id', 'task']
+          required: ['task']
         },
         handler: handleTaskGenerator
       }
