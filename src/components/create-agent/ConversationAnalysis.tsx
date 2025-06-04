@@ -360,7 +360,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                   )}
 
                   {/* Collapsible Transcript */}
-                  <div className="bg-dark-400 rounded-lg overflow-hidden">
+                  <div className="bg-dark-300 rounded-lg overflow-hidden">
                     <button
                       onClick={() => setShowTranscript(!showTranscript)}
                       className="w-full p-2 flex items-center justify-between text-white hover:bg-dark-400 transition-colors"
