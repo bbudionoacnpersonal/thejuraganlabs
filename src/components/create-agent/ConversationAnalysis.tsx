@@ -534,20 +534,12 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           </motion.div>
         </motion.div>
       )}
-
-      <transcript: string;
-  taskData: {
-    task: string;
-    components: Array<{
-      name: string;
-      purpose: string;
-    }>;
-    description: string;
-  };
+   <TranscriptHandler
         isVisible={showTranscriptHandler}
         onClose={() => setShowTranscriptHandler(false)}
         conversationId={conversationId}
       />
+    </AnimatePresence>
     </AnimatePresence>
   );
 };
