@@ -92,31 +92,6 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                 </div>
               )}
 
-              {/* Task Information */}
-              <div className="bg-dark-400 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-white mb-2">Task Information</h3>
-                <div className="space-y-2">
-                  <div>
-                    <div className="text-xs text-gray-400">Task:</div>
-                    <div className="text-sm text-white">{taskData}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-400">Description:</div>
-                    <div className="text-sm text-white">{taskData.description}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-400">Components:</div>
-                    <div className="space-y-1 mt-1">
-                      {taskData.components.map((component, index) => (
-                        <div key={index} className="bg-dark-surface p-2 rounded text-sm">
-                          <div className="text-white">{component.name}</div>
-                          <div className="text-gray-400 text-xs">{component.purpose}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               {/* Generated Config */}
               {config ? (
