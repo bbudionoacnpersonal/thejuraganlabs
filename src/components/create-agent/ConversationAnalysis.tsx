@@ -168,6 +168,23 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
 
         const transcriptData = await transcriptResponse.json();
         setData(transcriptData);
+
+         // Build transcript from conversation data
+        const fullTranscript = transcriptData.transcript
+          .map((entry: any) => `${entry.role}: ${entry.message}`)
+          .join('\n');
+        setTranscript(fullTranscript);
+
+         // Set task data if available
+        if (transcriptData.analysis?.task) {
+          setTaskData({
+            task: transcriptData.analysis.task.message,
+            components: transcriptData.analysis.task.components || [],
+            description: transcriptData.analysis.task.description || ''
+          });
+        }
+        
+        
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
