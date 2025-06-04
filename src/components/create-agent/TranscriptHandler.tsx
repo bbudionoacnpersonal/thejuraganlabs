@@ -98,7 +98,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                 <div className="space-y-2">
                   <div>
                     <div className="text-xs text-gray-400">Task:</div>
-                    <div className="text-sm text-white">{taskData.task}</div>
+                    <div className="text-sm text-white">{taskData}</div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-400">Description:</div>
