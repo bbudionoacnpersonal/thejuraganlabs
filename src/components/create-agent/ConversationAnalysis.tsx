@@ -176,7 +176,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           .join('\n');
         setTranscript(fullTranscript);
        
-        
+      // Extract task data from tool results
         let parsedTaskData: any = null;
 
         const taskGeneratorResult = transcriptData.transcript
