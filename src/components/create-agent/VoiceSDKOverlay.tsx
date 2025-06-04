@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline';
-import { ElevenLabsProvider, useConversation } from '@elevenlabs/react';
+import { useConversation } from '@elevenlabs/react';
 import ConversationAnalysis from './ConversationAnalysis';
 import { Message } from '@/types';
 
@@ -11,56 +11,17 @@ interface VoiceSDKOverlayProps {
   onMessage: (message: Message) => void;
 }
 
-const clientTools = {
-  task_generator: {
-    description: 'Generates task information from conversation',
-    parameters: {
-      type: 'object',
-      properties: {
-        task: {
-          type: 'string'
-        }
-      },
-      required: ['task']
-    },
-    call: async (input: any) => {
-      try {
-        const response = await fetch('https://api.elevenlabs.io/v1/convai/tools/task_generator', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'xi-api-key': 'sk_23315796af0e04dca2d364ac3da923dc1f385c4e375a249c'
-          },
-          body: JSON.stringify({
-            task: input.task,
-            examples: [
-              {
-                input: "Create an AI agent that can analyze customer support tickets",
-                output: "Task: Create a customer support analysis agent\nComponents:\n- NLP for ticket analysis\n- Priority classification\n- Department routing"
-              },
-              {
-                input: "I need an AI team for processing loan applications",
-                output: "Task: Build loan processing AI team\nComponents:\n- Document analysis\n- Risk assessment\n- Credit scoring"
-              }
-            ]
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to generate task');
-        }
-
-        const data = await response.json();
-        return data;
-      } catch (error) {
-        console.error('Task Generator error:', error);
-        throw error;
-      }
-    }
+async function requestMicrophonePermission() {
+  try {
+    await navigator.mediaDevices.getUserMedia({ audio: true });
+    return true;
+  } catch {
+    console.error("Microphone permission denied");
+    return false;
   }
-};
+}
 
-const VoiceSDKOverlayContent: React.FC<VoiceSDKOverlayProps> = ({
+const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   isVisible,
   onClose,
   onMessage
@@ -69,6 +30,41 @@ const VoiceSDKOverlayContent: React.FC<VoiceSDKOverlayProps> = ({
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [toolCalls, setToolCalls] = useState<any[]>([]);
+
+  const handleTaskGenerator = async (input: any) => {
+    try {
+      const response = await fetch('https://api.elevenlabs.io/v1/convai/tools/task_generator', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'xi-api-key': 'sk_23315796af0e04dca2d364ac3da923dc1f385c4e375a249c'
+        },
+        body: JSON.stringify({
+          task: input.task,
+          examples: [
+            {
+              input: "Create an AI agent that can analyze customer support tickets",
+              output: "Task: Create a customer support analysis agent\nComponents:\n- NLP for ticket analysis\n- Priority classification\n- Department routing"
+            },
+            {
+              input: "I need an AI team for processing loan applications",
+              output: "Task: Build loan processing AI team\nComponents:\n- Document analysis\n- Risk assessment\n- Credit scoring"
+            }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate task');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Task Generator error:', error);
+      throw error;
+    }
+  };
 
   const conversation = useConversation({
     agentId: 'agent_01jvw7ms1jfbe8c3ptec0na5z9',
@@ -102,7 +98,24 @@ const VoiceSDKOverlayContent: React.FC<VoiceSDKOverlayProps> = ({
     }
     
     try {
-      const sessionId = await conversation.startSession();
+      const sessionId = await conversation.startSession({
+        clientTools: [
+          {
+            name: 'task_generator',
+            description: 'Generates task information from conversation',
+            parameters: {
+              type: 'object',
+              properties: {
+                task: {
+                  type: 'string'
+                }
+              },
+              required: ['task']
+            },
+            handler: handleTaskGenerator
+          }
+        ]
+      });
       setConversationId(sessionId);
       setToolCalls([]); // Reset tool calls for new conversation
       console.log('ConversationID: ', sessionId);
@@ -284,24 +297,6 @@ const VoiceSDKOverlayContent: React.FC<VoiceSDKOverlayProps> = ({
         </motion.div>
       )}
     </AnimatePresence>
-  );
-};
-
-async function requestMicrophonePermission() {
-  try {
-    await navigator.mediaDevices.getUserMedia({ audio: true });
-    return true;
-  } catch {
-    console.error("Microphone permission denied");
-    return false;
-  }
-}
-
-const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = (props) => {
-  return (
-    <ElevenLabsProvider clientTools={clientTools}>
-      <VoiceSDKOverlayContent {...props} />
-    </ElevenLabsProvider>
   );
 };
 
