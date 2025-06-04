@@ -112,14 +112,6 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                 </div>
               </div>
 
-            {/* Content */}
-            <div className="p-4 space-y-4">
-              {error && (
-                <div className="bg-error-500/20 border border-error-500 text-error-100 px-4 py-3 rounded">
-                  {error}
-                </div>
-              )}
-
               {/* Generated Config */}
               {config ? (
                 <div className="bg-dark-400 rounded-lg p-4">
