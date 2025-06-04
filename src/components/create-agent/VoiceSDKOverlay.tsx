@@ -89,7 +89,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     },
     clientTools: [
       {
-        name: 'Task_Generator',
+        name: 'task_generator',
         description: 'Generates task information from conversation',
         parameters: {
           type: 'object',
