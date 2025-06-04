@@ -29,9 +29,11 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [toolCalls, setToolCalls] = useState<any[]>([]);
 
   const handleTaskGenerator = async (input: any) => {
     try {
+      const startTime = Date.now();
       const response = await fetch('https://api.elevenlabs.io/v1/convai/tools/task_generator', {
         method: 'POST',
         headers: {
@@ -59,9 +61,27 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       }
 
       const data = await response.json();
+      const duration = Date.now() - startTime;
+
+      // Track tool call
+      setToolCalls(prev => [...prev, {
+        name: 'task_generator',
+        arguments: input,
+        output: data,
+        duration_ms: duration,
+        status: 'success'
+      }]);
+
       return data;
     } catch (error) {
       console.error('Task Generator error:', error);
+      // Track failed tool call
+      setToolCalls(prev => [...prev, {
+        name: 'task_generator',
+        arguments: input,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        status: 'error'
+      }]);
       throw error;
     }
   };
@@ -84,7 +104,8 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         id: Math.random().toString(),
         role: message.source === 'ai' ? 'assistant' : 'user',
         content: message.message,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        tool_calls: toolCalls
       });
     },
     clientTools: [
@@ -120,6 +141,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     try {
       const sessionId = await conversation.startSession();
       setConversationId(sessionId);
+      setToolCalls([]); // Reset tool calls for new conversation
       console.log('ConversationID: ', sessionId);
     } catch (err) {
       setError("Failed to start conversation");
