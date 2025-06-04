@@ -170,31 +170,29 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         setData(transcriptData);
 
          // Build transcript from conversation data
-        const fullTranscript = transcriptData.transcript
-          .map((entry: any) => `${entry.role}: ${entry.message}`)
-          .join('\n');
-        setTranscript(fullTranscript);
+     let parsedTaskData: any = null;
 
-      // Extract task data from tool results that contain "task" in params_as_json
-      const taskGeneratorResult = transcriptData.transcript
-      .flatMap((entry: any) => entry.tool_results || [])
-      .map((tool: any) => {
-        try {
-          return JSON.parse(tool.params_as_json);
-        } catch {
-          return null;
+const taskGeneratorResult = transcriptData.transcript
+  .flatMap((entry: any) => entry.tool_results || [])
+  .find((tool: any) => {
+    if (tool.params_as_json) {
+      try {
+        const parsed = JSON.parse(tool.params_as_json);
+        if (Object.keys(parsed).some(key => key.toLowerCase().includes('task'))) {
+          parsedTaskData = parsed; // Save parsed version!
+          return true;
         }
-      })
-      .find((params: any) => 
-        params && typeof params === 'object' && 
-        Object.keys(params).some(key => key.toLowerCase().includes('task'))
-      )?.task;
+      } catch (error) {
+        console.error('Failed to parse params_as_json:', tool.params_as_json);
+      }
+    }
+    return false;
+  });
 
-        
-        if (taskGeneratorResult?.params_as_json) {
-           console.log('Task data found:', taskGeneratorResult.params_as_json);
-          setTaskData(taskGeneratorResult.params_as_json);
-        }
+if (parsedTaskData) {
+  console.log('Task data found:', parsedTaskData);
+  setTaskData(parsedTaskData);
+}
         
         
       } catch (err) {
