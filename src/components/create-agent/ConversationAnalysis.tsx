@@ -178,7 +178,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
        
       // Extract task data from tool results
         let parsedTaskData: any = null;
-
         const taskGeneratorResult = transcriptData.transcript
           .flatMap((entry: any) => entry.tool_results || [])
           .find((tool: any) => {
@@ -200,10 +199,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           console.log('Task data found:', parsedTaskData);
           setTaskData(parsedTaskData); // set parsed version
         }
-
-
           
-        
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
