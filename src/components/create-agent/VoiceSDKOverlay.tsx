@@ -29,53 +29,38 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [toolCalls, setToolCalls] = useState<any[]>([]);
+  const [transcript, setTranscript] = useState<string>('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [taskData, setTaskData] = useState<any>(null);
 
   const handleTaskGenerator = async (input: any) => {
     try {
       console.log('Simulating task generation for input:', input);
       await new Promise((resolve) => setTimeout(resolve, 500)); // simulate network delay
       
-      // Add to tool calls history
-      const toolCall = {
-        name: 'task_generator',
-        arguments: input,
-        duration_ms: 500,
-        status: 'success',
-        output: {
-          task: `Generated task for: ${input.task}`,
-          components: ['NLP', 'Classification', 'Routing'],
-          description: 'AI agent team configuration generated based on user requirements',
-          suggested_tools: [
-            {
-              name: 'Natural Language Processing',
-              purpose: 'Analyze and understand user input'
-            },
-            {
-              name: 'Classification System',
-              purpose: 'Categorize and prioritize tasks'
-            },
-            {
-              name: 'Routing Logic',
-              purpose: 'Direct tasks to appropriate handlers'
-            }
-          ]
-        }
+      const generatedTask = {
+        task: `Create an AI agent team for ${input.task}`,
+        components: [
+          {
+            name: 'Natural Language Processing',
+            purpose: 'Analyze and understand user input'
+          },
+          {
+            name: 'Classification System',
+            purpose: 'Categorize and prioritize tasks'
+          },
+          {
+            name: 'Routing Logic',
+            purpose: 'Direct tasks to appropriate handlers'
+          }
+        ],
+        description: 'AI agent team configuration generated based on user requirements'
       };
-      
-      setToolCalls(prev => [...prev, toolCall]);
-      
-      return toolCall.output;
+
+      setTaskData(generatedTask);
+      return generatedTask;
     } catch (error) {
       console.error('Task Generator error:', error);
-      const errorCall = {
-        name: 'task_generator',
-        arguments: input,
-        duration_ms: 500,
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Task generation failed'
-      };
-      setToolCalls(prev => [...prev, errorCall]);
       throw error;
     }
   };
@@ -94,13 +79,16 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     },
     onMessage: message => {
       console.log(message);
-      onMessage({
+      const newMessage = {
         id: Math.random().toString(),
         role: message.source === 'ai' ? 'assistant' : 'user',
         content: message.message,
-        timestamp: Date.now(),
-        tool_calls: toolCalls
-      });
+        timestamp: Date.now()
+      };
+      
+      setMessages(prev => [...prev, newMessage]);
+      setTranscript(prev => prev + '\n' + message.message);
+      onMessage(newMessage);
     }
   });
 
@@ -118,7 +106,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         }
       });
       setConversationId(sessionId);
-      setToolCalls([]); // Reset tool calls for new conversation
+      setMessages([]);
+      setTranscript('');
+      setTaskData(null);
       console.log('ConversationID: ', sessionId);
     } catch (err) {
       setError("Failed to start conversation");
@@ -290,11 +280,15 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
             </div>
           </motion.div>
 
-          <ConversationAnalysis
-            isVisible={showAnalysis}
-            onClose={() => setShowAnalysis(false)}
-            conversationId={conversationId || ''}
-          />
+          {showAnalysis && taskData && (
+            <ConversationAnalysis
+              isVisible={showAnalysis}
+              onClose={() => setShowAnalysis(false)}
+              conversationId={conversationId || ''}
+              transcript={transcript}
+              taskData={taskData}
+            />
+          )}
         </motion.div>
       )}
     </AnimatePresence>
