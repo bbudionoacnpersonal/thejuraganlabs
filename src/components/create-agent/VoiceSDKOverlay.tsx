@@ -100,10 +100,10 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
             },
             message: {
               type: 'string',
-              description: 'The message to analyze'
+              description: 'The task to generate'
             }
           },
-          required: ['conversation_id', 'message']
+          required: ['conversation_id', 'task']
         },
         handler: handleTaskGenerator
       }
