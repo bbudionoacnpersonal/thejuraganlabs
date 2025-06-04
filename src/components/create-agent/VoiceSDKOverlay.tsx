@@ -99,7 +99,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     
     try {
       const sessionId = await conversation.startSession({
-        clientTools: [
+        clientTools: 
           {
             name: 'task_generator',
             description: 'Generates task information from conversation',
@@ -114,7 +114,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
             },
             handler: handleTaskGenerator
           }
-        ]
+        
       });
       setConversationId(sessionId);
       setToolCalls([]); // Reset tool calls for new conversation
