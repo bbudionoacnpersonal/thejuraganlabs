@@ -32,7 +32,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 
   const handleTaskGenerator = async (input: any) => {
     try {
-      const response = await fetch('https://api.elevenlabs.io/v1/convai/tools/task_generator', {
+      const response = await fetch('https://api.elevenlabs.io/v1/convai/tools/Task_Generator', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
