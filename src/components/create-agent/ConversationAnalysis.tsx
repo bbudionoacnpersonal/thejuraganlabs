@@ -169,12 +169,14 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         const transcriptData = await transcriptResponse.json();
         setData(transcriptData);
 
-         // Build transcript from conversation data
-           // Build transcript from conversation data
+
+        // Build transcript from conversation data
         const fullTranscript = transcriptData.transcript
           .map((entry: any) => `${entry.role}: ${entry.message}`)
           .join('\n');
         setTranscript(fullTranscript);
+       
+        
         let parsedTaskData: any = null;
 
         const taskGeneratorResult = transcriptData.transcript
