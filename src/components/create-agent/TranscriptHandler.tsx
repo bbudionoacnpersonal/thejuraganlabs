@@ -84,6 +84,34 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
               </Button>
             </div>
 
+            
+            {/* Content */}
+            <div className="p-4 space-y-4">
+              {error && (
+                <div className="bg-error-500/20 border border-error-500 text-error-100 px-4 py-3 rounded">
+                  {error}
+                </div>
+              )}
+
+              {/* Input Parameters Preview */}
+              <div className="bg-dark-400 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-white mb-2">API Input Parameters</h3>
+                <div className="space-y-2">
+                  <div>
+                    <div className="text-xs text-gray-400">Prompt (Transcript):</div>
+                    <pre className="text-sm text-white bg-dark-surface p-2 rounded mt-1 overflow-x-auto">
+                      {transcript}
+                    </pre>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-400">Task:</div>
+                    <pre className="text-sm text-white bg-dark-surface p-2 rounded mt-1 overflow-x-auto">
+                      {JSON.stringify(taskData, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+
             {/* Content */}
             <div className="p-4 space-y-4">
               {error && (
