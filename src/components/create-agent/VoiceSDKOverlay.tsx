@@ -30,6 +30,42 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
 
+  const handleTaskGenerator = async (input: any) => {
+    try {
+      const response = await fetch('https://api.elevenlabs.io/v1/convai/tools/task_generator', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'xi-api-key': 'sk_23315796af0e04dca2d364ac3da923dc1f385c4e375a249c'
+        },
+        body: JSON.stringify({
+          conversation_id: input.conversation_id,
+          message: input.message,
+          examples: [
+            {
+              input: "Create an AI agent that can analyze customer support tickets",
+              output: "Task: Create a customer support analysis agent\nComponents:\n- NLP for ticket analysis\n- Priority classification\n- Department routing"
+            },
+            {
+              input: "I need an AI team for processing loan applications",
+              output: "Task: Build loan processing AI team\nComponents:\n- Document analysis\n- Risk assessment\n- Credit scoring"
+            }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate task');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Task Generator error:', error);
+      throw error;
+    }
+  };
+
   const conversation = useConversation({
     agentId: 'agent_01jvw7ms1jfbe8c3ptec0na5z9',
     onConnect: () => {
@@ -42,51 +78,36 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       console.log(error);
       setError("An error occurred during the conversation");
     },
-    onMessage: async message => {
+    onMessage: message => {
       console.log(message);
-
-      // If the message is from the AI, try to extract task information
-      if (message.source === 'ai') {
-        try {
-          // Extract conversation examples and generate task
-          const taskResponse = await fetch('https://api.elevenlabs.io/v1/convai/tools/task_generator', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'xi-api-key': 'sk_23315796af0e04dca2d364ac3da923dc1f385c4e375a249c'
-            },
-            body: JSON.stringify({
-              conversation_id: conversationId,
-              message: message.message,
-              examples: [
-                {
-                  input: "Create an AI agent that can analyze customer support tickets",
-                  output: "Task: Create a customer support analysis agent\nComponents:\n- NLP for ticket analysis\n- Priority classification\n- Department routing"
-                },
-                {
-                  input: "I need an AI team for processing loan applications",
-                  output: "Task: Build loan processing AI team\nComponents:\n- Document analysis\n- Risk assessment\n- Credit scoring"
-                }
-              ]
-            })
-          });
-
-          if (taskResponse.ok) {
-            const taskData = await taskResponse.json();
-            console.log('Generated task:', taskData);
-          }
-        } catch (err) {
-          console.error('Error generating task:', err);
-        }
-      }
-
       onMessage({
         id: Math.random().toString(),
         role: message.source === 'ai' ? 'assistant' : 'user',
         content: message.message,
         timestamp: Date.now()
-      }); 
+      });
     },
+    clientTools: [
+      {
+        name: 'Task_Generator',
+        description: 'Generates task information from conversation',
+        parameters: {
+          type: 'object',
+          properties: {
+            conversation_id: {
+              type: 'string',
+              description: 'The ID of the conversation'
+            },
+            message: {
+              type: 'string',
+              description: 'The message to analyze'
+            }
+          },
+          required: ['conversation_id', 'message']
+        },
+        handler: handleTaskGenerator
+      }
+    ]
   });
 
   async function startConversation() {
