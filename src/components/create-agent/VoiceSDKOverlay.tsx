@@ -114,7 +114,6 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
             },
             handler: handleTaskGenerator
           }
-        
       });
       setConversationId(sessionId);
       setToolCalls([]); // Reset tool calls for new conversation
