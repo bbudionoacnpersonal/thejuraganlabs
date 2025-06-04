@@ -86,7 +86,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
 
             
             {/* Content */}
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(80vh-8rem)]">
               {error && (
                 <div className="bg-error-500/20 border border-error-500 text-error-100 px-4 py-3 rounded">
                   {error}
