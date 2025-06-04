@@ -539,6 +539,8 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         isVisible={showTranscriptHandler}
         onClose={() => setShowTranscriptHandler(false)}
         conversationId={conversationId}
+        transcript={transcript}
+        taskData={taskData}
       />
     </AnimatePresence>
   );
