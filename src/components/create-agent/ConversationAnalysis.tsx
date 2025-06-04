@@ -374,7 +374,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                     </button>
                     
                     {showTranscript && (
-                      <div className="p-4 space-y-4 border-t border-dark-borde">
+                      <div className="p-4 space-y-4 border-t border-dark-border">
                         {data.transcript.map((entry, index) => (
                           <div
                             key={index}
