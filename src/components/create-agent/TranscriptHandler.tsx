@@ -8,9 +8,7 @@ interface TranscriptHandlerProps {
   onClose: () => void;
   conversationId: string;
   transcript: string;
-  taskData: {
-    task: string;
-  };
+  taskData: string;
 }
 
 const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
