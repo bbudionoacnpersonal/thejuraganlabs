@@ -44,11 +44,11 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
           examples: [
             {
               input: "Create an AI agent that can analyze customer support tickets",
-              output: "Task: Create a customer support analysis agent\nComponents:\n- NLP for ticket analysis\n- Priority classification\n- Department routing"
+              output: "task: Create a customer support analysis agent\nComponents:\n- NLP for ticket analysis\n- Priority classification\n- Department routing"
             },
             {
               input: "I need an AI team for processing loan applications",
-              output: "Task: Build loan processing AI team\nComponents:\n- Document analysis\n- Risk assessment\n- Credit scoring"
+              output: "task: Build loan processing AI team\nComponents:\n- Document analysis\n- Risk assessment\n- Credit scoring"
             }
           ]
         })
