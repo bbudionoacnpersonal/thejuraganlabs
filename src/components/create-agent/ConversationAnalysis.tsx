@@ -390,29 +390,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                           </span>
                         </div>
                         
-                        {/* Task Information */}
-                        {data.analysis.task && (
-                          <div className="bg-dark-surface/50 p-2 rounded mt-2">
-                            <h4 className="text-sm font-medium text-white mb-1">Generated Task</h4>
-                            <div className="space-y-1">
-                              <p className="text-sm text-gray-300">{data.analysis.task.message}</p>
-                              <div className="text-xs text-gray-400">
-                                <span>Client: {data.analysis.task.client}</span>
-                                {data.analysis.task.duration_ms && (
-                                  <span className="ml-2">Duration: {data.analysis.task.duration_ms}ms</span>
-                                )}
-                              </div>
-                              {data.analysis.task.params_as_json && (
-                                <div className="mt-1">
-                                  <div className="text-xs text-gray-400">Parameters:</div>
-                                  <pre className="text-xs text-gray-300 overflow-x-auto mt-1 bg-dark-400/50 p-2 rounded">
-                                    {JSON.stringify(data.analysis.task.params_as_json, null, 2)}
-                                  </pre>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
 
                         {/* Transcript Summary */}
                         <div className="bg-dark-surface/50 p-2 rounded">
