@@ -180,6 +180,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         .flatMap((entry: any) => entry.tool_results || [])
         .find((tool: any) => {
           if (typeof tool.params_as_json === 'object' && tool.params_as_json !== null) {
+            console.log( tool.params_as_json);
             return Object.keys(tool.params_as_json).some(key => key.toLowerCase().includes('task'));
           }
           return false;
