@@ -33,35 +33,49 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 
   const handleTaskGenerator = async (input: any) => {
     try {
-      const response = await fetch('https://api.elevenlabs.io/v1/convai/tools/task_generator', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'xi-api-key': 'sk_23315796af0e04dca2d364ac3da923dc1f385c4e375a249c'
-        },
-        body: JSON.stringify({
-          task: input.task,
-          examples: [
+      console.log('Simulating task generation for input:', input);
+      await new Promise((resolve) => setTimeout(resolve, 500)); // simulate network delay
+      
+      // Add to tool calls history
+      const toolCall = {
+        name: 'task_generator',
+        arguments: input,
+        duration_ms: 500,
+        status: 'success',
+        output: {
+          task: `Generated task for: ${input.task}`,
+          components: ['NLP', 'Classification', 'Routing'],
+          description: 'AI agent team configuration generated based on user requirements',
+          suggested_tools: [
             {
-              input: "Create an AI agent that can analyze customer support tickets",
-              output: "Task: Create a customer support analysis agent\nComponents:\n- NLP for ticket analysis\n- Priority classification\n- Department routing"
+              name: 'Natural Language Processing',
+              purpose: 'Analyze and understand user input'
             },
             {
-              input: "I need an AI team for processing loan applications",
-              output: "Task: Build loan processing AI team\nComponents:\n- Document analysis\n- Risk assessment\n- Credit scoring"
+              name: 'Classification System',
+              purpose: 'Categorize and prioritize tasks'
+            },
+            {
+              name: 'Routing Logic',
+              purpose: 'Direct tasks to appropriate handlers'
             }
           ]
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate task');
-      }
-
-      const data = await response.json();
-      return data;
+        }
+      };
+      
+      setToolCalls(prev => [...prev, toolCall]);
+      
+      return toolCall.output;
     } catch (error) {
       console.error('Task Generator error:', error);
+      const errorCall = {
+        name: 'task_generator',
+        arguments: input,
+        duration_ms: 500,
+        status: 'error',
+        error: error instanceof Error ? error.message : 'Task generation failed'
+      };
+      setToolCalls(prev => [...prev, errorCall]);
       throw error;
     }
   };
@@ -99,8 +113,8 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     
     try {
       const sessionId = await conversation.startSession({
-       clientTools: {
-          task_generator: handleTaskGenerator  // <- THIS IS THE FIX
+        clientTools: {
+          task_generator: handleTaskGenerator
         }
       });
       setConversationId(sessionId);
