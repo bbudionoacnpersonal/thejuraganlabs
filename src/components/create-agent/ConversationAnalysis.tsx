@@ -178,13 +178,18 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
       // Extract task data from tool results that contain "task" in params_as_json
       const taskGeneratorResult = transcriptData.transcript
       .flatMap((entry: any) => entry.tool_results || [])
-      .map((tool: any) => tool.params_as_json) // take only params_as_json
-      .find((params: any) => {
-        if (params && typeof params === 'object') {
-          return Object.keys(params).some(key => key.toLowerCase().includes('task'));
+      .map((tool: any) => {
+        try {
+          return JSON.parse(tool.params_as_json);
+        } catch {
+          return null;
         }
-        return false;
-      });
+      })
+      .find((params: any) => 
+        params && typeof params === 'object' && 
+        Object.keys(params).some(key => key.toLowerCase().includes('task'))
+      )?.task;
+
         
         if (taskGeneratorResult?.params_as_json) {
            console.log('Task data found:', taskGeneratorResult.params_as_json);
