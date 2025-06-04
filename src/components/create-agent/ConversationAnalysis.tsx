@@ -144,6 +144,8 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
   const [data, setData] = useState<ConversationData | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
   const [showTranscriptHandler, setShowTranscriptHandler] = useState(false);
+    const [transcript, setTranscript] = useState<string>('');
+  const [taskData, setTaskData] = useState<any>(null);
 
   useEffect(() => {
     if (!isVisible || !conversationId) return;
