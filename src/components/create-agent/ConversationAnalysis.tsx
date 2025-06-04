@@ -391,7 +391,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                               {entry.llm_usage?.model_usage && (
                                 <div className="mt-2 pt-2 border-t border-dark-border">
                                   <div className="flex items-center gap-1 text-xs text-gray-400 mb-1">
-                                    <SparklesIcon className="h-3 w-3" />
+                                    <SparklesIcon className="h-2 w-2" />
                                     <span>LLM Usage</span>
                                   </div>
                                   {Object.entries(entry.llm_usage.model_usage).map(([model, usage], idx) => (
