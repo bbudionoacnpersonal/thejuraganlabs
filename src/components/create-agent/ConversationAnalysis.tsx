@@ -183,7 +183,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
             }
           }
           return false;
-              });
+       });
             
       if (taskGeneratorResult?.params_as_json) {
         try {
