@@ -179,6 +179,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         const taskGeneratorResult = transcriptData.transcript
           .flatMap((entry: any) => entry.tool_results || [])
           .find((tool: any) => tool.tool_name === 'task_generator');
+      
 
         if (taskGeneratorResult?.params_as_json) {
           setTaskData(taskGeneratorResult.params_as_json);
