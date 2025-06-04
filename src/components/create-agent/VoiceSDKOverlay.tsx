@@ -99,7 +99,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     
     try {
       const sessionId = await conversation.startSession({
-         clientTools: {
+      clientTools: {
         task_generator: {
           description: 'Generates task information from conversation',
           parameters: {
