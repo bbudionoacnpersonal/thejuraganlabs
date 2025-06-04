@@ -170,30 +170,30 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         setData(transcriptData);
 
          // Build transcript from conversation data
-        const taskGeneratorResult = transcriptData.transcript
-        .flatMap((entry: any) => entry.tool_results || [])
-        .find((tool: any) => {
-          if (tool.params_as_json) {
-            try {
-              const parsed = JSON.parse(tool.params_as_json);
-              return Object.keys(parsed).some(key => key.toLowerCase().includes('task'));
-            } catch (error) {
-              console.error('Failed to parse params_as_json:', tool.params_as_json);
-              return false;
-            }
-          }
-          return false;
-       });
-            
-      if (taskGeneratorResult?.params_as_json) {
-        try {
-          const parsedTaskData = JSON.parse(taskGeneratorResult.params_as_json);
-          console.log('Task data found:', parsedTaskData);
-          setTaskData(parsedTaskData);
-        } catch (error) {
-          console.error('Failed to parse params_as_json on assignment:', taskGeneratorResult.params_as_json);
+      let parsedTaskData: any = null;
+
+const taskGeneratorResult = transcriptData.transcript
+  .flatMap((entry: any) => entry.tool_results || [])
+  .find((tool: any) => {
+    if (tool.params_as_json) {
+      try {
+        const parsed = JSON.parse(tool.params_as_json);
+        if (parsed && typeof parsed === 'object' && Object.keys(parsed).some(key => key.toLowerCase().includes('task'))) {
+          parsedTaskData = parsed; // Save parsed version
+          return true; // Found it
         }
+      } catch (error) {
+        console.error('Failed to parse params_as_json:', tool.params_as_json);
       }
+    }
+    return false;
+  });
+
+if (parsedTaskData) {
+  console.log('Task data found:', parsedTaskData);
+  setTaskData(parsedTaskData); // set parsed version
+}
+
 
           
         
