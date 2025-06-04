@@ -42,7 +42,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         },
         body: JSON.stringify({
           conversation_id: input.conversation_id,
-          task: input.conversation_id ? input.task : input.message, // Handle both task and message parameters
+          task: input.conversation_id ? input.task : input.message,
           examples: [
             {
               input: "Create an AI agent that can analyze customer support tickets",
@@ -116,12 +116,10 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
           type: 'object',
           properties: {
             conversation_id: {
-              type: 'string',
-              description: 'The ID of the conversation'
+              type: 'string'
             },
             task: {
-              type: 'string',
-              description: 'The task to analyze'
+              type: 'string'
             }
           },
           required: ['conversation_id', 'task']
