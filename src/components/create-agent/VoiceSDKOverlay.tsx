@@ -40,7 +40,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         },
         body: JSON.stringify({
           conversation_id: input.conversation_id,
-          message: input.message,
+          task: input.task,
           examples: [
             {
               input: "Create an AI agent that can analyze customer support tickets",
@@ -98,12 +98,12 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
               type: 'string',
               description: 'The ID of the conversation'
             },
-            message: {
+            task: {
               type: 'string',
               description: 'The task to generate'
             }
           },
-          required: ['conversation_id', 'message']
+          required: ['conversation_id', 'task']
         },
         handler: handleTaskGenerator
       }
