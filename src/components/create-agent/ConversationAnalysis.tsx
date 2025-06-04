@@ -137,36 +137,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
   const [showTranscript, setShowTranscript] = useState(false);
   const [showTranscriptHandler, setShowTranscriptHandler] = useState(false);
 
-  const task_generator = async (transcript: string): Promise<{ message: string; client: string; result: string }> => {
-    try {
-      const response = await fetch('https://api.elevenlabs.io/v1/convai/tools/task_generator', {
-        method: 'POST',
-        headers: {
-          'xi-api-key': 'sk_23315796af0e04dca2d364ac3da923dc1f385c4e375a249c',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          conversation_id: conversationId,
-          transcript: transcript
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate task');
-      }
-
-      const taskData = await response.json();
-      return {
-        message: taskData.message,
-        client: taskData.client || 'default',
-        result: taskData.result || taskData.message
-      };
-    } catch (error) {
-      console.error('Error in task_generator:', error);
-      throw error;
-    }
-  };
-
   useEffect(() => {
     if (!isVisible || !conversationId) return;
 
@@ -187,25 +157,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         }
 
         const transcriptData = await transcriptResponse.json();
-        const transcript = transcriptData.transcript.map((entry: any) => entry.message).join('\n');
-
-        // Generate task using task_generator
-        const taskResult = await task_generator(transcript);
-
-        // Add task to the analysis
-        const dataWithTask = {
-          ...transcriptData,
-          analysis: {
-            ...transcriptData.analysis,
-            task: {
-              ...taskResult,
-              duration_ms: 0, // You can add actual duration if available
-              params_as_json: {} // Add any additional parameters if needed
-            }
-          }
-        };
-
-        setData(dataWithTask);
+        setData(transcriptData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
