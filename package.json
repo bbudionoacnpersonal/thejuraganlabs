@@ -15,6 +15,8 @@
     "@elevenlabs/react": "^0.1.5",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
+    "@splinetool/react-spline": "^2.2.6",
+    "@splinetool/runtime": "^1.0.51",
     "@tabler/icons-react": "^2.47.0",
     "@types/node": "^20.11.5",
     "@types/uuid": "^9.0.8",
