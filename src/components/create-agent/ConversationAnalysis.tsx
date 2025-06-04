@@ -541,7 +541,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         conversationId={conversationId}
       />
     </AnimatePresence>
-    </AnimatePresence>
   );
 };
 
