@@ -43,30 +43,20 @@ interface TranscriptEntry {
     duration_ms: number;
     strategy: string;
   };
-  llm_usage?: LLMUsageDetails;
+  llm_usage?: {
+    model_usage?: Record<string, {
+      input?: {
+        tokens: number;
+        price: number;
+      };
+      output_total?: {
+        tokens: number;
+        price: number;
+      };
+    }>;
+  };
   interrupted?: boolean;
   original_message?: string;
-}
-
-interface LLMUsageDetails {
-  model_usage?: Record<string, {
-    input?: {
-      tokens: number;
-      price: number;
-    };
-    input_cache_read?: {
-      tokens: number;
-      price: number;
-    };
-    input_cache_write?: {
-      tokens: number;
-      price: number;
-    };
-    output_total?: {
-      tokens: number;
-      price: number;
-    };
-  }>;
 }
 
 interface ConversationData {
@@ -145,7 +135,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ConversationData | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
-  const [showLLMUsage, setShowLLMUsage] = useState(false);
   const [showTranscriptHandler, setShowTranscriptHandler] = useState(false);
 
   useEffect(() => {
@@ -327,7 +316,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                           <p className="text-sm text-gray-300">{data.analysis.transcript_summary}</p>
                         </div>
 
-                   
                         {/* Tool Results */}
                         {data.transcript.map((entry, index) => (
                           entry.tool_results && entry.tool_results.length > 0 && (
@@ -341,11 +329,11 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                   <div key={toolIndex} className="border-t border-dark-border pt-2 first:border-t-0 first:pt-0">
                                     <div className="text-sm font-medium text-gray-300">{tool.tool_name}</div>
                                     <div className="text-sm text-gray-400 mt-1">{tool.result_value}</div>
-                                    {entry.tool_calls[toolIndex].Task_Generator && (
+                                    {tool.params_as_json && (
                                       <div className="bg-dark-400/50 p-2 rounded mt-1">
                                         <div className="text-xs text-gray-400">Parameters:</div>
                                         <pre className="text-xs text-gray-300 mt-1 overflow-x-auto">
-                                          {JSON.stringify(entry.tool_calls[toolIndex].Task_Generator, null, 2)}
+                                          {JSON.stringify(tool.params_as_json, null, 2)}
                                         </pre>
                                       </div>
                                     )}
@@ -398,6 +386,29 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                 </span>
                               </div>
                               <p className="text-sm">{entry.message}</p>
+
+                              {/* LLM Usage */}
+                              {entry.llm_usage?.model_usage && (
+                                <div className="mt-2 pt-2 border-t border-dark-border">
+                                  <div className="flex items-center gap-1 text-xs text-gray-400 mb-1">
+                                    <SparklesIcon className="h-3 w-3" />
+                                    <span>LLM Usage</span>
+                                  </div>
+                                  {Object.entries(entry.llm_usage.model_usage).map(([model, usage], idx) => (
+                                    <div key={idx} className="text-xs text-gray-300 mt-1">
+                                      <div className="text-primary-400">{model}</div>
+                                      <div className="grid grid-cols-2 gap-2 mt-0.5">
+                                        {usage.input && (
+                                          <div>Input: {usage.input.tokens} tokens (${usage.input.price.toFixed(4)})</div>
+                                        )}
+                                        {usage.output_total && (
+                                          <div>Output: {usage.output_total.tokens} tokens (${usage.output_total.price.toFixed(4)})</div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
 
                               {/* Tool Calls */}
                               {entry.tool_calls && entry.tool_calls.length > 0 && (
