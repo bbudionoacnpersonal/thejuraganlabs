@@ -92,7 +92,6 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                 </div>
               )}
 
-
               {/* Generated Config */}
               {config ? (
                 <div className="bg-dark-400 rounded-lg p-4">
