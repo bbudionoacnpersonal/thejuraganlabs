@@ -105,7 +105,7 @@ interface ConversationData {
   analysis?: {
     call_successful: 'success' | 'failure' | 'unknown';
     transcript_summary: string;
-    task_generator?: {
+    task?: {
       message: string;
       client: string;
       result: string;
@@ -137,6 +137,36 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
   const [showTranscript, setShowTranscript] = useState(false);
   const [showTranscriptHandler, setShowTranscriptHandler] = useState(false);
 
+  const task_generator = async (transcript: string): Promise<{ message: string; client: string; result: string }> => {
+    try {
+      const response = await fetch('https://api.elevenlabs.io/v1/convai/tools/task_generator', {
+        method: 'POST',
+        headers: {
+          'xi-api-key': 'sk_23315796af0e04dca2d364ac3da923dc1f385c4e375a249c',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          conversation_id: conversationId,
+          transcript: transcript
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate task');
+      }
+
+      const taskData = await response.json();
+      return {
+        message: taskData.message,
+        client: taskData.client || 'default',
+        result: taskData.result || taskData.message
+      };
+    } catch (error) {
+      console.error('Error in task_generator:', error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     if (!isVisible || !conversationId) return;
 
@@ -145,19 +175,37 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
       setError(null);
 
       try {
-        const response = await fetch(`https://api.elevenlabs.io/v1/convai/conversations/${conversationId}`, {
+        const transcriptResponse = await fetch(`https://api.elevenlabs.io/v1/convai/conversations/${conversationId}`, {
           method: 'GET',
           headers: {
             'xi-api-key': 'sk_23315796af0e04dca2d364ac3da923dc1f385c4e375a249c'
           }
         });
 
-        if (!response.ok) {
+        if (!transcriptResponse.ok) {
           throw new Error('Failed to fetch conversation data');
         }
 
-        const data = await response.json();
-        setData(data);
+        const transcriptData = await transcriptResponse.json();
+        const transcript = transcriptData.transcript.map((entry: any) => entry.message).join('\n');
+
+        // Generate task using task_generator
+        const taskResult = await task_generator(transcript);
+
+        // Add task to the analysis
+        const dataWithTask = {
+          ...transcriptData,
+          analysis: {
+            ...transcriptData.analysis,
+            task: {
+              ...taskResult,
+              duration_ms: 0, // You can add actual duration if available
+              params_as_json: {} // Add any additional parameters if needed
+            }
+          }
+        };
+
+        setData(dataWithTask);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -310,6 +358,22 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                           </span>
                         </div>
                         
+                        {/* Task Information */}
+                        {data.analysis.task && (
+                          <div className="bg-dark-surface/50 p-2 rounded mt-2">
+                            <h4 className="text-sm font-medium text-white mb-1">Generated Task</h4>
+                            <div className="space-y-1">
+                              <p className="text-sm text-gray-300">{data.analysis.task.message}</p>
+                              <div className="text-xs text-gray-400">
+                                <span>Client: {data.analysis.task.client}</span>
+                                {data.analysis.task.duration_ms && (
+                                  <span className="ml-2">Duration: {data.analysis.task.duration_ms}ms</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Transcript Summary */}
                         <div className="bg-dark-surface/50 p-2 rounded">
                           <h4 className="text-sm font-medium text-white mb-1">Transcript Summary</h4>
