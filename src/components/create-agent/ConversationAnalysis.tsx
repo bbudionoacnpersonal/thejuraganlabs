@@ -175,16 +175,15 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           .join('\n');
         setTranscript(fullTranscript);
 
-       // Extract task data from tool results that contain "task" in params_as_json
-        const taskGeneratorResult = transcriptData.transcript
-          .flatMap((entry: any) => entry.tool_results || [])
-          .find((tool: any) => {
-             if (typeof Object.keys(tool.params_as_json === 'object'){
-               return Object.keys(tool.params_as_json).some(key => key.toLowerCase().includes('task'));
-             }
-            return false;
-            });
-
+      // Extract task data from tool results that contain "task" in params_as_json
+const taskGeneratorResult = transcriptData.transcript
+  .flatMap((entry: any) => entry.tool_results || [])
+  .find((tool: any) => {
+    if (typeof tool.params_as_json === 'object' && tool.params_as_json !== null) {
+      return Object.keys(tool.params_as_json).some(key => key.toLowerCase().includes('task'));
+    }
+    return false;
+  });
         if (taskGeneratorResult?.params_as_json) {
            console.log('Task data found:', taskGeneratorResult.params_as_json);
           setTaskData(taskGeneratorResult.params_as_json);
