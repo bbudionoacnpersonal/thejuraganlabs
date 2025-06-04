@@ -42,15 +42,15 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         },
         body: JSON.stringify({
           conversation_id: input.conversation_id,
-          task: input.task,
+          task: input.conversation_id ? input.task : input.message, // Handle both task and message parameters
           examples: [
             {
               input: "Create an AI agent that can analyze customer support tickets",
-              output: "task: Create a customer support analysis agent\nComponents:\n- NLP for ticket analysis\n- Priority classification\n- Department routing"
+              output: "Task: Create a customer support analysis agent\nComponents:\n- NLP for ticket analysis\n- Priority classification\n- Department routing"
             },
             {
               input: "I need an AI team for processing loan applications",
-              output: "task: Build loan processing AI team\nComponents:\n- Document analysis\n- Risk assessment\n- Credit scoring"
+              output: "Task: Build loan processing AI team\nComponents:\n- Document analysis\n- Risk assessment\n- Credit scoring"
             }
           ]
         })
@@ -63,25 +63,25 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       const data = await response.json();
       const duration = Date.now() - startTime;
 
-      // Track tool call
-      setToolCalls(prev => [...prev, {
+      const toolCall = {
         name: 'task_generator',
         arguments: input,
         output: data,
         duration_ms: duration,
         status: 'success'
-      }]);
+      };
 
+      setToolCalls(prev => [...prev, toolCall]);
       return data;
     } catch (error) {
       console.error('Task Generator error:', error);
-      // Track failed tool call
-      setToolCalls(prev => [...prev, {
+      const failedToolCall = {
         name: 'task_generator',
         arguments: input,
         error: error instanceof Error ? error.message : 'Unknown error',
         status: 'error'
-      }]);
+      };
+      setToolCalls(prev => [...prev, failedToolCall]);
       throw error;
     }
   };
@@ -121,7 +121,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
             },
             task: {
               type: 'string',
-              description: 'The task to generate'
+              description: 'The task to analyze'
             }
           },
           required: ['conversation_id', 'task']
@@ -292,7 +292,6 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                 </button>
               </div>
 
-              {/* Analysis Link - Always visible */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
