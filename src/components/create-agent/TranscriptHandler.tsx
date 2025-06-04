@@ -17,10 +17,12 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [config, setConfig] = useState<any>(null);
+  const [toolResults, setToolResults] = useState<any[]>([]);
 
   const handleSubmitTranscript = async () => {
     setIsLoading(true);
     setError(null);
+    setToolResults([]);
 
     try {
       // First, fetch the conversation transcript
@@ -47,7 +49,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
         },
         body: JSON.stringify({
           conversation_id: conversationId,
-          transcript: transcript
+          task: transcript
         })
       });
 
@@ -56,7 +58,12 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
       }
 
       const taskData = await taskResponse.json();
-      console.log('Task Generator Response:', taskData);
+      setToolResults(prev => [...prev, {
+        name: 'task_generator',
+        input: { conversation_id: conversationId, task: transcript },
+        output: taskData,
+        status: 'success'
+      }]);
 
       // Then, submit to autogen config generator with task
       const configResponse = await fetch('https://autogen-json-generator-432934902994.asia-southeast2.run.app/generate-autogen-config/', {
@@ -76,9 +83,20 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
 
       const configData = await configResponse.json();
       setConfig(configData);
+      setToolResults(prev => [...prev, {
+        name: 'autogen_config_generator',
+        input: { prompt: transcript, task: taskData.message },
+        output: configData,
+        status: 'success'
+      }]);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
+      setToolResults(prev => [...prev, {
+        name: 'error',
+        error: err instanceof Error ? err.message : 'An error occurred',
+        status: 'error'
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -123,8 +141,53 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                 </div>
               )}
 
+              {/* Tool Results */}
+              {toolResults.length > 0 && (
+                <div className="space-y-4">
+                  {toolResults.map((result, index) => (
+                    <div key={index} className="bg-dark-400 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-medium text-white">{result.name}</h3>
+                        <span className={`text-xs px-2 py-0.5 rounded ${
+                          result.status === 'success' ? 'bg-success-500/20 text-success-300' :
+                          result.status === 'error' ? 'bg-error-500/20 text-error-300' :
+                          'bg-warning-500/20 text-warning-300'
+                        }`}>
+                          {result.status}
+                        </span>
+                      </div>
+                      
+                      {result.input && (
+                        <div className="mb-2">
+                          <div className="text-xs text-gray-400 mb-1">Input:</div>
+                          <pre className="text-xs text-gray-300 bg-dark-surface p-2 rounded overflow-x-auto">
+                            {JSON.stringify(result.input, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                      
+                      {result.output && (
+                        <div>
+                          <div className="text-xs text-gray-400 mb-1">Output:</div>
+                          <pre className="text-xs text-gray-300 bg-dark-surface p-2 rounded overflow-x-auto">
+                            {JSON.stringify(result.output, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                      
+                      {result.error && (
+                        <div className="text-xs text-error-400">
+                          Error: {result.error}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {config ? (
                 <div className="bg-dark-400 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-white mb-2">Generated Configuration</h3>
                   <pre className="text-sm text-gray-300 whitespace-pre-wrap">
                     {JSON.stringify(config, null, 2)}
                   </pre>
