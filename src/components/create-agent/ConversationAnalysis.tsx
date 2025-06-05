@@ -395,7 +395,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                             </div>
                           </div>
                         )
-                      ))
+                      ))}}
 
                        
                       </div>
