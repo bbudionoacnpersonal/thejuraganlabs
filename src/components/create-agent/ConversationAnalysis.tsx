@@ -409,7 +409,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                         {data.transcript.some(entry => entry.tool_results && entry.tool_results.length > 0) && (
                             <div className="bg-dark-surface/50 p-2 rounded mt-2">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <wrench className="h-3 w-3 text-secondary-600" /> {/* Differentiated Icon */}
+                                    <Wrench className="h-3 w-3 text-secondary-600" /> {/* Differentiated Icon */}
                                     <h4 className="text-sm font-medium text-white">Detailed Tool Results (Per Transcript Entry)</h4>
                                 </div>
                                 {data.transcript.map((entry, index) => (
