@@ -183,7 +183,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         
         if (taskGeneratingToolCall && taskGeneratingToolCall.params_as_json) {
           const params = taskGeneratingToolCall.params_as_json; // Already an object
-          if (params && typeof params.task === 'string') {
+          if (params && typeof params?.task === 'string') {
             console.log('Task found:', params.task);
             setTaskData(params.task);
           } else {
