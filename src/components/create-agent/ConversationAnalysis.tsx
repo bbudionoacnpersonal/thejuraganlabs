@@ -434,14 +434,14 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                                     </pre>
                                                 </div>
                                               )}
-                                              {params && (
+                                            
                                                 <div className="bg-dark-400/50 p-2 rounded mt-1">
                                                   <div className="text-xs text-gray-400">Parameters:</div>
                                                   <pre className="text-xs text-gray-300 mt-1 overflow-x-auto whitespace-pre-wrap break-all">
                                                     {JSON.stringify(params, null, 2)}
                                                   </pre>
                                                 </div>
-                                              )}
+                                            
                                             </div>
                                           );
                                         })}
