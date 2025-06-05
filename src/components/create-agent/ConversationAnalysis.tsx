@@ -175,7 +175,26 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           .map((entry: any) => `${entry.role}: ${entry.message}`)
           .join('\n');
         setTranscript(fullTranscript);
-       
+
+        //extract tools
+        const taskValue = transcriptData.transcript
+        .flatMap((entry: any) => entry.tool_calls || [])  // <-- NOW tool_calls
+        .find((tool: any) => tool.tool_name === 'task_generator' && tool.params_as_json)
+        ;
+        
+        if (taskValue) {
+          try {
+            const parsed = JSON.parse(taskValue.params_as_json);
+            if (parsed && parsed.task) {
+              console.log('Task found:', parsed.task);
+              setTaskData(parsed.task); // <-- Only set the task string
+            }
+          } catch (error) {
+            console.error('Failed to parse params_as_json:', taskValue.params_as_json);
+          }
+        }
+
+        
 
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
