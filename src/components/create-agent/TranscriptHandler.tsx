@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
-import { XMarkIcon, DocumentTextIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 
 interface TranscriptHandlerProps {
   isVisible: boolean;
@@ -21,7 +21,6 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [config, setConfig] = useState<any>(null);
-  const [isInputParamsExpanded, setIsInputParamsExpanded] = useState(false);
 
   const handleSubmitTranscript = async () => {
     setIsLoading(true);
