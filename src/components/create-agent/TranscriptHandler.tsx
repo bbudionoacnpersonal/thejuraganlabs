@@ -102,9 +102,9 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                 >
                   <h3 className="text-sm font-medium">API Input Parameters</h3>
                   {isInputParamsExpanded ? (
-                    <ChevronUpIcon className="h-4 w-4 text-gray-400" />
+                    <ChevronUpIcon className="h-2 w-2 text-gray-400" />
                   ) : (
-                    <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+                    <ChevronDownIcon className="h-2 w-2 text-gray-400" />
                   )}
                 </button>
 
