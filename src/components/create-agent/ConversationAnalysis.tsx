@@ -195,7 +195,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         //console.log ('param_task_generator:',   tool.params_as_json);
         
         if (taskEntry?.tools) {
-          const taskTool = taskEntry.tools.find(tool => tool.tool_name === 'task_generator');
+          const taskTool = taskEntry.tools.find(tool => tool.type === 'task_generator');
           if (taskTool && taskTool.params_as_json) {
             try {
               const params = typeof taskTool.params_as_json === 'string' 
