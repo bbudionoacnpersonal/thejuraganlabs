@@ -544,7 +544,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                             {JSON.stringify(tool.params_as_json, null, 2)}
                                             if tool.tool_name === "task_generator"
                                             (
-                                                  setTaskDatatool.params_as_jso);
+                                                  setTaskData(tool.params_as_jso);
                                             )
                                           </pre>
                                         </div>
