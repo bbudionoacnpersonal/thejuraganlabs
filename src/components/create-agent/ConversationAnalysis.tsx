@@ -212,14 +212,14 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
     fetchConversationData();
   }, [isVisible, conversationId]);
 
+  const formatDate = (unixSeconds: number) => {
+    return new Date(unixSeconds * 1000).toLocaleString();
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.round(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const formatDate = (unixSeconds: number) => {
-    return new Date(unixSeconds * 1000).toLocaleString();
   };
 
   return (
@@ -471,6 +471,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         onClose={() => setShowTranscriptHandler(false)}
         transcript={transcript}
         taskData={taskData || ''}
+        conversationId={conversationId}
       />
     </AnimatePresence>
   );
