@@ -93,23 +93,36 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                 </div>
               )}
 
-              {/* Input Parameters Preview */}
-              <div className="bg-dark-400 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-white mb-2">API Input Parameters</h3>
-                <div className="space-y-2">
-                  <div>
-                    <div className="text-xs text-gray-400">Prompt (Transcript):</div>
-                    <pre className="text-sm text-white bg-dark-surface p-2 rounded mt-1 overflow-x-auto">
-                      {transcript}
-                    </pre>
+             {/* Input Parameters Preview */}
+              <div className="bg-dark-400 rounded-lg">
+                <button
+                  onClick={() => setIsInputParamsExpanded(!isInputParamsExpanded)}
+                  className="w-full p-4 flex items-center justify-between text-white"
+                >
+                  <h3 className="text-sm font-medium">API Input Parameters</h3>
+                  {isInputParamsExpanded ? (
+                    <ChevronUpIcon className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+                  )}
+                </button>
+
+                {isInputParamsExpanded && (
+                  <div className="px-4 pb-4 space-y-2">
+                    <div>
+                      <div className="text-xs text-gray-400">Prompt (Transcript):</div>
+                      <pre className="text-sm text-white bg-dark-surface p-2 rounded mt-1 overflow-x-auto">
+                        {transcript}
+                      </pre>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-400">Task:</div>
+                      <pre className="text-sm text-white bg-dark-surface p-2 rounded mt-1 overflow-x-auto">
+                        {JSON.stringify(taskData, null, 2)}
+                      </pre>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xs text-gray-400">Task:</div>
-                    <pre className="text-sm text-white bg-dark-surface p-2 rounded mt-1 overflow-x-auto">
-                      {JSON.stringify(taskData, null, 2)}
-                    </pre>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Generated Config */}
