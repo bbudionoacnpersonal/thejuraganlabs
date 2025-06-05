@@ -522,7 +522,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                         <div className="bg-dark-400/50 p-1 rounded mt-1">
                                          <pre className="text-xs text-gray-300 overflow-x-auto">
                                            entry tools: {JSON.stringify(entry.tool_calls)}
-                                           Param: {JSON.stringify((entry.tool_calls.params_as_json, null, 2)}
                                           </pre>
                                         </div>
                                       )}
