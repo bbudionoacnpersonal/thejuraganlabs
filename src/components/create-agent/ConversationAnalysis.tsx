@@ -420,7 +420,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                 {entry.tool_results.map((tool, toolIndex) => (
                                   <div key={toolIndex} className="border-t border-dark-border pt-2 first:border-t-0 first:pt-0">
                                     <div className="text-sm font-medium text-gray-300">{entry.tool_results.tool_name}</div>
-                                    <div className="text-sm text-gray-400 mt-1">{entry.tool_results.result_value}</div>
+                                    <div className="text-sm text-gray-400 mt-1">{entry.tool_results.tool_name}</div>
                                     {/*tool.params_as_json && (*/
                                       <div className="bg-dark-400/50 p-2 rounded mt-1">
                                         <div className="text-xs text-gray-400">Parameters:</div>
