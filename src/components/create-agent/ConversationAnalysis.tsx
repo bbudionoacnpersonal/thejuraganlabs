@@ -407,7 +407,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                   <div className="bg-dark-600 rounded-lg overflow-hidden">
                     <button
                       onClick={() => setShowTranscript(!showTranscript)}
-                      className="w-full p-2 flex items-center justify-between text-white hover:bg-dark-500 bg-dark-500 transition-colors"
+                      className="w-full p-2 flex items-center justify-between text-white hover:bg-dark-600 bg-dark-500 transition-colors"
                     >
                       <span className="text-sm font-medium">Conversation Transcript</span>
                       {showTranscript ? (
