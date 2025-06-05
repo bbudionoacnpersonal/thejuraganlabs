@@ -41,8 +41,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   // onAnimationStart in restProps will have the Framer Motion compatible type.
   ...restProps 
 }, ref) => {
-  const baseClasses = 'font-medium rounded-md transition-all duration-200 flex items-center justify-center focus:outline-none focus:ring-1 focus:ring-offset-1 text-white';
-  
+const baseClasses = 'font-medium rounded-md transition-all duration-200 flex flex-row items-center justify-center focus:outline-none focus:ring-1 focus:ring-offset-1 text-white';
+
   const variantClasses = {
     primary: 'bg-primary-400 hover:bg-primary-500 focus:ring-primary-400',
     secondary: 'bg-secondary-600 hover:bg-secondary-600 focus:ring-secondary-600',
@@ -92,10 +92,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
         </svg>
       )}
       
-      {!isLoading && leftIcon && <span className="mr-2">{leftIcon}</span>}
+      {!isLoading && leftIcon && <span className="mr-2 inline-flex">{leftIcon}</span>}
       {/* Using motion.span for children to handle potential MotionValue children */}
       <motion.span>{children}</motion.span> 
-      {!isLoading && rightIcon && <span className="ml-2">{rightIcon}</span>}
+      {!isLoading && rightIcon && <span className="ml-2  inline-flex">{rightIcon}</span>}
     </motion.button>
   );
 });

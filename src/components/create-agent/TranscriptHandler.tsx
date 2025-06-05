@@ -1,59 +1,52 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
-import { XMarkIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, DocumentTextIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { FileJson } from 'lucide-react';
 
 interface TranscriptHandlerProps {
   isVisible: boolean;
   onClose: () => void;
   conversationId: string;
+  transcript: string;
+  taskData: string;
 }
 
 const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
   isVisible,
   onClose,
-  conversationId
+  conversationId,
+  transcript,
+  taskData
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [config, setConfig] = useState<any>(null);
+  const [isInputParamsExpanded, setIsInputParamsExpanded] = useState(true);
 
   const handleSubmitTranscript = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // First, fetch the conversation transcript
-      const transcriptResponse = await fetch(`https://api.elevenlabs.io/v1/convai/conversations/${conversationId}`, {
-        method: 'GET',
-        headers: {
-          'xi-api-key': 'sk_23315796af0e04dca2d364ac3da923dc1f385c4e375a249c'
-        }
-      });
-
-      if (!transcriptResponse.ok) {
-        throw new Error('Failed to fetch conversation transcript');
-      }
-
-      const transcriptData = await transcriptResponse.json();
-      const transcript = transcriptData.transcript.map((entry: any) => entry.message).join('\n');
-
-      // Then, submit to autogen config generator
-      const configResponse = await fetch('https://autogen-json-generator-432934902994.asia-southeast2.run.app/generate-autogen-config/', {
+      const options = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          prompt: transcript
+          prompt: transcript,
+          task: taskData
         })
-      });
+      };
 
-      if (!configResponse.ok) {
+      const response = await fetch('https://autogen-json-generator-432934902994.asia-southeast2.run.app/generate-autogen-config/', options);
+
+      if (!response.ok) {
         throw new Error('Failed to generate autogen config');
       }
 
-      const configData = await configResponse.json();
+      const configData = await response.json();
       setConfig(configData);
 
     } catch (err) {
@@ -95,15 +88,49 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
             </div>
 
             {/* Content */}
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(80vh-8rem)]">
               {error && (
                 <div className="bg-error-500/20 border border-error-500 text-error-100 px-4 py-3 rounded">
                   {error}
                 </div>
               )}
 
+              {/* Input Parameters Preview */}
+              <div className="bg-dark-400 rounded-lg">
+                <button
+                  onClick={() => setIsInputParamsExpanded(!isInputParamsExpanded)}
+                  className="w-full p-4 flex items-center justify-between text-white"
+                >
+                  <h3 className="text-sm font-medium">API Input Parameters</h3>
+                  {isInputParamsExpanded ? (
+                    <ChevronUpIcon className="h-2 w-2 text-gray-400" />
+                  ) : (
+                    <ChevronDownIcon className="h-2 w-2 text-gray-400" />
+                  )}
+                </button>
+
+                {isInputParamsExpanded && (
+                  <div className="px-4 pb-4 space-y-2">
+                    <div>
+                      <div className="text-xs text-gray-400">Prompt (Transcript):</div>
+                      <pre className="text-sm text-white bg-dark-surface p-2 rounded mt-1 overflow-x-auto">
+                        {transcript}
+                      </pre>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-400">Task:</div>
+                      <pre className="text-sm text-white bg-dark-surface p-2 rounded mt-1 overflow-x-auto">
+                        {taskData}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Generated Config */}
               {config ? (
                 <div className="bg-dark-400 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-white mb-2">Generated Configuration</h3>
                   <pre className="text-sm text-gray-300 whitespace-pre-wrap">
                     {JSON.stringify(config, null, 2)}
                   </pre>
@@ -116,8 +143,12 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                   <Button
                     onClick={handleSubmitTranscript}
                     isLoading={isLoading}
+                    size="md"
+                    fullWidth="true"
+                    className="w-[70%]"
+                    leftIcon= {<FileJson className="h-3 w-3 inline-block"/>}
                   >
-                    Generate Config
+                    Generate AI Agent s JSON Code
                   </Button>
                 </div>
               )}

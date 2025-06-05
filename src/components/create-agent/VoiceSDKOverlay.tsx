@@ -29,6 +29,41 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [transcript, setTranscript] = useState<string>('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [taskData, setTaskData] = useState<any>(null);
+
+  const handleTaskGenerator = async (input: any) => {
+    try {
+      console.log('Simulating task generation for input:', input);
+      await new Promise((resolve) => setTimeout(resolve, 500)); // simulate network delay
+      
+      const generatedTask = {
+        task: `Create an AI agent team for ${input.task}`,
+        components: [
+          {
+            name: 'Natural Language Processing',
+            purpose: 'Analyze and understand user input'
+          },
+          {
+            name: 'Classification System',
+            purpose: 'Categorize and prioritize tasks'
+          },
+          {
+            name: 'Routing Logic',
+            purpose: 'Direct tasks to appropriate handlers'
+          }
+        ],
+        description: 'AI agent team configuration generated based on user requirements'
+      };
+
+      setTaskData(generatedTask);
+      return generatedTask;
+    } catch (error) {
+      console.error('Task Generator error:', error);
+      throw error;
+    }
+  };
 
   const conversation = useConversation({
     agentId: 'agent_01jvw7ms1jfbe8c3ptec0na5z9',
@@ -44,13 +79,17 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     },
     onMessage: message => {
       console.log(message);
-      onMessage({
-        id: Math.random().toString(),
+      const newMessage = {
+        id: Math.random().toString(36).substr(2, 9),
         role: message.source === 'ai' ? 'assistant' : 'user',
         content: message.message,
         timestamp: Date.now()
-      }); 
-    },
+      };
+      
+      setMessages(prev => [...prev, newMessage]);
+      setTranscript(prev => prev + '\n' + message.message);
+      onMessage(newMessage);
+    }
   });
 
   async function startConversation() {
@@ -61,8 +100,15 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     }
     
     try {
-      const sessionId = await conversation.startSession();
+      const sessionId = await conversation.startSession({
+        clientTools: {
+          task_generator: handleTaskGenerator
+        }
+      });
       setConversationId(sessionId);
+      setMessages([]);
+      setTranscript('');
+      setTaskData(null);
       console.log('ConversationID: ', sessionId);
     } catch (err) {
       setError("Failed to start conversation");
@@ -213,7 +259,6 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                 </button>
               </div>
 
-              {/* Analysis Link - Always visible */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -235,11 +280,15 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
             </div>
           </motion.div>
 
-          <ConversationAnalysis
-            isVisible={showAnalysis}
-            onClose={() => setShowAnalysis(false)}
-            conversationId={conversationId || ''}
-          />
+          {showAnalysis && taskData && (
+            <ConversationAnalysis
+              isVisible={showAnalysis}
+              onClose={() => setShowAnalysis(false)}
+              conversationId={conversationId || ''}
+              transcript={transcript}
+              taskData={taskData}
+            />
+          )}
         </motion.div>
       )}
     </AnimatePresence>

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { XMarkIcon, ClockIcon, ChatBubbleLeftRightIcon, BeakerIcon, WrenchScrewdriverIcon, ChevronDownIcon, ChevronUpIcon, LanguageIcon } from '@heroicons/react/24/outline';
 import Button from '@/components/ui/Button';
+import { XMarkIcon, ChatBubbleLeftRightIcon, BeakerIcon, ClockIcon, SparklesIcon, DocumentTextIcon, LanguageIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { Wrench } from 'lucide-react';
 import TranscriptHandler from './TranscriptHandler';
 
 interface ConversationAnalysisProps {
@@ -10,25 +11,17 @@ interface ConversationAnalysisProps {
   conversationId: string;
 }
 
-interface LLMUsageDetails {
-  model_usage?: Record<string, {
-    input?: {
-      tokens: number;
-      price: number;
-    };
-    input_cache_read?: {
-      tokens: number;
-      price: number;
-    };
-    input_cache_write?: {
-      tokens: number;
-      price: number;
-    };
-    output_total?: {
-      tokens: number;
-      price: number;
-    };
-  }>;
+interface ToolResult {
+  tool_name: string;
+  result_value: string;
+  type?: string;
+  request_id?: string;
+  params_as_json?: string | Record<string, any>;
+  tool_has_been_called?: boolean;
+  tool_details?: {
+    type: string;
+    parameters: string;
+  };
 }
 
 interface TranscriptEntry {
@@ -39,13 +32,20 @@ interface TranscriptEntry {
     name: string;
     arguments: Record<string, any>;
     output?: any;
+    params_as_json?: Record<string, any>;
   }>;
-  tool_results?: Array<{
-    name: string;
-    result: any;
-    error?: string;
-    duration_ms: number;
+  tools?: Array<{
+    type: string;
+    request_id: string;
+    tool_name: string;
+    params_as_json: string;
+    tool_has_been_called: boolean;
+    tool_details: {
+      type: string;
+      parameters: string;
+    };
   }>;
+  tool_results?: ToolResult[];
   feedback?: {
     rating: number;
     comment?: string;
@@ -61,7 +61,18 @@ interface TranscriptEntry {
     duration_ms: number;
     strategy: string;
   };
-  llm_usage?: LLMUsageDetails;
+  llm_usage?: {
+    model_usage?: Record<string, {
+      input?: {
+        tokens: number;
+        price: number;
+      };
+      output_total?: {
+        tokens: number;
+        price: number;
+      };
+    }>;
+  };
   interrupted?: boolean;
   original_message?: string;
 }
@@ -112,6 +123,13 @@ interface ConversationData {
   analysis?: {
     call_successful: 'success' | 'failure' | 'unknown';
     transcript_summary: string;
+    task?: {
+      message: string;
+      client: string;
+      result: string;
+      duration_ms: number;
+      params_as_json?: Record<string, any>;
+    };
     evaluation_criteria_results?: Record<string, {
       criteria_id: string;
       result: 'success' | 'failure' | 'unknown';
@@ -135,8 +153,9 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ConversationData | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
-  const [showLLMUsage, setShowLLMUsage] = useState(false);
   const [showTranscriptHandler, setShowTranscriptHandler] = useState(false);
+  const [transcript, setTranscript] = useState<string>('');
+  const [taskData, setTaskData] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isVisible || !conversationId) return;
@@ -145,22 +164,46 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
       setIsLoading(true);
       setError(null);
 
-      console.log('ConversationAnalysis ID: ', conversationId);
-
       try {
-        const response = await fetch(`https://api.elevenlabs.io/v1/convai/conversations/${conversationId}`, {
+        const transcriptResponse = await fetch(`https://api.elevenlabs.io/v1/convai/conversations/${conversationId}`, {
           method: 'GET',
           headers: {
             'xi-api-key': 'sk_23315796af0e04dca2d364ac3da923dc1f385c4e375a249c'
           }
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch conversation data: ' + conversationId);
+        if (!transcriptResponse.ok) {
+          throw new Error('Failed to fetch conversation data');
         }
 
-        const data = await response.json();
-        setData(data);
+        const transcriptData = await transcriptResponse.json();
+        setData(transcriptData);
+
+        const fullTranscript = transcriptData.transcript
+          .map((entry: any) => `${entry.role}: ${entry.message}`)
+          .join('\n');
+        setTranscript(fullTranscript);
+
+        // Extract task data from tools array
+       const taskGeneratingToolCall = transcriptData.transcript
+        .flatMap((entry: TranscriptEntry) => entry.tool_calls || [])
+        .find(toolCall => toolCall.tool_name === 'task_generator' && toolCall.params_as_json);
+      
+      if (taskGeneratingToolCall && taskGeneratingToolCall.params_as_json) {
+        try {
+          const params = JSON.parse(taskGeneratingToolCall.params_as_json); // <-- MUST PARSE here!
+          if (params && typeof params.task === 'string') {
+            console.log('Task found:', params.task);
+            setTaskData(params.task);
+          } else {
+            console.warn('Task property not found or not a string in params_as_json of task_generator tool call:', params);
+          }
+        } catch (error) {
+          console.error('Failed to parse params_as_json:', taskGeneratingToolCall.params_as_json, error);
+        }
+      }
+
+
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -181,13 +224,8 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
     return new Date(unixSeconds * 1000).toLocaleString();
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 4,
-      maximumFractionDigits: 4,
-    }).format(price);
+  const formatDuration = (ms: number) => {
+    return `${(ms / 1000).toFixed(1)}s`;
   };
 
   return (
@@ -218,7 +256,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                   size="sm"
                   onClick={() => setShowTranscriptHandler(true)}
                 >
-                  Generate Config
+                  Generate AI Agent Code
                 </Button>
                 <Button
                   variant="ghost"
@@ -307,7 +345,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                   {/* Analysis Summary */}
                   {data.analysis && (
                     <div className="bg-dark-400 rounded-lg p-2">
-                      <h3 className="text-sm font-medium text-white mb-2">Transcript Summary</h3>
+                      <h3 className="text-sm font-medium text-white mb-2">Analysis</h3>
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="text-gray-400 text-sm">Status:</span>
@@ -321,52 +359,41 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                             {data.analysis.call_successful}
                           </span>
                         </div>
-                        <p className="text-sm text-white">{data.analysis.transcript_summary}</p>
-                      </div>
-                    </div>
-                  )}
+                        
+                        {/* Transcript Summary */}
+                        <div className="bg-dark-surface/50 p-2 rounded">
+                          <h4 className="text-sm font-medium text-white mb-1">Transcript Summary</h4>
+                          <p className="text-sm text-gray-300">{data.analysis.transcript_summary}</p>
+                        </div>
 
-                  {/* LLM Usage Summary - Now Collapsible */}
-                  {data.transcript.some(entry => entry.llm_usage?.model_usage) && (
-                    <div className="bg-dark-400 rounded-lg overflow-hidden">
-                      <button
-                        onClick={() => setShowLLMUsage(!showLLMUsage)}
-                        className="w-full p-2 flex items-center justify-between text-white hover:bg-dark-500 transition-colors"
-                      >
-                        <span className="text-sm font-medium">LLM Usages</span>
-                        {showLLMUsage ? (
-                          <ChevronUpIcon className="h-2 w-2" />
-                        ) : (
-                          <ChevronDownIcon className="h-2 w-2" />
-                        )}
-                      </button>
-                      
-                      {showLLMUsage && (
-                        <div className="p-2 space-y-2 border-t border-dark-border">
-                          {data.transcript
-                            .filter(entry => entry.llm_usage?.model_usage)
-                            .map((entry, index) => (
-                              Object.entries(entry.llm_usage!.model_usage!).map(([model, usage]) => (
-                                <div key={`${index}-${model}`} className="border-b border-dark-border last:border-0 pb-2 last:pb-0">
-                                  <div className="text-sm font-medium text-secondary-600">{model}</div>
-                                  <div className="grid grid-cols-2 gap-2 mt-1 text-xs">
-                                    {usage.input && (
-                                      <div className="text-gray-300">
-                                        Input: {usage.input.tokens} tokens ({formatPrice(usage.input.price)})
-                                      </div>
-                                    )}
-                                    {usage.output_total && (
-                                      <div className="text-gray-300">
-                                        Output: {usage.output_total.tokens} tokens ({formatPrice(usage.output_total.price)})
+                        {/* Tool Results */}
+                        {data.transcript.map((entry, index) => (
+                          entry.tool_results && entry.tool_results.length > 0 && (
+                            <div key={index} className="bg-dark-surface/50 p-2 rounded mt-2">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Wrench className="h-2 w-2 text-secondary-600" />
+                                <h4 className="text-sm font-medium text-white">Tool Results</h4>
+                              </div>
+                              <div className="space-y-2">
+                                {entry.tool_results.map((tool, toolIndex) => (
+                                  <div key={toolIndex} className="border-t border-dark-border pt-2 first:border-t-0 first:pt-0">
+                                    <div className="text-sm font-medium text-gray-300">{tool.tool_name}</div>
+                                    <div className="text-sm text-gray-400 mt-1">{tool.result_value}</div>
+                                    {tool.params_as_json && (
+                                      <div className="bg-dark-400/50 p-2 rounded mt-1">
+                                        <div className="text-xs text-gray-400">Parameters:</div>
+                                        <pre className="text-xs text-gray-300 mt-1 overflow-x-auto">
+                                          {JSON.stringify(tool.params_as_json, null, 2)}
+                                        </pre>
                                       </div>
                                     )}
                                   </div>
-                                </div>
-                              ))
-                            ))
-                          }
-                        </div>
-                      )}
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -374,7 +401,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                   <div className="bg-dark-400 rounded-lg overflow-hidden">
                     <button
                       onClick={() => setShowTranscript(!showTranscript)}
-                      className="w-full p-2 flex items-center justify-between text-white hover:bg-dark-500 transition-colors"
+                      className="w-full p-2 flex items-center justify-between text-white hover:bg-dark-500 bg-dark-400 transition-colors"
                     >
                       <span className="text-sm font-medium">Conversation Transcript</span>
                       {showTranscript ? (
@@ -396,7 +423,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                             <div
                               className={`max-w-[70%] rounded-lg p-3 ${
                                 entry.role === 'agent'
-                                  ? 'bg-primary-500/20 text-white'
+                                  ? 'bg-primary-500/40 text-white'
                                   : 'bg-dark-surface text-white'
                               }`}
                             >
@@ -410,19 +437,24 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                               </div>
                               <p className="text-sm">{entry.message}</p>
 
-                              {/* Tool Calls */}
-                              {entry.tool_calls && entry.tool_calls.length > 0 && (
+                              {/* LLM Usage */}
+                              {entry.llm_usage?.model_usage && (
                                 <div className="mt-2 pt-2 border-t border-dark-border">
                                   <div className="flex items-center gap-1 text-xs text-gray-400 mb-1">
-                                    <WrenchScrewdriverIcon className="h-3 w-3" />
-                                    <span>Tool Calls</span>
+                                    <SparklesIcon className="h-2 w-2" />
+                                    <span>LLM Usage</span>
                                   </div>
-                                  {entry.tool_calls.map((tool, idx) => (
+                                  {Object.entries(entry.llm_usage.model_usage).map(([model, usage], idx) => (
                                     <div key={idx} className="text-xs text-gray-300 mt-1">
-                                      <span className="text-primary-400">{tool.name}</span>
-                                      {tool.output && (
-                                        <span className="ml-1">→ {JSON.stringify(tool.output)}</span>
-                                      )}
+                                      <div className="text-primary-400">{model}</div>
+                                      <div className="grid grid-cols-2 gap-2 mt-0.5">
+                                        {usage.input && (
+                                          <div>Input: {usage.input.tokens} tokens (${usage.input.price.toFixed(4)})</div>
+                                        )}
+                                        {usage.output_total && (
+                                          <div>Output: {usage.output_total.tokens} tokens (${usage.output_total.price.toFixed(4)})</div>
+                                        )}
+                                      </div>
                                     </div>
                                   ))}
                                 </div>
@@ -439,11 +471,13 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           </motion.div>
         </motion.div>
       )}
-
+      
       <TranscriptHandler
         isVisible={showTranscriptHandler}
         onClose={() => setShowTranscriptHandler(false)}
         conversationId={conversationId}
+        transcript={transcript}
+        taskData={taskData || ''}
       />
     </AnimatePresence>
   );
