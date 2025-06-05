@@ -30,10 +30,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<string>('');
-  const [messages, setMessages] = useState<Message[]>([]);
   const [taskData, setTaskData] = useState<any>(null);
 
-  const handleTaskGenerator = async (input: any) => {
+  const handleTaskGenerator = async (input: any): Promise<void> => {
     try {
       console.log('Simulating task generation for input:', input);
       await new Promise((resolve) => setTimeout(resolve, 500)); // simulate network delay
@@ -58,7 +57,6 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       };
 
       setTaskData(generatedTask);
-      return generatedTask;
     } catch (error) {
       console.error('Task Generator error:', error);
       throw error;
@@ -79,14 +77,13 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     },
     onMessage: message => {
       console.log(message);
-      const newMessage = {
+      const newMessage: Message = {
         id: Math.random().toString(36).substr(2, 9),
         role: message.source === 'ai' ? 'assistant' : 'user',
         content: message.message,
         timestamp: Date.now()
       };
       
-      setMessages(prev => [...prev, newMessage]);
       setTranscript(prev => prev + '\n' + message.message);
       onMessage(newMessage);
     }
@@ -106,7 +103,6 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         }
       });
       setConversationId(sessionId);
-      setMessages([]);
       setTranscript('');
       setTaskData(null);
       console.log('ConversationID: ', sessionId);
@@ -149,7 +145,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
           <motion.div
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
-            exit={{ scale: 0.9 }}
+            exit={{ scale:  0.9 }}
             className="relative bg-dark-surface/80 backdrop-blur-md p-4 border border-dark-border rounded-xl shadow-xl w-[300px]"
           >
             <button
@@ -280,13 +276,11 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
             </div>
           </motion.div>
 
-          {showAnalysis && taskData && (
+          {showAnalysis && conversationId && (
             <ConversationAnalysis
               isVisible={showAnalysis}
               onClose={() => setShowAnalysis(false)}
-              conversationId={conversationId || ''}
-              transcript={transcript}
-              taskData={taskData}
+              conversationId={conversationId}
             />
           )}
         </motion.div>
