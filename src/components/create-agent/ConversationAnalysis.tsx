@@ -185,32 +185,24 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         setTranscript(fullTranscript);
 
         // Extract task data from tools array
-        const taskEntry = transcriptData.transcript.find((entry: TranscriptEntry) => 
-          entry.tools?.some(tool => 
-            tool.tool_name === 'task_generator' && 
-            tool.params_as_json
-          )
-        );
+     const taskGeneratingToolCall = transcriptData.transcript
+  .flatMap((entry: TranscriptEntry) => entry.tool_calls || [])
+  .find(toolCall => toolCall.name === 'task_generator' && toolCall.params_as_json);
 
-        //console.log ('param_task_generator:',   tool.params_as_json);
-        
-        if (taskEntry?.tools) {
-          const taskTool = taskEntry.tools.find(tool => tool.type === 'client');
-          if (taskTool && taskTool.params_as_json) {
-            try {
-              const params = typeof taskTool.params_as_json === 'object' 
-                ? JSON.parse(taskTool.params_as_json)
-                : taskTool.params_as_json;
-              
-              if (params && params.task) {
-                console.log('Task found:', params.task);
-                setTaskData(params.task);
-              }
-            } catch (error) {
-              console.error('Error parsing task params:', error);
-            }
-          }
-        }
+if (taskGeneratingToolCall && taskGeneratingToolCall.params_as_json) {
+  try {
+    const params = JSON.parse(taskGeneratingToolCall.params_as_json); // <-- MUST PARSE here!
+    if (params && typeof params.task === 'string') {
+      console.log('Task found:', params.task);
+      setTaskData(params.task);
+    } else {
+      console.warn('Task property not found or not a string in params_as_json of task_generator tool call:', params);
+    }
+  } catch (error) {
+    console.error('Failed to parse params_as_json:', taskGeneratingToolCall.params_as_json, error);
+  }
+}
+
 
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
