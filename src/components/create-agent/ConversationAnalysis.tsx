@@ -513,7 +513,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                 <div className="mt-2 pt-2 border-t border-dark-border">
                                   <div className="flex items-center gap-1 text-xs text-gray-400 mb-1">
                                     <Wrench className="h-2 w-2" />
-                                    <span>Tool Calls</span>
+                                    <span>Tool Calls A</span>
                                   </div>
                                   {entry.tool_calls.map((tool, idx) => (
                                     <div key={idx} className="text-xs text-gray-300 mt-1">
@@ -521,7 +521,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                       {tool.params_as_json && (
                                         <div className="bg-dark-400/50 p-1 rounded mt-1">
                                           <pre className="text-xs text-gray-300 overflow-x-auto">
-                                            param_as_json
+                                            param_as_json: 
                                             {JSON.stringify(tool.params_as_json, null, 2)}
                                           </pre>
                                         </div>
