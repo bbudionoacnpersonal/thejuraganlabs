@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
-import { XMarkIcon, ChatBubbleLeftRightIcon, BeakerIcon, ClockIcon, SparklesIcon, DocumentTextIcon, LanguageIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ChatBubbleLeftRightIcon, BeakerIcon, ClockIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { Wrench } from 'lucide-react';
 import TranscriptHandler from './TranscriptHandler';
 
@@ -155,7 +155,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
   const [showTranscript, setShowTranscript] = useState(false);
   const [showTranscriptHandler, setShowTranscriptHandler] = useState(false);
   const [transcript, setTranscript] = useState<string>('');
-  const [taskData, setTaskData] = useState<string | null>(null);
+  const [taskData, setTaskData] = useState<any>(null);
 
   useEffect(() => {
     if (!isVisible || !conversationId) return;
@@ -184,24 +184,23 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           .join('\n');
         setTranscript(fullTranscript);
 
-        // Extract task data from tools array
-       const taskGeneratingToolCall = transcriptData.transcript
-        .flatMap((entry: TranscriptEntry) => entry.tool_calls || [])
-        .find(toolCall => toolCall.name === 'task_generator' && toolCall.params_as_json);
+        const taskGeneratingToolCall = transcriptData.transcript
+          .flatMap((entry: TranscriptEntry) => entry.tool_calls || [])
+          .find((toolCall: { name: string; params_as_json?: any }) => toolCall.name === 'task_generator' && toolCall.params_as_json);
       
-      if (taskGeneratingToolCall && taskGeneratingToolCall.params_as_json) {
-        try {
-          const params = JSON.parse(typeof taskGeneratingToolCall.params_as_json === 'string' ? taskGeneratingToolCall.params_as_json : JSON.stringify(taskGeneratingToolCall.params_as_json));
-          if (params && typeof params.task === 'string') {
-            console.log('Task found:', params.task);
-            setTaskData(params.task);
-          } else {
-            console.warn('Task property not found or not a string in params_as_json of task_generator tool call:', params);
+        if (taskGeneratingToolCall && taskGeneratingToolCall.params_as_json) {
+          try {
+            const params = JSON.parse(typeof taskGeneratingToolCall.params_as_json === 'string' ? taskGeneratingToolCall.params_as_json : JSON.stringify(taskGeneratingToolCall.params_as_json));
+            if (params && typeof params.task === 'string') {
+              console.log('Task found:', params.task);
+              setTaskData(params.task);
+            } else {
+              console.warn('Task property not found or not a string in params_as_json of task_generator tool call:', params);
+            }
+          } catch (error) {
+            console.error('Failed to parse params_as_json:', taskGeneratingToolCall.params_as_json, error);
           }
-        } catch (error) {
-          console.error('Failed to parse params_as_json:', taskGeneratingToolCall.params_as_json, error);
         }
-      }
 
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -309,7 +308,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
 
                     <div className="bg-dark-400 rounded-lg p-2">
                       <div className="flex items-center gap-2 text-gray-400 mb-2">
-                        <LanguageIcon className="h-2 w-2" />
+                        <SparklesIcon className="h-2 w-2" />
                         <span className="text-sm">Language</span>
                       </div>
                       <p className="text-sm font-semibold text-white">
@@ -470,7 +469,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
       <TranscriptHandler
         isVisible={showTranscriptHandler}
         onClose={() => setShowTranscriptHandler(false)}
-        conversationId={conversationId}
         transcript={transcript}
         taskData={taskData || ''}
       />
