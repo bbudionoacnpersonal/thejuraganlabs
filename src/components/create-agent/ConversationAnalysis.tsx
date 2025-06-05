@@ -542,9 +542,9 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                           <div className="text-xs text-gray-500">Parameters (from params_as_json):</div>
                                           <pre className="text-xs text-gray-300 overflow-x-auto mt-1 whitespace-pre-wrap break-all">
                                             {JSON.stringify(tool.params_as_json, null, 2)}
-                                            {if tool.tool_name === "task_generator"(
+                                            if tool.tool_name === "task_generator"(
                                                   setTaskData(params.task);
-                                            )};
+                                            )
                                           </pre>
                                         </div>
                                       )}
