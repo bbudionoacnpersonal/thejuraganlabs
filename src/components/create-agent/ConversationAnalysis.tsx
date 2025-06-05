@@ -340,7 +340,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                           <div key={index} className="bg-dark-surface/50 p-2 rounded">
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
-                                <Wrench className="h-3 w-3 text-secondary-600" />
+                                <Wrench className="h-2 w-2 text-secondary-600" />
                                 <span className="text-sm font-medium text-white">{tool.name}</span>
                               </div>
                               {tool.status && (
