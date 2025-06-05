@@ -252,4 +252,67 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                   {/* Tool Calls Section */}
                   {data.tool_calls?.length > 0 && (
                     <div className="bg-dark-400 rounded-lg p-2">
-                      <h3 className="text-sm font-medium text
+                      <h3 className="text-sm font-medium text-white mb-2">Tool Calls</h3>
+                      {data.tool_calls.map((tool, index) => (
+                        <div key={index} className="bg-dark-surface/50 p-2 rounded mt-2">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <WrenchScrewdriverIcon className="h-3 w-3 text-secondary-600" />
+                              <span className="text-sm font-medium text-white">{tool.name}</span>
+                            </div>
+                            {tool.status && (
+                              <span className={`text-xs px-2 py-0.5 rounded ${
+                                tool.status === 'success' ? 'bg-success-500/20 text-success-300' :
+                                tool.status === 'error' ? 'bg-error-500/20 text-error-300' :
+                                'bg-warning-500/20 text-warning-300'
+                              }`}>
+                                {tool.status}
+                              </span>
+                            )}
+                          </div>
+                          <div className="space-y-1 text-sm">
+                            <div className="bg-dark-400/50 p-2 rounded">
+                              <div className="text-xs text-gray-400">Arguments:</div>
+                              <pre className="text-xs text-gray-300 overflow-x-auto mt-1">
+                                {JSON.stringify(tool.arguments, null, 2)}
+                              </pre>
+                            </div>
+                            {tool.output && (
+                              <div className="bg-dark-400/50 p-2 rounded">
+                                <div className="text-xs text-gray-400">Output:</div>
+                                <pre className="text-xs text-gray-300 overflow-x-auto mt-1">
+                                  {JSON.stringify(tool.output, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Analysis Summary */}
+                  {/* .... */}
+                  
+                  {/* Transcript and Tool Results (collapsed) */}
+                  {/* .... */}
+                </div>
+              ) : null}
+            </div>
+
+            {/* Transcript Handler */}
+            <TranscriptHandler
+              isVisible={showTranscriptHandler}
+              onClose={() => setShowTranscriptHandler(false)}
+              conversationId={conversationId}
+              transcript={transcript}
+              taskData={taskData}
+            />
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+export default ConversationAnalysis;
