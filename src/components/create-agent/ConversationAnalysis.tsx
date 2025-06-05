@@ -409,41 +409,41 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                         </div>
 
                       {/* Tool Results */}
-{data.transcript.map((entry, index) => (
-  entry.tool_results && entry.tool_results.length > 0 && (
-    <div key={index} className="bg-dark-surface/50 p-2 rounded mt-2">
-      <div className="flex items-center gap-2 mb-2">
-        <Wrench className="h-2 w-2 text-secondary-600" />
-        <h4 className="text-sm font-medium text-white">Tool Results</h4>
-      </div>
-      <div className="space-y-2">
-        {entry.tool_results.map((tool, toolIndex) => {
-          let parsedParams = null;
-          try {
-            parsedParams = JSON.parse(tool.params_as_json);
-          } catch (error) {
-            console.error('Failed to parse params_as_json:', tool.params_as_json);
-          }
-
-          return (
-            <div key={toolIndex} className="border-t border-dark-border pt-2 first:border-t-0 first:pt-0">
-              <div className="text-sm font-medium text-gray-300">{tool.tool_name}</div>
-              <div className="text-sm text-gray-400 mt-1">{tool.request_id}</div>
-              {parsedParams && (
-                <div className="bg-dark-400/50 p-2 rounded mt-1">
-                  <div className="text-xs text-gray-400">Parameters:</div>
-                  <pre className="text-xs text-gray-300 mt-1 overflow-x-auto">
-                    {JSON.stringify(parsedParams, null, 2)}
-                  </pre>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  )
-))}
+                      {data.transcript.map((entry, index) => (
+                        entry.tool_results && entry.tool_results.length > 0 && (
+                          <div key={index} className="bg-dark-surface/50 p-2 rounded mt-2">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Wrench className="h-2 w-2 text-secondary-600" />
+                              <h4 className="text-sm font-medium text-white">Tool Results</h4>
+                            </div>
+                            <div className="space-y-2">
+                              {entry.tool_results.map((tool, toolIndex) => {
+                                let parsedParams = null;
+                                try {
+                                  parsedParams = JSON.parse(tool.params_as_json);
+                                } catch (error) {
+                                  console.error('Failed to parse params_as_json:', tool.params_as_json);
+                                }
+                      
+                                return (
+                                  <div key={toolIndex} className="border-t border-dark-border pt-2 first:border-t-0 first:pt-0">
+                                    <div className="text-sm font-medium text-gray-300">{tool.tool_name}</div>
+                                    <div className="text-sm text-gray-400 mt-1">{tool.request_id}</div>
+                                    {parsedParams && (
+                                      <div className="bg-dark-400/50 p-2 rounded mt-1">
+                                        <div className="text-xs text-gray-400">Parameters:</div>
+                                        <pre className="text-xs text-gray-300 mt-1 overflow-x-auto">
+                                          {JSON.stringify(parsedParams, null, 2)}
+                                        </pre>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )
+                      ))}
 
                        
                       </div>
