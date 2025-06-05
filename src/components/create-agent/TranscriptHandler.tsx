@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
-import { XMarkIcon, DocumentTextIcon,ChevronUpIcon, ChevronDownIcon  } from '@heroicons/react/24/outline';
+import { XMarkIcon, DocumentTextIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 
 interface TranscriptHandlerProps {
   isVisible: boolean;
@@ -21,31 +21,29 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [config, setConfig] = useState<any>(null);
-   const [isInputParamsExpanded, setIsInputParamsExpanded] = useState(true);
-
+  const [isInputParamsExpanded, setIsInputParamsExpanded] = useState(true);
 
   const handleSubmitTranscript = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Submit to autogen config generator with transcript and task
-      const configResponse = await fetch('https://autogen-json-generator-432934902994.asia-southeast2.run.app/generate-autogen-config/', {
+      const response = await fetch('https://autogen-json-generator-432934902994.asia-southeast2.run.app/generate-autogen-config/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           prompt: transcript,
-          task: taskData
+          Task: taskData
         })
       });
 
-      if (!configResponse.ok) {
+      if (!response.ok) {
         throw new Error('Failed to generate autogen config');
       }
 
-      const configData = await configResponse.json();
+      const configData = await response.json();
       setConfig(configData);
 
     } catch (err) {
@@ -86,7 +84,6 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
               </Button>
             </div>
 
-            
             {/* Content */}
             <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(80vh-8rem)]">
               {error && (
@@ -95,7 +92,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                 </div>
               )}
 
-             {/* Input Parameters Preview */}
+              {/* Input Parameters Preview */}
               <div className="bg-dark-400 rounded-lg">
                 <button
                   onClick={() => setIsInputParamsExpanded(!isInputParamsExpanded)}
@@ -120,7 +117,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                     <div>
                       <div className="text-xs text-gray-400">Task:</div>
                       <pre className="text-sm text-white bg-dark-surface p-2 rounded mt-1 overflow-x-auto">
-                        {JSON.stringify(taskData, null, 2)}
+                        {taskData}
                       </pre>
                     </div>
                   </div>
