@@ -513,7 +513,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                 <div className="mt-2 pt-2 border-t border-dark-border">
                                   <div className="flex items-center gap-1 text-xs text-gray-400 mb-1">
                                     <Wrench className="h-2 w-2" />
-                                    <span>Tool Calls A</span>
+                                    <span>Tool Calls</span>
                                   </div>
                                   {entry.tool_calls.map((tool, idx) => (
                                     <div key={idx} className="text-xs text-gray-300 mt-1">
