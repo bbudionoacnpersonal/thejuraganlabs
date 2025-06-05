@@ -28,16 +28,18 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
     setError(null);
 
     try {
-      const response = await fetch('https://autogen-json-generator-432934902994.asia-southeast2.run.app/generate-autogen-config/', {
+      const options = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           prompt: transcript,
-          Task: taskData
+          task: taskData
         })
-      });
+      };
+
+      const response = await fetch('https://autogen-json-generator-432934902994.asia-southeast2.run.app/generate-autogen-config/', options);
 
       if (!response.ok) {
         throw new Error('Failed to generate autogen config');
