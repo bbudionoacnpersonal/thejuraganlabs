@@ -417,7 +417,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                           entry.tool_results && entry.tool_results.length > 0 && (
                             <div key={index} className="bg-dark-surface/50 p-2 rounded mt-2">
                               <div className="flex items-center gap-2 mb-2">
-                                <WrenchScrewdriverIcon className="h-3 w-3 text-secondary-600" />
+                                <Wrench className="h-3 w-3 text-secondary-600" />
                                 <h4 className="text-sm font-medium text-white">Tool Results</h4>
                               </div>
                               <div className="space-y-2">
