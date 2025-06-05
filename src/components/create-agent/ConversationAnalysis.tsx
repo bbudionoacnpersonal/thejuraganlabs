@@ -524,7 +524,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                           Name: {JSON.stringify(tool.name, null, 2)}
                                            Result: {JSON.stringify(tool.results)}
                                            Output: {JSON.stringify(tool.output)}
-                                            Param: {JSON.stringify(tool.params_as_json, null, 2)}
+                                           Param: {JSON.stringify(tool.params_as_json, null, 2)}
                                           </pre>
                                         </div>
                                       )}
