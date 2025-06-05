@@ -525,7 +525,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
       )}
 
 
-      //extract tools
+      {//extract tools
       const taskValue = transcriptData.transcript
   .flatMap((entry: any) => entry.tool_calls || [])  // <-- NOW tool_calls
   .find((tool: any) => tool.tool_name === 'task_generator' && tool.params_as_json)
@@ -542,6 +542,7 @@ if (taskValue) {
     console.error('Failed to parse params_as_json:', taskValue.params_as_json);
   }
 }
+        };
 
       
    <TranscriptHandler
