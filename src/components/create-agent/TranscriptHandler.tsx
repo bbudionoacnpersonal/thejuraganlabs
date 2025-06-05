@@ -143,7 +143,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                   <Button
                     onClick={handleSubmitTranscript}
                     isLoading={isLoading}
-                    leftIcon= {<FileJson className="h-2 w-2"/>}
+                    leftIcon= {<FileJson className="h-4 w-4"/>}
                   >
                     Generate AI Agent Code
                   </Button>
