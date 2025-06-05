@@ -418,6 +418,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                       <p className="text-xs text-gray-500 mb-1">From entry at {formatTime(entry.time_in_call_secs)} ({entry.role})</p>
                                       <div className="space-y-2">
                                         {entry.tool_results.map((toolResult, toolIndex) => {
+                                      
                                           // Corrected: toolResult.params_as_json is already an object
                                           const params = JSON.stringify(toolResult.params_as_json,null,2); 
                                           return (
