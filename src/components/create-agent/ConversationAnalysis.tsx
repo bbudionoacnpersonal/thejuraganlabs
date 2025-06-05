@@ -142,13 +142,6 @@ interface ConversationData {
       json_schema?: Record<string, any>;
     }>;
   };
-  tool_calls?: Array<{
-    name: string;
-    arguments: Record<string, any>;
-    output?: any;
-    duration_ms?: number;
-    status?: string;
-  }>;
 }
 
 const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
@@ -162,7 +155,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
   const [showTranscript, setShowTranscript] = useState(false);
   const [showTranscriptHandler, setShowTranscriptHandler] = useState(false);
   const [transcript, setTranscript] = useState<string>('');
-  const [taskData, setTaskData] = useState<any>(null);
+  const [taskData, setTaskData] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isVisible || !conversationId) return;
@@ -355,7 +348,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                     </div>
                   </div>
 
-
                   {/* Analysis Summary */}
                   {data.analysis && (
                     <div className="bg-dark-400 rounded-lg p-2">
@@ -473,34 +465,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                   ))}
                                 </div>
                               )}
-
-                              {/* Tool Calls */}
-                              {entry.tool_calls && entry.tool_calls.length > 0 && (
-                                <div className="mt-2 pt-2 border-t border-dark-border">
-                                  <div className="flex items-center gap-1 text-xs text-gray-400 mb-1">
-                                    <Wrench className="h-2 w-2" />
-                                    <span>Tool Calls</span>
-                                  </div>
-                                  {entry.tool_calls.map((tool, idx) => (
-                                    <div key={idx} className="text-xs text-gray-300 mt-1">
-                                      <span className="text-primary-400">{tool.name}</span>
-                                      {tool.params_as_json && (
-                                        <div className="bg-dark-400/50 p-1 rounded mt-1">
-                                          <pre className="text-xs text-gray-300 overflow-x-auto">
-                                            {JSON.stringify(tool.params_as_json, null, 2)}
-                                          </pre>
-                                        </div>
-                                      )}
-                                      {tool.output && (
-                                        <div className="mt-1">
-                                          <span className="text-gray-400">Output:</span>
-                                          <span className="ml-1 text-gray-300">{JSON.stringify(tool.output)}</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                           </div>
                         ))}
@@ -519,7 +483,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         onClose={() => setShowTranscriptHandler(false)}
         conversationId={conversationId}
         transcript={transcript}
-        taskData={taskData}
+        taskData={taskData || ''}
       />
     </AnimatePresence>
   );
