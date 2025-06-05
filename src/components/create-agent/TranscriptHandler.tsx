@@ -145,7 +145,6 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                     isLoading={isLoading}
                     leftIcon= {FileJson className="h-2 w-2"}
                   >
-                
                     Generate AI Agent Code
                   </Button>
                 </div>
