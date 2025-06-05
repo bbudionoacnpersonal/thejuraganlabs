@@ -187,11 +187,11 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         // Extract task data from tools array
        const taskGeneratingToolCall = transcriptData.transcript
         .flatMap((entry: TranscriptEntry) => entry.tool_calls || [])
-        .find(toolCall => toolCall.tool_name === 'task_generator' && toolCall.params_as_json);
+        .find(toolCall => toolCall.name === 'task_generator' && toolCall.params_as_json);
       
       if (taskGeneratingToolCall && taskGeneratingToolCall.params_as_json) {
         try {
-          const params = JSON.parse(taskGeneratingToolCall.params_as_json); // <-- MUST PARSE here!
+          const params = JSON.parse(typeof taskGeneratingToolCall.params_as_json === 'string' ? taskGeneratingToolCall.params_as_json : JSON.stringify(taskGeneratingToolCall.params_as_json));
           if (params && typeof params.task === 'string') {
             console.log('Task found:', params.task);
             setTaskData(params.task);
@@ -202,7 +202,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           console.error('Failed to parse params_as_json:', taskGeneratingToolCall.params_as_json, error);
         }
       }
-
 
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -222,10 +221,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
 
   const formatDate = (unixSeconds: number) => {
     return new Date(unixSeconds * 1000).toLocaleString();
-  };
-
-  const formatDuration = (ms: number) => {
-    return `${(ms / 1000).toFixed(1)}s`;
   };
 
   return (

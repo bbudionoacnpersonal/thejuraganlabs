@@ -15,7 +15,6 @@ interface TranscriptHandlerProps {
 const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
   isVisible,
   onClose,
-  conversationId,
   transcript,
   taskData
 }) => {
@@ -144,9 +143,8 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                     onClick={handleSubmitTranscript}
                     isLoading={isLoading}
                     size="md"
-                    fullWidth="true"
                     className="w-[70%]"
-                    leftIcon= {<FileJson className="h-3 w-3 inline-block"/>}
+                    leftIcon={<FileJson className="h-3 w-3 inline-block"/>}
                   >
                     Generate AI Agent s JSON Code
                   </Button>
