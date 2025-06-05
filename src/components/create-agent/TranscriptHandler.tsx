@@ -145,7 +145,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                     fullWidth="true"
                     leftIcon
                   >
-                  <ChevronUpIcon className="h-2 w-2 text-gray-400" />
+                  <Wrench className="h-2 w-2 text-gray-400" />
                     Generate AI Agent Code
                   </Button>
                 </div>
