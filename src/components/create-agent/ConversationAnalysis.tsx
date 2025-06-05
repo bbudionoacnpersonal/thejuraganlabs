@@ -521,7 +521,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                               {entry.tool_calls && entry.tool_calls.length > 0 && (
                                 <div className="mt-2 pt-2 border-t border-dark-border/50"> {/* Softer border */}
                                   <div className="flex items-center gap-1 text-xs text-gray-400 mb-1">
-                                    <Wrench className="h-3 w-3" /> {/* Adjusted icon size */}
+                                    <Wrench className="h-2 w-2" /> {/* Adjusted icon size */}
                                     <span>Tool Calls in this turn</span> {/* Clarified */}
                                   </div>
                                   {entry.tool_calls.map((tool, idx) => (
