@@ -185,23 +185,23 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         setTranscript(fullTranscript);
 
         // Extract task data from tools array
-     const taskGeneratingToolCall = transcriptData.transcript
-  .flatMap((entry: TranscriptEntry) => entry.tool_calls || [])
-  .find(toolCall => toolCall.name === 'task_generator' && toolCall.params_as_json);
-
-if (taskGeneratingToolCall && taskGeneratingToolCall.params_as_json) {
-  try {
-    const params = JSON.parse(taskGeneratingToolCall.params_as_json); // <-- MUST PARSE here!
-    if (params && typeof params.task === 'string') {
-      console.log('Task found:', params.task);
-      setTaskData(params.task);
-    } else {
-      console.warn('Task property not found or not a string in params_as_json of task_generator tool call:', params);
-    }
-  } catch (error) {
-    console.error('Failed to parse params_as_json:', taskGeneratingToolCall.params_as_json, error);
-  }
-}
+       const taskGeneratingToolCall = transcriptData.transcript
+        .flatMap((entry: TranscriptEntry) => entry.tool_calls || [])
+        .find(toolCall => toolCall.name === 'task_generator' && toolCall.params_as_json);
+      
+      if (taskGeneratingToolCall && taskGeneratingToolCall.params_as_json) {
+        try {
+          const params = JSON.parse(taskGeneratingToolCall.params_as_json); // <-- MUST PARSE here!
+          if (params && typeof params.task === 'string') {
+            console.log('Task found:', params.task);
+            setTaskData(params.task);
+          } else {
+            console.warn('Task property not found or not a string in params_as_json of task_generator tool call:', params);
+          }
+        } catch (error) {
+          console.error('Failed to parse params_as_json:', taskGeneratingToolCall.params_as_json, error);
+        }
+      }
 
 
       } catch (err) {
