@@ -42,7 +42,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   ...restProps 
 }, ref) => {
 const baseClasses = 'font-medium rounded-md transition-all duration-200 flex flex-row items-center justify-center focus:outline-none focus:ring-1 focus:ring-offset-1 text-white';
-  
+
   const variantClasses = {
     primary: 'bg-primary-400 hover:bg-primary-500 focus:ring-primary-400',
     secondary: 'bg-secondary-600 hover:bg-secondary-600 focus:ring-secondary-600',
