@@ -419,7 +419,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                       <div className="space-y-2">
                                         {entry.tool_results.map((toolResult, toolIndex) => {
                                           // Corrected: toolResult.params_as_json is already an object
-                                          const params = toolResult.params_as_json; 
+                                          const params = JSON.stringify(toolResult.params_as_json,null,2); 
                                           return (
                                             <div key={toolIndex} className="border-t border-dark-border/50 pt-2 first:border-t-0 first:pt-0">
                                               <div className="text-sm font-medium text-gray-300">{toolResult.tool_name}</div>
