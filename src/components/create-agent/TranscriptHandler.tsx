@@ -142,6 +142,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                   <Button
                     onClick={handleSubmitTranscript}
                     isLoading={isLoading}
+                    className="items-center"
                   >
                     Generate AI Agent Code
                   </Button>
