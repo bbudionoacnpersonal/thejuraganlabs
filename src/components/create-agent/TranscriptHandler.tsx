@@ -21,7 +21,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [config, setConfig] = useState<any>(null);
-    const [isInputParamsExpanded, setIsInputParamsExpanded] = useState(true);
+   const [isInputParamsExpanded, setIsInputParamsExpanded] = useState(true);
 
 
   const handleSubmitTranscript = async () => {
