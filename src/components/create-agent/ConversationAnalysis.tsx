@@ -462,9 +462,9 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                     >
                       <span className="text-sm font-medium">Conversation Transcript</span>
                       {showTranscript ? (
-                        <ChevronUpIcon className="h-2 w-2" /> {/* Adjusted icon size */}
+                        <ChevronUpIcon className="h-2 w-2" /> 
                       ) : (
-                        <ChevronDownIcon className="h-2 w-2" /> {/* Adjusted icon size */}
+                        <ChevronDownIcon className="h-2 w-2" /> 
                       )}
                     </button>
                     
