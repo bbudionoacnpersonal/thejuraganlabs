@@ -29,34 +29,11 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [transcript, setTranscript] = useState<string>('');
-  const [taskData, setTaskData] = useState<any>(null);
 
   const handleTaskGenerator = async (input: any): Promise<void> => {
     try {
       console.log('Simulating task generation for input:', input);
-      await new Promise((resolve) => setTimeout(resolve, 500)); // simulate network delay
-      
-      const generatedTask = {
-        task: `Create an AI agent team for ${input.task}`,
-        components: [
-          {
-            name: 'Natural Language Processing',
-            purpose: 'Analyze and understand user input'
-          },
-          {
-            name: 'Classification System',
-            purpose: 'Categorize and prioritize tasks'
-          },
-          {
-            name: 'Routing Logic',
-            purpose: 'Direct tasks to appropriate handlers'
-          }
-        ],
-        description: 'AI agent team configuration generated based on user requirements'
-      };
-
-      setTaskData(generatedTask);
+      await new Promise((resolve) => setTimeout(resolve, 500));
     } catch (error) {
       console.error('Task Generator error:', error);
       throw error;
@@ -84,7 +61,6 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         timestamp: Date.now()
       };
       
-      setTranscript(prev => prev + '\n' + message.message);
       onMessage(newMessage);
     }
   });
@@ -103,8 +79,6 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         }
       });
       setConversationId(sessionId);
-      setTranscript('');
-      setTaskData(null);
       console.log('ConversationID: ', sessionId);
     } catch (err) {
       setError("Failed to start conversation");
@@ -145,7 +119,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
           <motion.div
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
-            exit={{ scale:  0.9 }}
+            exit={{ scale: 0.9 }}
             className="relative bg-dark-surface/80 backdrop-blur-md p-4 border border-dark-border rounded-xl shadow-xl w-[300px]"
           >
             <button
