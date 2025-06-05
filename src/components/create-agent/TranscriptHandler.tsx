@@ -147,7 +147,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                     fullWidth="true"
                     leftIcon= {<FileJson className="h-2 w-2 inline-block"/>}
                   >
-                    Generate AI Agent Code
+                    Generate AI Agent s JSON Code
                   </Button>
                 </div>
               )}
