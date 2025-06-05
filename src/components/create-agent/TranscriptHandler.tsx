@@ -135,7 +135,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                   </pre>
                 </div>
               ) : (
-                <div className="text-center py-8 justify-center items center">
+                <div className="text-center py-8 justify-center items-center">
                   <p className="text-gray-400 mb-4">
                     Generate Autogen configuration from the conversation transcript?
                   </p>
