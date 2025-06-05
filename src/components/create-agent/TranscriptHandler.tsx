@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import { XMarkIcon, DocumentTextIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, DocumentTextIcon, ChevronUpIcon, ChevronDownIcon } from 'lucide-reacte';
 
 interface TranscriptHandlerProps {
   isVisible: boolean;
