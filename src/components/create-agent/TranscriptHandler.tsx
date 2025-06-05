@@ -28,7 +28,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
     setError(null);
 
     try {
-      const response = await fetch(''https://autogen-json-generator-432934902994.asia-southeast2.run.app/generate-autogen-config/', {
+      const response = await fetch('https://autogen-json-generator-432934902994.asia-southeast2.run.app/generate-autogen-config/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
