@@ -143,7 +143,6 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                   <Button
                     onClick={handleSubmitTranscript}
                     isLoading={isLoading}
-                    fullWidth="true"
                     leftIcon
                   >
                   <FileJson className="h-2 w-2 text-gray-400" />
