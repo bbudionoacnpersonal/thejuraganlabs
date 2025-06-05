@@ -198,7 +198,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           const taskTool = taskEntry.tools.find(tool => tool.type === 'client');
           if (taskTool && taskTool.params_as_json) {
             try {
-              const params = typeof taskTool.params_as_json === 'string' 
+              const params = typeof taskTool.params_as_json === 'object' 
                 ? JSON.parse(taskTool.params_as_json)
                 : taskTool.params_as_json;
               
