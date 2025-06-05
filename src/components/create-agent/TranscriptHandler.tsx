@@ -35,8 +35,8 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          "prompt": transcript,
-          "task": taskData
+          prompt: transcript,
+          task: taskData
         })
       };
 
