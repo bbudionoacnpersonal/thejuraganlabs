@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
-import { XMarkIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, DocumentTextIcon,ChevronUpIcon, ChevrondownIcon  } from '@heroicons/react/24/outline';
 
 interface TranscriptHandlerProps {
   isVisible: boolean;
