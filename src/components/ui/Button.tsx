@@ -95,7 +95,7 @@ const baseClasses = 'font-medium rounded-md transition-all duration-200 flex fle
       {!isLoading && leftIcon && <span className="mr-2 inline-flex">{leftIcon}</span>}
       {/* Using motion.span for children to handle potential MotionValue children */}
       <motion.span>{children}</motion.span> 
-      {!isLoading && rightIcon && <span className="ml-2">{rightIcon}</span>}
+      {!isLoading && rightIcon && <span className="ml-2  inline-flex">{rightIcon}</span>}
     </motion.button>
   );
 });
