@@ -176,31 +176,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           .join('\n');
         setTranscript(fullTranscript);
        
-      // Extract task data from tool results
-      let parsedTaskData: any = null;
 
-      const taskGeneratorResult = transcriptData.transcript
-        .flatMap((entry: any) => entry.tool_results || [])
-        .find((tool: any) => {
-          if (tool.tool_name === 'task_generator' && tool.params_as_json) {
-            try {
-              const parsed = JSON.parse(tool.params_as_json);
-              if (parsed && typeof parsed === 'object' && parsed.task) {
-                parsedTaskData = parsed; // Save parsed version
-                return true; // Found the correct tool and task
-              }
-            } catch (error) {
-              console.error('Failed to parse params_as_json:', tool.params_as_json);
-            }
-          }
-          return false;
-        });
-      
-      if (parsedTaskData) {
-        console.log('Task data found:', parsedTaskData);
-        setTaskData(parsedTaskData); // set parsed version
-      }
-          
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -547,6 +523,26 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           </motion.div>
         </motion.div>
       )}
+
+
+      //extract tools
+      const taskValue = transcriptData.transcript
+  .flatMap((entry: any) => entry.tool_calls || [])  // <-- NOW tool_calls
+  .find((tool: any) => tool.tool_name === 'task_generator' && tool.params_as_json)
+;
+
+if (taskValue) {
+  try {
+    const parsed = JSON.parse(taskValue.params_as_json);
+    if (parsed && parsed.task) {
+      console.log('Task found:', parsed.task);
+      setTaskData(parsed.task); // <-- Only set the task string
+    }
+  } catch (error) {
+    console.error('Failed to parse params_as_json:', taskValue.params_as_json);
+  }
+}
+
       
    <TranscriptHandler
         isVisible={showTranscriptHandler}
