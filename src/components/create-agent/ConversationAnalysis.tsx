@@ -179,27 +179,27 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
       // Extract task data from tool results
       let parsedTaskData: any = null;
 
-const taskGeneratorResult = transcriptData.transcript
-  .flatMap((entry: any) => entry.tool_results || [])
-  .find((tool: any) => {
-    if (tool.tool_name === 'task_generator' && tool.params_as_json) {
-      try {
-        const parsed = JSON.parse(tool.params_as_json);
-        if (parsed && typeof parsed === 'object' && parsed.task) {
-          parsedTaskData = parsed; // Save parsed version
-          return true; // Found the correct tool and task
-        }
-      } catch (error) {
-        console.error('Failed to parse params_as_json:', tool.params_as_json);
+      const taskGeneratorResult = transcriptData.transcript
+        .flatMap((entry: any) => entry.tool_results || [])
+        .find((tool: any) => {
+          if (tool.tool_name === 'task_generator' && tool.params_as_json) {
+            try {
+              const parsed = JSON.parse(tool.params_as_json);
+              if (parsed && typeof parsed === 'object' && parsed.task) {
+                parsedTaskData = parsed; // Save parsed version
+                return true; // Found the correct tool and task
+              }
+            } catch (error) {
+              console.error('Failed to parse params_as_json:', tool.params_as_json);
+            }
+          }
+          return false;
+        });
+      
+      if (parsedTaskData) {
+        console.log('Task data found:', parsedTaskData);
+        setTaskData(parsedTaskData); // set parsed version
       }
-    }
-    return false;
-  });
-
-if (parsedTaskData) {
-  console.log('Task data found:', parsedTaskData);
-  setTaskData(parsedTaskData); // set parsed version
-}
           
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
