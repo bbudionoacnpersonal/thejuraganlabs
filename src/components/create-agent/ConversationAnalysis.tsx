@@ -521,7 +521,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                       {tool.params_as_json && (
                                         <div className="bg-dark-400/50 p-1 rounded mt-1">
                                          <pre className="text-xs text-gray-300 overflow-x-auto">
-
                                           Name: {JSON.stringify(tool.name, null, 2)}
                                            Output: {JSON.stringify(tool.output)}
                                             Param: {JSON.stringify(tool.params_as_json, null, 2)}
