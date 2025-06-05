@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
-import { XMarkIcon, ChatBubbleLeftRightIcon, BeakerIcon, ClockIcon, SparklesIcon, DocumentTextIcon, LanguageIcon, ChevronDownIcon, ChevronUpIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ChatBubbleLeftRightIcon, BeakerIcon, ClockIcon, SparklesIcon, DocumentTextIcon, LanguageIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { Wrench } from 'lucide-react';
 import TranscriptHandler from './TranscriptHandler';
 
