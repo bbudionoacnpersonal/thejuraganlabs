@@ -4,6 +4,7 @@ import { XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { useConversation } from '@elevenlabs/react';
 import ConversationAnalysis from './ConversationAnalysis';
 import { Message } from '@/types';
+import { industries, focusAreas } from '@/mockdata/industry_functions';
 
 interface VoiceSDKOverlayProps {
   isVisible: boolean;
@@ -30,9 +31,13 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
 
-  // Get user's industry and focus areas
+  // Get user's industry and focus areas from localStorage
   const userIndustry = localStorage.getItem('user_industry') || '';
   const userFocusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
+
+  // Get industry and focus area details
+  const industryDetails = industries.find(i => i.value === userIndustry);
+  const focusAreaDetails = focusAreas.filter(f => userFocusAreas.includes(f.value));
 
   const handleTaskGenerator = async (input: any): Promise<void> => {
     try {
@@ -80,11 +85,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       const sessionId = await conversation.startSession({
         dynamicVariables: {
           industry: userIndustry,
-          function_focus: userFocusAreas.join(', ')
-            'Brand management',
-        'Consumer insights',
-        'Market trend analysis',
-        'Product lifecycle management'
+          function_focus: userFocusAreas.join(', '),
+          agentConsiderations: industryDetails?.keyPrompts.agentConsiderations.join(', ') || '',
+          functionConsiderations: focusAreaDetails.map(f => f.keyConsiderations.join(', ')).join(' | ')
         },
         clientTools: {
           task_generator: handleTaskGenerator
