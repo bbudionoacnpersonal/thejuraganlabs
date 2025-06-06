@@ -10,8 +10,8 @@ export const industries = [
   { value: 'energy', label: 'Energy & Utilities' },
   { value: 'education', label: 'Education & Training' },
   { value: 'government', label: 'Government & Public Sector' },
-  { value: 'consulting', label: 'Professional Services & Consulting' }
-   { value: 'others', label: 'General Industry Services' }
+  { value: 'consulting', label: 'Professional Services & Consulting' },
+  { value: 'others', label: 'General Industry Services' }
 ];
 
 export const focusAreas = [
