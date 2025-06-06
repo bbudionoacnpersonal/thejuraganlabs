@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { useConversation } from '@elevenlabs/react';
 import ConversationAnalysis from './ConversationAnalysis';
+import ConversationFlowVisualizer from './ConversationFlowVisualizer';
 import { Message } from '@/types';
 import { industries, focusAreas } from '@/mockdata/industry_functions';
 
@@ -10,6 +11,16 @@ interface VoiceSDKOverlayProps {
   isVisible: boolean;
   onClose: () => void;
   onMessage: (message: Message) => void;
+}
+
+interface AgentFlowStep {
+  id: string;
+  type: 'user' | 'agent' | 'tool' | 'decision' | 'output';
+  label: string;
+  status: 'pending' | 'active' | 'completed' | 'error';
+  description?: string;
+  timestamp?: number;
+  duration?: number;
 }
 
 async function requestMicrophonePermission() {
@@ -29,7 +40,10 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [showFlowVisualizer, setShowFlowVisualizer] = useState(true);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversationState, setConversationState] = useState<'idle' | 'listening' | 'processing' | 'responding'>('idle');
+  const [agentFlow, setAgentFlow] = useState<AgentFlowStep[]>([]);
 
   // Get user's industry and focus areas from localStorage
   const userIndustry = localStorage.getItem('user_industry') || '';
@@ -42,9 +56,35 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const handleTaskGenerator = async (input: any): Promise<void> => {
     try {
       console.log('Simulating task generation for input:', input);
+      
+      // Update flow to show tool usage
+      setAgentFlow(prev => [
+        ...prev,
+        {
+          id: `tool-${Date.now()}`,
+          type: 'tool',
+          label: 'Task Generator',
+          status: 'active',
+          description: 'Generating task structure',
+          timestamp: Date.now()
+        }
+      ]);
+
       await new Promise((resolve) => setTimeout(resolve, 500));
+      
+      // Mark tool as completed
+      setAgentFlow(prev => prev.map(step => 
+        step.type === 'tool' && step.status === 'active' 
+          ? { ...step, status: 'completed', duration: 500 }
+          : step
+      ));
     } catch (error) {
       console.error('Task Generator error:', error);
+      setAgentFlow(prev => prev.map(step => 
+        step.type === 'tool' && step.status === 'active' 
+          ? { ...step, status: 'error' }
+          : step
+      ));
       throw error;
     }
   };
@@ -53,16 +93,59 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     agentId: 'agent_01jvw7ms1jfbe8c3ptec0na5z9',
     onConnect: () => {
       console.log("connected");
+      setConversationState('idle');
     },
     onDisconnect: () => {
       console.log("disconnected");
+      setConversationState('idle');
+      setAgentFlow([]);
     },
     onError: error => {
       console.log(error);
       setError("An error occurred during the conversation");
+      setConversationState('idle');
     },
     onMessage: message => {
       console.log(message);
+      
+      // Update conversation state based on message source
+      if (message.source === 'user') {
+        setConversationState('processing');
+        // Add user input to flow
+        setAgentFlow([{
+          id: `user-${Date.now()}`,
+          type: 'user',
+          label: 'User Input',
+          status: 'completed',
+          description: 'Voice input received',
+          timestamp: Date.now()
+        }]);
+      } else if (message.source === 'ai') {
+        setConversationState('responding');
+        // Add AI response to flow
+        setAgentFlow(prev => [
+          ...prev,
+          {
+            id: `ai-${Date.now()}`,
+            type: 'agent',
+            label: 'AI Agent',
+            status: 'active',
+            description: 'Generating response',
+            timestamp: Date.now()
+          }
+        ]);
+        
+        // Mark as completed after a short delay
+        setTimeout(() => {
+          setAgentFlow(prev => prev.map(step => 
+            step.type === 'agent' && step.status === 'active' 
+              ? { ...step, status: 'completed', duration: 1000 }
+              : step
+          ));
+          setConversationState('idle');
+        }, 1000);
+      }
+      
       const newMessage: Message = {
         id: Math.random().toString(36).substr(2, 9),
         role: message.source === 'ai' ? 'assistant' : 'user',
@@ -73,6 +156,26 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       onMessage(newMessage);
     }
   });
+
+  // Listen for recording events to update conversation state
+  useEffect(() => {
+    const handleRecordingStart = () => {
+      setConversationState('listening');
+      setAgentFlow([]);
+    };
+
+    const handleRecordingEnd = () => {
+      setConversationState('processing');
+    };
+
+    window.addEventListener('elevenlabs-convai:recording-start', handleRecordingStart);
+    window.addEventListener('elevenlabs-convai:recording-end', handleRecordingEnd);
+
+    return () => {
+      window.removeEventListener('elevenlabs-convai:recording-start', handleRecordingStart);
+      window.removeEventListener('elevenlabs-convai:recording-end', handleRecordingEnd);
+    };
+  }, []);
 
   async function startConversation() {
     const hasPermission = await requestMicrophonePermission();
@@ -94,6 +197,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         }
       });
       setConversationId(sessionId);
+      setShowFlowVisualizer(true);
       console.log('ConversationID: ', sessionId);
     } catch (err) {
       setError("Failed to start conversation");
@@ -104,6 +208,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const stopConversation = async () => {
     try {
       await conversation.endSession();
+      setShowFlowVisualizer(false);
+      setAgentFlow([]);
+      setConversationState('idle');
     } catch (err) {
       console.error("Error ending conversation:", err);
     }
@@ -125,146 +232,157 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   return (
     <AnimatePresence>
       {isVisible && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs"
-        >
+        <>
           <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.9 }}
-            className="relative bg-dark-surface/80 backdrop-blur-md p-4 border border-dark-border rounded-xl shadow-xl w-[300px]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs"
           >
-            <button
-              onClick={handleClose}
-              className="absolute top-2 right-2 text-gray-400 hover:text-white transition-colors"
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              className="relative bg-dark-surface/80 backdrop-blur-md p-4 border border-dark-border rounded-xl shadow-xl w-[300px]"
             >
-              <XMarkIcon className="h-4 w-4" />
-            </button>
-
-            <div className="flex flex-col items-center justify-center p-2">
-              <h3 className="text-lg font-medium text-white text-center mb-2">
-                {conversation.status === "connected"
-                  ? conversation.isSpeaking
-                    ? "Speaking..."
-                    : "Listening..."
-                  : "Disconnected"}
-              </h3>
-
-              {error && (
-                <span className="text-error-500 text-sm mb-2">{error}</span>
-              )}
-
-              <motion.div
-                animate={conversation.status === "connected" ? {
-                  scale: [1, 1.2, 1],
-                  opacity: [0.5, 1, 0.5]
-                } : {}}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="relative my-8"
+              <button
+                onClick={handleClose}
+                className="absolute top-2 right-2 text-gray-400 hover:text-white transition-colors"
               >
-                {conversation.status === "connected" && (
-                  <>
-                    <motion.div
-                      animate={{
-                        scale: [1, 2],
-                        opacity: [0.5, 0]
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "easeOut"
-                      }}
-                      className="absolute inset-0 rounded-full bg-secondary-600/20"
-                    />
-                    <motion.div
-                      animate={{
-                        scale: [1, 1.5],
-                        opacity: [0.5, 0]
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "easeOut",
-                        delay: 0.5
-                      }}
-                      className="absolute inset-0 rounded-full bg-secondary-600/20"
-                    />
-                  </>
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+
+              <div className="flex flex-col items-center justify-center p-2">
+                <h3 className="text-lg font-medium text-white text-center mb-2">
+                  {conversation.status === "connected"
+                    ? conversation.isSpeaking
+                      ? "Speaking..."
+                      : "Listening..."
+                    : "Disconnected"}
+                </h3>
+
+                {error && (
+                  <span className="text-error-500 text-sm mb-2">{error}</span>
                 )}
-                <div 
-                  className={`w-20 h-30 rounded-full flex items-center justify-center ${
-                    conversation.status === "connected" && conversation.isSpeaking
-                      ? "bg-secondary-600"
-                      : conversation.status === "connected"
-                      ? "bg-primary-400"
-                      : "bg-dark-400"
-                  }`}
+
+                <motion.div
+                  animate={conversation.status === "connected" ? {
+                    scale: [1, 1.2, 1],
+                    opacity: [0.5, 1, 0.5]
+                  } : {}}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="relative my-8"
                 >
-                  <img 
-                    src="/juragan-logo.svg" 
-                    alt="Juragan Logo"
-                    className="w-17 h-17"
-                    style={{ 
-                      filter: 'invert(100%) sepia(79%) saturate(2476%) hue-rotate(190deg) brightness(118%) contrast(119%)'
-                    }}
-                  />
+                  {conversation.status === "connected" && (
+                    <>
+                      <motion.div
+                        animate={{
+                          scale: [1, 2],
+                          opacity: [0.5, 0]
+                        }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeOut"
+                        }}
+                        className="absolute inset-0 rounded-full bg-secondary-600/20"
+                      />
+                      <motion.div
+                        animate={{
+                          scale: [1, 1.5],
+                          opacity: [0.5, 0]
+                        }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeOut",
+                          delay: 0.5
+                        }}
+                        className="absolute inset-0 rounded-full bg-secondary-600/20"
+                      />
+                    </>
+                  )}
+                  <div 
+                    className={`w-20 h-30 rounded-full flex items-center justify-center ${
+                      conversation.status === "connected" && conversation.isSpeaking
+                        ? "bg-secondary-600"
+                        : conversation.status === "connected"
+                        ? "bg-primary-400"
+                        : "bg-dark-400"
+                    }`}
+                  >
+                    <img 
+                      src="/juragan-logo.svg" 
+                      alt="Juragan Logo"
+                      className="w-17 h-17"
+                      style={{ 
+                        filter: 'invert(100%) sepia(79%) saturate(2476%) hue-rotate(190deg) brightness(118%) contrast(119%)'
+                      }}
+                    />
+                  </div>
+                </motion.div>
+
+                <div className="flex flex-col gap-2 w-full">
+                  <button
+                    onClick={startConversation}
+                    disabled={conversation.status === "connected"}
+                    className={
+                      conversation.status === "connected"
+                        ? "px-2 py-2 rounded-lg text-white text-sm bg-gray-600 cursor-not-allowed"
+                        : "px-2 py-2 rounded-lg text-white text-sm bg-secondary-600 hover:bg-primary-400 transition-colors"
+                    }
+                  >
+                    Start conversation
+                  </button>
+
+                  <button
+                    onClick={stopConversation}
+                    disabled={conversation.status !== "connected"}
+                    className={
+                      conversation.status !== "connected"
+                        ? "px-2 py-2 rounded-lg text-white text-sm bg-gray-600 cursor-not-allowed"
+                        : "px-2 py-2 rounded-lg text-white text-sm bg-error-600 hover:bg-error-500 transition-colors"
+                    }
+                  >
+                    End conversation
+                  </button>
                 </div>
-              </motion.div>
 
-              <div className="flex flex-col gap-2 w-full">
-                <button
-                  onClick={startConversation}
-                  disabled={conversation.status === "connected"}
-                  className={
-                    conversation.status === "connected"
-                      ? "px-2 py-2 rounded-lg text-white text-sm bg-gray-600 cursor-not-allowed"
-                      : "px-2 py-2 rounded-lg text-white text-sm bg-secondary-600 hover:bg-primary-400 transition-colors"
-                  }
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-4 flex justify-center"
                 >
-                  Start conversation
-                </button>
-
-                <button
-                  onClick={stopConversation}
-                  disabled={conversation.status !== "connected"}
-                  className={
-                    conversation.status !== "connected"
-                      ? "px-2 py-2 rounded-lg text-white text-sm bg-gray-600 cursor-not-allowed"
-                      : "px-2 py-2 rounded-lg text-white text-sm bg-error-600 hover:bg-error-500 transition-colors"
-                  }
-                >
-                  End conversation
-                </button>
+                  <button
+                    onClick={handleAnalysisClick}
+                    className={`flex items-center gap-2 text-sm border rounded-lg p-1 border-dark-border ${
+                      conversationId 
+                        ? 'text-gray-100 hover:text-secondary-600 cursor-pointer'
+                        : 'text-gray-500 cursor-not-allowed'
+                    }`}
+                    disabled={!conversationId}
+                  >
+                    <ChartBarIcon className="h-3 w-3" />
+                    Conversation Analysis
+                  </button>
+                </motion.div>
               </div>
-
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mt-4 flex justify-center"
-              >
-                <button
-                  onClick={handleAnalysisClick}
-                  className={`flex items-center gap-2 text-sm border rounded-lg p-1 border-dark-border ${
-                    conversationId 
-                      ? 'text-gray-100 hover:text-secondary-600 cursor-pointer'
-                      : 'text-gray-500 cursor-not-allowed'
-                  }`}
-                  disabled={!conversationId}
-                >
-                  <ChartBarIcon className="h-3 w-3" />
-                  Conversation Analysis
-                </button>
-              </motion.div>
-            </div>
+            </motion.div>
           </motion.div>
 
+          {/* Flow Visualizer */}
+          <ConversationFlowVisualizer
+            isVisible={showFlowVisualizer && conversation.status === "connected"}
+            onClose={() => setShowFlowVisualizer(false)}
+            conversationState={conversationState}
+            agentFlow={agentFlow}
+          />
+
+          {/* Analysis Modal */}
           {showAnalysis && conversationId && (
             <ConversationAnalysis
               isVisible={showAnalysis}
@@ -272,7 +390,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
               conversationId={conversationId}
             />
           )}
-        </motion.div>
+        </>
       )}
     </AnimatePresence>
   );
