@@ -274,19 +274,19 @@ const parseGeminiResponse = (data: any): AnalysisResult => {
 
     console.log('📝 Raw Gemini content:', content);
 
-    // Clean and parse JSON
+    // Clean and parse JSON with improved extraction
     let cleanedContent = content.trim();
     
     // Remove markdown formatting if present
     cleanedContent = cleanedContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
     
-    // Extract JSON from the response
-    const jsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('No JSON found in Gemini response');
+    // Use improved JSON extraction with proper bracket matching
+    const jsonResult = extractValidJSON(cleanedContent);
+    if (!jsonResult) {
+      throw new Error('No valid JSON found in Gemini response');
     }
 
-    const parsed = JSON.parse(jsonMatch[0]);
+    const parsed = JSON.parse(jsonResult);
     
     // Validate and structure the response
     const analysisResult: AnalysisResult = {
@@ -315,6 +315,79 @@ const parseGeminiResponse = (data: any): AnalysisResult => {
       confidence: 0.1,
       reasoning: `Failed to parse Gemini response: ${error instanceof Error ? error.message : 'Unknown error'}`
     };
+  }
+};
+
+// Improved JSON extraction function with proper bracket matching
+const extractValidJSON = (text: string): string | null => {
+  try {
+    // Find the first opening brace
+    const startIndex = text.indexOf('{');
+    if (startIndex === -1) {
+      return null;
+    }
+
+    // Track bracket depth to find the matching closing brace
+    let braceCount = 0;
+    let inString = false;
+    let escapeNext = false;
+    
+    for (let i = startIndex; i < text.length; i++) {
+      const char = text[i];
+      
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
+      }
+      
+      if (char === '\\') {
+        escapeNext = true;
+        continue;
+      }
+      
+      if (char === '"' && !escapeNext) {
+        inString = !inString;
+        continue;
+      }
+      
+      if (!inString) {
+        if (char === '{') {
+          braceCount++;
+        } else if (char === '}') {
+          braceCount--;
+          
+          // Found the matching closing brace
+          if (braceCount === 0) {
+            const jsonString = text.substring(startIndex, i + 1);
+            
+            // Validate that it's parseable JSON
+            try {
+              JSON.parse(jsonString);
+              return jsonString;
+            } catch {
+              // Continue searching for another valid JSON object
+              continue;
+            }
+          }
+        }
+      }
+    }
+    
+    // If we couldn't find a complete JSON object, try the original regex as fallback
+    const fallbackMatch = text.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/);
+    if (fallbackMatch) {
+      try {
+        JSON.parse(fallbackMatch[0]);
+        return fallbackMatch[0];
+      } catch {
+        // Fallback failed too
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error in extractValidJSON:', error);
+    return null;
   }
 };
 
