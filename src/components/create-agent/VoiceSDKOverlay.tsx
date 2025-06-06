@@ -138,8 +138,6 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const stopConversation = async () => {
     try {
       await conversation.endSession();
-      setIsSessionActive(false); // Let onDisconnect handle this for consistency, but good for immediate UI feedback
-      setConversationId(null);
     } catch (err) {
       console.error("Error ending conversation:", err);
     }
