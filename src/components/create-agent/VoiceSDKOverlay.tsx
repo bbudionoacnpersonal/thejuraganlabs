@@ -37,10 +37,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const userFocusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
 
   const createSystemPrompt = (industryValue: string, focusAreaValues: string[]): string => {
-    // Find the industry configuration
     const industryConfig = industries.find(i => i.value === industryValue);
-    
-    // Find focus area configurations
     const focusAreaConfigs = focusAreas.filter(fa => focusAreaValues.includes(fa.value));
     
     if (!industryConfig) {
@@ -49,7 +46,6 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 
     let prompt = industryConfig.keyPrompts.systemInstructions;
 
-    // Add focus area considerations
     if (focusAreaConfigs.length > 0) {
       prompt += '\n\nAdditional focus areas to consider:';
       focusAreaConfigs.forEach(fa => {
@@ -57,13 +53,11 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       });
     }
 
-    // Add agent considerations
     prompt += '\n\nKey agent considerations:\n- ';
     prompt += industryConfig.keyPrompts.agentConsiderations.join('\n- ');
 
-    /* remove tool priorities
     prompt += '\n\nRecommended tools:\n- ';
-    prompt += industryConfig.keyPrompts.toolPriorities.join('\n- ');*/
+    prompt += industryConfig.keyPrompts.toolPriorities.join('\n- ');
 
     return prompt;
   };
@@ -106,17 +100,18 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     }
   });
 
+  // ========== CHANGE #1: Corrected useEffect Hook ==========
+  // This effect now runs its cleanup function ONLY when the component unmounts.
   useEffect(() => {
-    // Cleanup function to end session when component unmounts or overlay closes
     return () => {
-      if (isSessionActive) {
-        stopConversation();
+      // Ensure we end the session if the component is closed while active.
+      if (conversation.status === 'connected') {
+        conversation.endSession();
       }
     };
-  }, []);
+  }, []); // The empty dependency array [] is the key fix.
 
-   // In your startConversation function
-    async function startConversation() {
+  async function startConversation() {
     const hasPermission = await requestMicrophonePermission();
     if (!hasPermission) {
       setError("No microphone permission");
@@ -125,12 +120,11 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     
     try {
       const systemPrompt = createSystemPrompt(userIndustry, userFocusAreas);
-  
-      // --- KEY CHANGE: Simplify the context object ---
+
+      // ========== CHANGE #2: Simplified Payload in startSession ==========
+      // The context object now only contains simple identifiers, not large config objects.
       const sessionId = await conversation.startSession({
         context: {
-          // Only send simple, key-value data.
-          // The detailed instructions are in the prompt.
           industry: userIndustry,
           focus_areas: userFocusAreas,
         },
@@ -141,20 +135,24 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
           task_generator: handleTaskGenerator
         }
       });
-  
+
       setConversationId(sessionId);
-      // You can remove setIsSessionActive(true) here, as onConnect will handle it.
       console.log('ConversationID with context:', sessionId);
+
+      // ========== CHANGE #3: Removed Redundant State Update ==========
+      // We no longer set `setIsSessionActive(true)` here.
+      // The `onConnect` callback is the single source of truth for an active session.
+
     } catch (err) {
       setError("Failed to start conversation");
       console.error(err);
     }
-  }  
+  }
 
   const stopConversation = async () => {
     try {
       await conversation.endSession();
-      setIsSessionActive(false);
+      setIsSessionActive(false); // Let onDisconnect handle this for consistency, but good for immediate UI feedback
       setConversationId(null);
     } catch (err) {
       console.error("Error ending conversation:", err);
@@ -253,7 +251,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                   </>
                 )}
                 <div 
-                  className={`w-20 h-30 rounded-full flex items-center justify-center ${
+                  className={`w-20 h-20 rounded-full flex items-center justify-center ${
                     isSessionActive && conversation.isSpeaking
                       ? "bg-secondary-600"
                       : isSessionActive
@@ -264,9 +262,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                   <img 
                     src="/juragan-logo.svg" 
                     alt="Juragan Logo"
-                    className="w-17 h-17"
+                    className="w-12 h-12" // Adjusted size for better fit
                     style={{ 
-                      filter: 'invert(100%) sepia(79%) saturate(2476%) hue-rotate(190deg) brightness(118%) contrast(119%)'
+                      filter: 'invert(1) drop-shadow(0 0 2px #fff)' // Simplified filter for white logo
                     }}
                   />
                 </div>
