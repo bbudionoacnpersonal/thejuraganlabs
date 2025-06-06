@@ -1,7 +1,20 @@
+import nodemailer from 'nodemailer';
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'welcome@juraganlabs.io',
+    pass: 'yheh gipa vmnv gwxr'
+  }
+});
+
 export const sendVerificationEmail = async (to: string, verificationUrl: string) => {
   const emailData = {
+    from: {
+      name: 'Juragan Labs',
+      address: 'welcome@juraganlabs.io'
+    },
     to,
-    from: 'Juragan Labs <welcome@juraganlabs.io>',
     subject: 'Verify your Juragan Labs account',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -25,21 +38,12 @@ export const sendVerificationEmail = async (to: string, verificationUrl: string)
     `
   };
 
-  // Log email details in development
-  if (import.meta.env.DEV) {
-    console.log('Development mode - Email details:', emailData);
-    console.log('Verification URL:', verificationUrl);
-  }
-
   try {
-    // Simulate email sending delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // In production, this would make an API call to your email service
-    console.log(`Email sent to ${to} from ${emailData.from}`);
+    await transporter.sendMail(emailData);
+    console.log(`Verification email sent to ${to}`);
     return true;
   } catch (error) {
-    console.error('Failed to send email:', error);
-    throw error;
+    console.error('Failed to send verification email:', error);
+    throw new Error('Failed to send verification email');
   }
 };
