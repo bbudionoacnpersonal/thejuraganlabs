@@ -110,15 +110,15 @@ const ConversationNode = ({ data }: { data: any }) => {
     const getNodeStyle = () => {
       switch (data.type) {
         case 'user':
-          return 'bg-blue-500 border-blue-600 text-white';
+          return 'bg-white border-gray-200 text-gray-900';
         case 'final_task':
-          return 'bg-green-600 border-green-700 text-white';
+          return 'bg-white border-gray-200 text-gray-900';
         case 'team':
-          return 'bg-green-500 border-green-600 text-white';
+          return 'bg-white border-gray-200 text-gray-900';
         case 'agent':
-          return 'bg-blue-400 border-blue-500 text-white';
+          return 'bg-white border-gray-200 text-gray-900';
         default:
-          return 'bg-gray-500 border-gray-600 text-white';
+          return 'bg-white border-gray-200 text-gray-900';
       }
     };
 
@@ -141,13 +141,13 @@ const ConversationNode = ({ data }: { data: any }) => {
       if (!teamType) return '🏢';
       
       const type = teamType.toLowerCase();
-      if (type.includes('roundrobin')) return <RotateCcw className="w-4 h-4 text-white" />;
-      if (type.includes('selector')) return <Target className="w-4 h-4 text-white" />;
-      if (type.includes('magneticone') || type.includes('magenticone')) return <Zap className="w-4 h-4 text-white" />;
-      if (type.includes('swarm')) return <Network className="w-4 h-4 text-white" />;
-      if (type.includes('graphflow') || type.includes('graph')) return <GitBranch className="w-4 h-4 text-white" />;
-      if (type.includes('broadcast')) return <Broadcast className="w-4 h-4 text-white" />;
-      return <Users className="w-4 h-4 text-white" />;
+      if (type.includes('roundrobin')) return <RotateCcw className="w-4 h-4 text-blue-600" />;
+      if (type.includes('selector')) return <Target className="w-4 h-4 text-purple-600" />;
+      if (type.includes('magneticone') || type.includes('magenticone')) return <Zap className="w-4 h-4 text-yellow-600" />;
+      if (type.includes('swarm')) return <Network className="w-4 h-4 text-green-600" />;
+      if (type.includes('graphflow') || type.includes('graph')) return <GitBranch className="w-4 h-4 text-indigo-600" />;
+      if (type.includes('broadcast')) return <Broadcast className="w-4 h-4 text-green-600" />;
+      return <Users className="w-4 h-4 text-gray-600" />;
     };
 
     const getTeamTypeName = (teamType?: string) => {
@@ -203,12 +203,12 @@ const ConversationNode = ({ data }: { data: any }) => {
         
         {/* Team Type Display */}
         {data.type === 'team' && data.teamType && (
-          <div className="bg-white/20 rounded p-2 mb-3">
+          <div className="bg-gray-100 rounded p-2 mb-3">
             <div className="flex items-center justify-center gap-2 mb-1">
               {getTeamTypeIcon(data.teamType)}
-              <span className="text-xs font-semibold text-white">{getTeamTypeName(data.teamType)}</span>
+              <span className="text-xs font-semibold text-gray-900">{getTeamTypeName(data.teamType)}</span>
             </div>
-            <p className="text-xs text-center opacity-90 text-white">
+            <p className="text-xs text-center opacity-90 text-gray-700">
               {data.teamType.includes('roundrobin') && 'Agents take turns in sequence'}
               {data.teamType.includes('selector') && 'LLM selects next speaker dynamically'}
               {(data.teamType.includes('magneticone') || data.teamType.includes('magenticone')) && 'Generalist multi-agent for web/file tasks'}
@@ -228,47 +228,47 @@ const ConversationNode = ({ data }: { data: any }) => {
           <div className="space-y-2">
             {/* Agent Type */}
             {data.agentType && (
-              <div className="bg-white/20 rounded p-2">
+              <div className="bg-gray-100 rounded p-2">
                 <div className="flex items-center gap-2 mb-1">
-                  <Bot className="w-3 h-3 text-white" />
-                  <span className="text-xs font-semibold text-white">Agent Type</span>
+                  <Bot className="w-3 h-3 text-gray-700" />
+                  <span className="text-xs font-semibold text-gray-900">Agent Type</span>
                 </div>
-                <p className="text-xs text-white">{getAgentTypeName(data.agentType)}</p>
+                <p className="text-xs text-gray-700">{getAgentTypeName(data.agentType)}</p>
               </div>
             )}
 
             {/* LLM Model */}
             {data.llmModel && (
-              <div className="bg-white/20 rounded p-2">
+              <div className="bg-gray-100 rounded p-2">
                 <div className="flex items-center gap-2 mb-1">
-                  <SparklesIcon className="w-3 h-3 text-white" />
-                  <span className="text-xs font-semibold text-white">LLM Model</span>
+                  <SparklesIcon className="w-3 h-3 text-gray-700" />
+                  <span className="text-xs font-semibold text-gray-900">LLM Model</span>
                 </div>
-                <p className="text-xs text-white">{data.llmModel}</p>
+                <p className="text-xs text-gray-700">{data.llmModel}</p>
                 {data.llmProvider && (
-                  <p className="text-xs opacity-75 text-white">Provider: {data.llmProvider}</p>
+                  <p className="text-xs opacity-75 text-gray-600">Provider: {data.llmProvider}</p>
                 )}
               </div>
             )}
 
             {/* Tools */}
             {data.tools && Array.isArray(data.tools) && data.tools.length > 0 && (
-              <div className="bg-white/20 rounded p-2">
+              <div className="bg-gray-100 rounded p-2">
                 <div className="flex items-center gap-2 mb-1">
-                  <Wrench className="w-3 h-3 text-white" />
-                  <span className="text-xs font-semibold text-white">Tools ({data.tools.length})</span>
+                  <Wrench className="w-3 h-3 text-gray-700" />
+                  <span className="text-xs font-semibold text-gray-900">Tools ({data.tools.length})</span>
                 </div>
                 <div className="space-y-1">
                   {data.tools.slice(0, 3).map((tool: any, idx: number) => (
                     <div key={idx} className="text-xs">
-                      <span className="font-medium text-white">{tool.name || `Tool ${idx + 1}`}</span>
+                      <span className="font-medium text-gray-900">{tool.name || `Tool ${idx + 1}`}</span>
                       {tool.description && (
-                        <p className="opacity-75 truncate text-white">{tool.description}</p>
+                        <p className="opacity-75 truncate text-gray-600">{tool.description}</p>
                       )}
                     </div>
                   ))}
                   {data.tools.length > 3 && (
-                    <p className="text-xs opacity-75 text-white">+{data.tools.length - 3} more tools</p>
+                    <p className="text-xs opacity-75 text-gray-600">+{data.tools.length - 3} more tools</p>
                   )}
                 </div>
               </div>
@@ -277,29 +277,29 @@ const ConversationNode = ({ data }: { data: any }) => {
         )}
         
         {data.description && (
-          <div className="bg-white/10 rounded p-2 mb-2">
-            <p className="text-xs text-center text-white">{data.description}</p>
+          <div className="bg-gray-50 rounded p-2 mb-2">
+            <p className="text-xs text-center text-gray-700">{data.description}</p>
           </div>
         )}
         
         {data.confidence && (
           <div className="flex items-center justify-center mt-2">
-            <div className={`w-2 h-2 rounded-full ${data.confidence > 0.7 ? 'bg-green-300' : data.confidence > 0.4 ? 'bg-yellow-300' : 'bg-red-300'}`} />
-            <span className="text-xs ml-1 text-white">{Math.round(data.confidence * 100)}% confidence</span>
+            <div className={`w-2 h-2 rounded-full ${data.confidence > 0.7 ? 'bg-green-500' : data.confidence > 0.4 ? 'bg-yellow-500' : 'bg-red-500'}`} />
+            <span className="text-xs ml-1 text-gray-700">{Math.round(data.confidence * 100)}% confidence</span>
           </div>
         )}
         
         {data.agents && Array.isArray(data.agents) && data.agents.length > 0 && (
           <div className="mt-2 text-xs">
-            <div className="text-center opacity-75 text-white">Agents: {data.agents.length}</div>
+            <div className="text-center opacity-75 text-gray-700">Agents: {data.agents.length}</div>
             <div className="flex flex-wrap gap-1 mt-1 justify-center">
               {data.agents.slice(0, 3).map((agent: any, idx: number) => (
-                <span key={idx} className="bg-white/20 px-1 rounded text-xs text-white">
+                <span key={idx} className="bg-gray-200 px-1 rounded text-xs text-gray-800">
                   {agent.name || `Agent ${idx + 1}`}
                 </span>
               ))}
               {data.agents.length > 3 && (
-                <span className="bg-white/20 px-1 rounded text-xs text-white">
+                <span className="bg-gray-200 px-1 rounded text-xs text-gray-800">
                   +{data.agents.length - 3}
                 </span>
               )}
@@ -620,9 +620,12 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         };
         newNodes.push(teamNode);
 
-        // Connect input (user or final task) to team with enhanced animated edge
+        // 🎯 CRITICAL FIX: Always create edge from input to team
         const sourceNodeId = conversationEnded ? 'final-task-input' : 'user-input';
-        if (newNodes.find(n => n.id === sourceNodeId)) {
+        const sourceNode = newNodes.find(n => n.id === sourceNodeId);
+        
+        if (sourceNode) {
+          console.log('🔗 Creating edge from', sourceNodeId, 'to team');
           newEdges.push({
             id: `edge-${sourceNodeId}-team`,
             source: sourceNodeId,
@@ -693,8 +696,10 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           };
           newNodes.push(agentNode);
 
-          // Connect team to agent with enhanced animated edge
-          if (newNodes.find(n => n.id === 'team')) {
+          // 🎯 CRITICAL FIX: Always create edge from team to agent
+          const teamNode = newNodes.find(n => n.id === 'team');
+          if (teamNode) {
+            console.log('🔗 Creating edge from team to agent', index);
             newEdges.push({
               id: `edge-team-agent-${index}`,
               source: 'team',
@@ -754,11 +759,16 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         console.log('✅ Applied Dagre layout to Smart Visualizer:', {
           originalNodes: newNodes.length,
           layoutedNodes: layoutedElements.nodes.length,
+          originalEdges: newEdges.length,
+          layoutedEdges: layoutedElements.edges.length,
           teamType
         });
         
+        // 🎯 CRITICAL FIX: Set nodes and edges in separate state updates to ensure proper rendering
         setNodes(layoutedElements.nodes);
-        setEdges(layoutedElements.edges);
+        setTimeout(() => {
+          setEdges(layoutedElements.edges);
+        }, 50); // Small delay to ensure nodes are rendered first
       } else {
         setNodes(newNodes);
         setEdges(newEdges);
@@ -772,7 +782,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           } catch (error) {
             console.error('Error fitting view:', error);
           }
-        }, 100);
+        }, 200); // Increased delay to ensure both nodes and edges are rendered
       }
     } catch (error) {
       console.error('Error updating flow:', error);
@@ -796,6 +806,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       
       console.log('🔄 Smart Visualizer auto-layout applied:', {
         nodeCount: layouted.nodes.length,
+        edgeCount: layouted.edges.length,
         teamType
       });
     } catch (error) {
@@ -967,7 +978,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                 // 🎯 CRITICAL: Ensure ReactFlow properly handles animated edges
                 defaultEdgeOptions={{
                   animated: true,
-                  style: { strokeWidth: 2 }
+                  style: { strokeWidth: 2, stroke: '#4D9CFF' }
                 }}
               >
                 <Background color="#374151" gap={20} />
