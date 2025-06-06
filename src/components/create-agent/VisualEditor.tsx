@@ -116,6 +116,14 @@ const VisualEditor: React.FC<VisualEditorProps> = ({ teamStructure }) => {
         fitView
         minZoom={0.2}
         maxZoom={1.2}
+        defaultViewport={{ x: 0, y: 0, zoom: 0.6 }}
+        fitViewOptions={{ 
+          padding: 0.2,
+          includeHiddenNodes: true,
+          duration: 800,
+          minZoom: 0.6,
+          maxZoom: 0.6
+        }}
         proOptions={{ hideAttribution: true }}
         defaultEdgeOptions={{
           animated: true,
