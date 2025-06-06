@@ -78,12 +78,13 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     
     try {
       const sessionId = await conversation.startSession({
+        // Dynamic variables at top level
+        industry: userIndustry,
+        function_focus: userFocusAreas,
+        
+        // Client tools
         clientTools: {
           task_generator: handleTaskGenerator
-        },
-        context: {
-          industry: userIndustry,
-          function_focus: userFocusAreas
         }
       });
       setConversationId(sessionId);
