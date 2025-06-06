@@ -21,7 +21,6 @@ const SignupForm: React.FC = () => {
     confirmPassword?: string;
   }>({});
   
-  const navigate = useNavigate();
   const { signup, isLoading, error: authError } = useAuthStore();
   
   const validate = () => {

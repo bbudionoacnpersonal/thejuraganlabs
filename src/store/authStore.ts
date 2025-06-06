@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { User, Role } from '@/types';
 import { validateNewUser, registerUser, verifyEmail } from '@/services/authService';
+import { mockUsers } from '@/mockdata/users';
 
 interface AuthState {
   user: User | null;
@@ -44,15 +45,23 @@ const useAuthStore = create<AuthState>((set) => ({
       
       const token = `mock-jwt-token-${Math.random()}`;
       
+      const userWithoutPassword: User = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role as Role,
+        avatar: user.avatar
+      };
+      
       set({
-        user,
+        user: userWithoutPassword,
         token,
         isAuthenticated: true,
         isLoading: false,
       });
       
       localStorage.setItem('zeus_auth_token', token);
-      localStorage.setItem('zeus_user', JSON.stringify(user));
+      localStorage.setItem('zeus_user', JSON.stringify(userWithoutPassword));
       
     } catch (error) {
       set({
@@ -105,18 +114,26 @@ const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const user = verifyEmail(token);
+      const verifiedUser = verifyEmail(token);
       const authToken = `mock-jwt-token-${Math.random()}`;
 
+      const userWithoutPassword: User = {
+        id: verifiedUser.id,
+        name: verifiedUser.name,
+        email: verifiedUser.email,
+        role: verifiedUser.role as Role,
+        avatar: verifiedUser.avatar
+      };
+
       set({
-        user,
+        user: userWithoutPassword,
         token: authToken,
         isAuthenticated: true,
         isLoading: false,
       });
 
       localStorage.setItem('zeus_auth_token', authToken);
-      localStorage.setItem('zeus_user', JSON.stringify(user));
+      localStorage.setItem('zeus_user', JSON.stringify(userWithoutPassword));
 
     } catch (error) {
       set({
