@@ -23,7 +23,7 @@ export const focusAreas = [
   { value: 'risk', label: 'Risk Management & Compliance' },
   { value: 'innovation', label: 'Innovation & R&D' },
   { value: 'data', label: 'Data Analytics & Business Intelligence' },
-  { value: 'digital', label: 'Digital Transformation' }
+  { value: 'social_commerce', label: 'Social Commerce' }
 ];
 
 // Pre-built AI agents that can be leveraged by other users
