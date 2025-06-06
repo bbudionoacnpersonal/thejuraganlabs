@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Size {
   width: number;
@@ -14,7 +14,7 @@ export const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
       const element = ref.current;
       if (!element) return;
 
-      const handleMouseDown = (e: MouseEvent) => {
+      const handleMouseDown = (e: Event) => {
         try {
           const target = e.target as HTMLElement;
           const direction = target.getAttribute('data-resize-direction');
@@ -28,16 +28,17 @@ export const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
         }
       };
 
-      const handleMouseMove = (e: MouseEvent) => {
+      const handleMouseMove = (e: Event) => {
         try {
           if (!isResizing || !element) return;
 
+          const mouseEvent = e as MouseEvent;
           const rect = element.getBoundingClientRect();
           let newWidth = size.width;
           let newHeight = size.height;
 
-          newWidth = Math.max(800, e.clientX - rect.left);
-          newHeight = Math.max(600, e.clientY - rect.top);
+          newWidth = Math.max(800, mouseEvent.clientX - rect.left);
+          newHeight = Math.max(600, mouseEvent.clientY - rect.top);
 
           setSize({ width: newWidth, height: newHeight });
         } catch (error) {
