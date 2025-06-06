@@ -303,7 +303,7 @@ export const focusAreas = [
   },
   { 
     value: 'marketing',
-    label: 'Marketing & Brand Management',
+    label: 'Marketing  Management',
     keyConsiderations: [
       'Campaign optimization',
       'Market analysis',
