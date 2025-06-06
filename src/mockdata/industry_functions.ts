@@ -177,6 +177,51 @@ export const industries = [
     }
   },
   { 
+    value: 'petrochemical',
+    label: 'Petrochemical & Chemical Processing',
+    keyPrompts: {
+      agentConsiderations: [
+        'Process optimization and control',
+        'Chemical safety and hazard management',
+        'Feedstock and raw material management',
+        'Product quality and specification compliance',
+        'Environmental monitoring and emissions control',
+        'Catalyst management and performance',
+        'Plant maintenance and turnaround planning',
+        'Supply chain and logistics optimization'
+      ],
+      systemInstructions: `You are a petrochemical and chemical processing AI expert. Focus on:
+        - Chemical process optimization
+        - Safety and environmental compliance
+        - Quality control and product specifications
+        - Feedstock and catalyst management
+        - Plant operations and maintenance
+        - Supply chain efficiency
+        - Regulatory compliance (EPA, OSHA, DOT)
+        - Energy efficiency and sustainability`,
+      toolPriorities: ['process_optimizer', 'safety_monitor', 'quality_analyzer', 'emissions_tracker', 'maintenance_scheduler']
+    }
+  },
+  { 
+    value: 'education',
+    label: 'Education & Training',
+    keyPrompts: {
+      agentConsiderations: [
+        'Learning path customization',
+        'Student progress tracking',
+        'Content adaptation',
+        'Assessment automation'
+      ],
+      systemInstructions: `You are an education AI expert. Focus on:
+        - Personalized learning
+        - Student assessment
+        - Content management
+        - Progress tracking
+        - Educational analytics`,
+      toolPriorities: ['content_adapter', 'progress_tracker', 'assessment_generator']
+    }
+  },
+  { 
     value: 'government',
     label: 'Government & Public Sector',
     keyPrompts: {
@@ -334,6 +379,42 @@ export const focusAreas = [
       'Influencer analytics',
       'Engagement optimization',
       'Conversion tracking'
+    ]
+  },
+  { 
+    value: 'process_engineering',
+    label: 'Process Engineering & Optimization',
+    keyConsiderations: [
+      'Chemical process design',
+      'Process simulation and modeling',
+      'Heat and mass transfer optimization',
+      'Reaction kinetics analysis',
+      'Equipment sizing and selection',
+      'Process safety analysis'
+    ]
+  },
+  { 
+    value: 'environmental_compliance',
+    label: 'Environmental & Safety Compliance',
+    keyConsiderations: [
+      'Emissions monitoring and control',
+      'Waste management optimization',
+      'Environmental impact assessment',
+      'Safety protocol enforcement',
+      'Regulatory reporting automation',
+      'Incident management and prevention'
+    ]
+  },
+  { 
+    value: 'supply_chain_chemicals',
+    label: 'Chemical Supply Chain Management',
+    keyConsiderations: [
+      'Feedstock procurement optimization',
+      'Chemical inventory management',
+      'Transportation and logistics',
+      'Supplier quality management',
+      'Market price analysis',
+      'Contract management'
     ]
   }
 ];
