@@ -1,5 +1,4 @@
-import { industries, focusAreas } from './industry_functions';
-
+// Pre-built AI agents that can be leveraged by other users
 export interface PrebuiltAgent {
   id: string;
   name: string;
@@ -29,7 +28,6 @@ export interface PrebuiltAgent {
   rating: number;
 }
 
-// Pre-built AI agents that can be leveraged by other users
 export const prebuiltAgents: PrebuiltAgent[] = [
   {
     id: 'cs_ticket_analyzer',

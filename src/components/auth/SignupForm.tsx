@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
@@ -98,7 +98,7 @@ const SignupForm: React.FC = () => {
   return (
     <div className="space-y-6">
       {authError && (
-        <div className="bg-error-500/20 border border-error-500 text-error-100 px-4 py-3 rounded relative\" role="alert">
+        <div className="bg-error-500/20 border border-error-500 text-error-100 px-4 py-3 rounded relative" role="alert">
           <span className="block sm:inline">{authError}</span>
         </div>
       )}
