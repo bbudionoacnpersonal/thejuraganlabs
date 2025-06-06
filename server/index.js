@@ -14,8 +14,8 @@ app.use(express.json());
 // Create nodemailer transporter
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
+  port: 465,
+  secure: true,
   auth: {
     user: 'welcome@juraganlabs.io',
     pass: 'yheh gipa vmnv gwxr'
