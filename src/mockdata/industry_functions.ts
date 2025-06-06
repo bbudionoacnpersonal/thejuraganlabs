@@ -87,6 +87,7 @@ export const industries = [
         'Brand management',
         'Consumer insights',
         'Market trend analysis',
+        'Sales & distribution management',
         'Product lifecycle management'
       ],
       systemInstructions: `You are a consumer goods AI expert. Focus on:
