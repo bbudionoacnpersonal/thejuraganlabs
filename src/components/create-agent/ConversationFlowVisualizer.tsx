@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ReactFlow, {
   Node,
   Edge,
@@ -14,29 +14,42 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { XMarkIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import { Bot, User, Users, Zap, Clock, Wrench } from 'lucide-react';
-import { ConversationState, AgentFlowStep, Team, Agent, Model, Tool } from '@/types';
+import { XMarkIcon, EyeIcon, EyeSlashIcon, SparklesIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline';
+import { Bot, User, Users, Zap, Clock, Wrench, Brain } from 'lucide-react';
+import { 
+  conversationFlowState, 
+  updateUserInput, 
+  updateFromAutogenStructure,
+  updateConversationState,
+  getFlowState,
+  setAnalysisInProgress,
+  shouldTriggerAnalysis,
+  getAnalysisReadyData,
+  getTeamProgress,
+  TempTeamData,
+  TempAgentData,
+  getCurrentAutogenStructure
+} from '@/mockdata/temp_conv_agentflow';
+import { analyzeConversationForAutogenStructure } from '@/services/anthropicService';
+import { transformTeamStructureToFlow } from '@/utils/visualEditorUtils';
 
 interface ConversationFlowVisualizerProps {
   isVisible: boolean;
   onClose: () => void;
-  conversationState: ConversationState['state'];
-  agentFlow: AgentFlowStep[];
-  currentTeam?: Team;
-  activeAgents?: Agent[];
-  usedModels?: Model[];
-  usedTools?: Tool[];
+  conversationState: 'idle' | 'listening' | 'processing' | 'responding';
+  agentFlow: Array<{
+    id: string;
+    type: 'user' | 'agent' | 'tool' | 'decision' | 'output';
+    label: string;
+    status: 'pending' | 'active' | 'completed' | 'error';
+    description?: string;
+    timestamp?: number;
+    duration?: number;
+  }>;
+  messages?: Array<{ role: string; content: string; timestamp: number }>;
 }
 
-interface FlowState {
-  userInputShown: boolean;
-  teamIdentified: boolean;
-  agentsIdentified: Agent[];
-  teamData?: Team;
-}
-
-// Custom node components
+// Enhanced custom node components with confidence indicators
 const UserNode = ({ data }: { data: any }) => (
   <div className={`p-4 rounded-lg shadow-lg border-2 min-w-[160px] transition-all duration-300 ${
     data.status === 'active' 
@@ -57,6 +70,12 @@ const UserNode = ({ data }: { data: any }) => (
         {new Date(data.timestamp).toLocaleTimeString()}
       </p>
     )}
+    {data.processed !== undefined && (
+      <div className="flex items-center justify-center mt-2">
+        <div className={`w-2 h-2 rounded-full ${data.processed ? 'bg-green-300' : 'bg-yellow-300'}`} />
+        <span className="text-xs ml-1">{data.processed ? 'Analyzed' : 'Pending'}</span>
+      </div>
+    )}
   </div>
 );
 
@@ -71,17 +90,30 @@ const TeamNode = ({ data }: { data: any }) => (
     <div className="flex items-center gap-2 justify-center mb-2">
       <Users className="h-5 w-5" />
       <span className="text-sm font-medium">{data.label}</span>
+      {data.confidence && (
+        <div className="flex items-center gap-1">
+          <Brain className="h-3 w-3" />
+          <span className="text-xs">{Math.round(data.confidence * 100)}%</span>
+        </div>
+      )}
     </div>
-    {data.aiTeamType && (
+    {data.teamType && (
       <div className="text-center mb-2">
-        <span className="text-xs bg-white/20 px-2 py-1 rounded font-mono">{data.aiTeamType}</span>
+        <span className="text-xs bg-white/20 px-2 py-1 rounded font-mono">{data.teamType}</span>
       </div>
     )}
     {data.description && (
       <p className="text-xs opacity-80 text-center mb-2">{data.description}</p>
     )}
-    {data.agentCount && (
+    {data.agentCount !== undefined && (
       <p className="text-xs opacity-70 text-center">{data.agentCount} agents configured</p>
+    )}
+    {data.source && (
+      <div className="text-center mt-2">
+        <span className="text-xs bg-white/10 px-2 py-1 rounded">
+          {data.source === 'ai_analysis' ? '🤖 AI Detected' : '👤 User Input'}
+        </span>
+      </div>
     )}
   </div>
 );
@@ -99,6 +131,12 @@ const AgentNode = ({ data }: { data: any }) => (
     <div className="flex items-center gap-2 justify-center mb-2">
       <Bot className="h-4 w-4" />
       <span className="text-sm font-medium">{data.label}</span>
+      {data.confidence && (
+        <div className="flex items-center gap-1">
+          <Brain className="h-3 w-3" />
+          <span className="text-xs">{Math.round(data.confidence * 100)}%</span>
+        </div>
+      )}
     </div>
     
     {data.agentType && (
@@ -121,19 +159,32 @@ const AgentNode = ({ data }: { data: any }) => (
     
     {/* Embedded Tools Info */}
     {data.tools && data.tools.length > 0 && (
-      <div className="bg-white/10 rounded p-2">
+      <div className="bg-white/10 rounded p-2 mb-2">
         <div className="flex items-center gap-1 justify-center mb-1">
           <Wrench className="h-3 w-3" />
           <span className="text-xs font-medium">Tools ({data.tools.length})</span>
         </div>
         <div className="space-y-1">
-          {data.tools.slice(0, 3).map((tool: any, idx: number) => (
-            <p key={idx} className="text-xs text-center opacity-90">{tool.name}</p>
+          {data.tools.slice(0, 2).map((tool: any, idx: number) => (
+            <div key={idx} className="flex items-center justify-between">
+              <p className="text-xs text-center opacity-90">{tool.name}</p>
+              {tool.confidence && (
+                <span className="text-xs opacity-70">{Math.round(tool.confidence * 100)}%</span>
+              )}
+            </div>
           ))}
-          {data.tools.length > 3 && (
-            <p className="text-xs text-center opacity-70">+{data.tools.length - 3} more</p>
+          {data.tools.length > 2 && (
+            <p className="text-xs text-center opacity-70">+{data.tools.length - 2} more</p>
           )}
         </div>
+      </div>
+    )}
+    
+    {data.source && (
+      <div className="text-center mt-2">
+        <span className="text-xs bg-white/10 px-2 py-1 rounded">
+          {data.source === 'ai_analysis' ? '🤖 AI Detected' : '👤 User Input'}
+        </span>
       </div>
     )}
     
@@ -152,112 +203,310 @@ const nodeTypes = {
   agentNode: AgentNode,
 };
 
+// Custom hook for draggable functionality
+const useDraggable = (ref: React.RefObject<HTMLDivElement>) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      // Only allow dragging from header area
+      const target = e.target as HTMLElement;
+      const header = element.querySelector('[data-drag-handle]');
+      if (!header?.contains(target)) return;
+
+      setIsDragging(true);
+      const rect = element.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+      e.preventDefault();
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+
+      const newX = e.clientX - dragOffset.x;
+      const newY = e.clientY - dragOffset.y;
+
+      // Constrain to viewport
+      const maxX = window.innerWidth - element.offsetWidth;
+      const maxY = window.innerHeight - element.offsetHeight;
+
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY))
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    element.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      element.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset, ref]);
+
+  return { position, isDragging };
+};
+
+// Custom hook for resizable functionality
+const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
+  const [isResizing, setIsResizing] = useState(false);
+  const [size, setSize] = useState({ width: 600, height: 500 });
+  const [resizeDirection, setResizeDirection] = useState<string>('');
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const direction = target.getAttribute('data-resize-direction');
+      if (!direction) return;
+
+      setIsResizing(true);
+      setResizeDirection(direction);
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing || !element) return;
+
+      const rect = element.getBoundingClientRect();
+      let newWidth = size.width;
+      let newHeight = size.height;
+
+      if (resizeDirection.includes('right')) {
+        newWidth = Math.max(400, e.clientX - rect.left);
+      }
+      if (resizeDirection.includes('left')) {
+        newWidth = Math.max(400, rect.right - e.clientX);
+      }
+      if (resizeDirection.includes('bottom')) {
+        newHeight = Math.max(300, e.clientY - rect.top);
+      }
+      if (resizeDirection.includes('top')) {
+        newHeight = Math.max(300, rect.bottom - e.clientY);
+      }
+
+      setSize({ width: newWidth, height: newHeight });
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      setResizeDirection('');
+    };
+
+    // Add resize handles
+    const resizeHandles = element.querySelectorAll('[data-resize-direction]');
+    resizeHandles.forEach(handle => {
+      handle.addEventListener('mousedown', handleMouseDown);
+    });
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      resizeHandles.forEach(handle => {
+        handle.removeEventListener('mousedown', handleMouseDown);
+      });
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, size, resizeDirection, ref]);
+
+  return { size, isResizing };
+};
+
 const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProps> = ({
   isVisible,
   onClose,
   conversationState,
   agentFlow = [],
-  currentTeam,
-  activeAgents = [],
-  usedModels = [],
-  usedTools = []
+  messages = []
 }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [flowState, setFlowState] = useState<FlowState>({
-    userInputShown: false,
-    teamIdentified: false,
-    agentsIdentified: [],
-    teamData: undefined
-  });
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [lastMessageCount, setLastMessageCount] = useState(0);
+  const [useAutogenFlow, setUseAutogenFlow] = useState(false);
+  
+  // Refs for draggable and resizable functionality
+  const windowRef = useRef<HTMLDivElement>(null);
+  const { position, isDragging } = useDraggable(windowRef);
+  const { size, isResizing } = useResizable(windowRef);
 
-  // Mock data for demonstration - this would be populated progressively from conversation
-  const mockTeam: Team = currentTeam || {
-    id: 'team-1',
-    name: 'Customer Service AI Team',
-    description: 'Intelligent customer support automation',
-    aiTeamType: 'RoundRobinGroupChat',
-    members: [],
-    ownerId: '1',
-    createdAt: new Date().toISOString(),
-    agents: ['agent-1', 'agent-2']
-  };
+  // Update conversation state in flow data
+  useEffect(() => {
+    updateConversationState(conversationState);
+  }, [conversationState]);
 
-  const mockAgents: Agent[] = activeAgents.length > 0 ? activeAgents : [
-    {
-      id: 'agent-1',
-      name: 'Assistant Agent',
-      description: 'Primary customer service assistant',
-      status: 'deployed',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      createdBy: '1',
-      teamId: 'team-1',
-      modelId: 'model-1',
-      toolIds: ['tool-1', 'tool-2'],
-      terminationConfig: 'auto'
-    },
-    {
-      id: 'agent-2',
-      name: 'User Proxy Agent',
-      description: 'Human escalation handler',
-      status: 'deployed',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      createdBy: '1',
-      teamId: 'team-1',
-      modelId: 'model-2',
-      toolIds: ['tool-1'],
-      terminationConfig: 'manual'
+  // Enhanced AI analysis with Autogen structure generation
+  useEffect(() => {
+    const performAnalysis = async () => {
+      if (messages.length === 0 || messages.length === lastMessageCount) return;
+      
+      // Check if analysis should be triggered
+      if (!shouldTriggerAnalysis()) return;
+      
+      setIsAnalyzing(true);
+      setAnalysisInProgress(true);
+      
+      try {
+        // Get user context
+        const userIndustry = localStorage.getItem('user_industry') || undefined;
+        const userFocusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
+        
+        // Get current state for context
+        const analysisData = getAnalysisReadyData();
+        
+        // Prepare messages for analysis
+        const messageTexts = messages.map(m => `${m.role}: ${m.content}`);
+        
+        console.log('Starting Autogen AI analysis with context:', {
+          messageCount: messages.length,
+          userIndustry,
+          userFocusAreas,
+          currentState: analysisData
+        });
+        
+        // Perform contextual analysis to get Autogen structure
+        const analysis = await analyzeConversationForAutogenStructure(
+          messageTexts,
+          analysisData.autogenStructure,
+          userIndustry,
+          userFocusAreas
+        );
+        
+        console.log('Autogen AI Analysis completed:', analysis);
+        
+        // Update flow state with Autogen structure
+        if (analysis.teamStructure) {
+          updateFromAutogenStructure(analysis.teamStructure, analysis);
+          setUseAutogenFlow(true); // Switch to Autogen-based flow
+        }
+        
+        setLastMessageCount(messages.length);
+        
+      } catch (error) {
+        console.error('Error in Autogen AI analysis:', error);
+        
+        // Fallback: Update user input manually if AI analysis fails
+        if (messages.length > 0) {
+          const userMessages = messages.filter(m => m.role === 'user');
+          if (userMessages.length > 0) {
+            const lastUserMessage = userMessages[userMessages.length - 1];
+            updateUserInput(lastUserMessage.content);
+          }
+        }
+      } finally {
+        setIsAnalyzing(false);
+        setAnalysisInProgress(false);
+      }
+    };
+
+    // Debounce analysis
+    const timeoutId = setTimeout(performAnalysis, 1500);
+    return () => clearTimeout(timeoutId);
+  }, [messages, lastMessageCount]);
+
+  // Generate flow based on Autogen structure or progressive flow
+  const generateFlow = useCallback(() => {
+    const flowState = getFlowState();
+    const autogenStructure = getCurrentAutogenStructure();
+    
+    if (useAutogenFlow && autogenStructure) {
+      // Use Autogen structure to generate flow
+      const { nodes: autogenNodes, edges: autogenEdges } = transformTeamStructureToFlow(
+        autogenStructure,
+        (nodeData) => console.log('Node edit:', nodeData)
+      );
+      
+      // Convert to our node format with enhanced data
+      const enhancedNodes = autogenNodes.map(node => ({
+        ...node,
+        type: node.data.type === 'team' ? 'teamNode' : 'agentNode',
+        data: {
+          ...node.data,
+          status: conversationState === 'processing' || conversationState === 'responding' ? 'active' : 'completed',
+          confidence: 0.9,
+          source: 'ai_analysis'
+        }
+      }));
+      
+      // Add user input node
+      const userNode: Node = {
+        id: 'user-input',
+        type: 'userNode',
+        position: { x: 300, y: -150 },
+        data: {
+          label: 'User Input',
+          description: conversationState === 'listening' ? 'Speaking...' : 
+                      conversationState === 'processing' ? 'Processing voice...' : 
+                      flowState.userInput.shown ? 'Voice input received' : 'Ready to listen',
+          status: conversationState === 'listening' ? 'active' : 
+                  flowState.userInput.shown ? 'completed' : 'pending',
+          timestamp: flowState.userInput.timestamp,
+          processed: flowState.userInput.processed
+        },
+        sourcePosition: Position.Bottom,
+        targetPosition: Position.Top,
+      };
+      
+      const allNodes = [userNode, ...enhancedNodes];
+      
+      // Add edge from user to team
+      const teamNode = enhancedNodes.find(n => n.data.type === 'team');
+      const userToTeamEdge: Edge = {
+        id: 'edge-user-team',
+        source: 'user-input',
+        target: teamNode?.id || 'team',
+        type: 'smoothstep',
+        animated: conversationState === 'processing' || isAnalyzing,
+        style: { 
+          stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' || conversationState === 'responding' ? '#3b82f6' : '#6b7280',
+          strokeWidth: 3 
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: isAnalyzing ? '#f59e0b' : conversationState === 'processing' || conversationState === 'responding' ? '#3b82f6' : '#6b7280',
+        },
+      };
+      
+      setNodes(allNodes);
+      setEdges([userToTeamEdge, ...autogenEdges]);
+      
+    } else {
+      // Use progressive flow generation
+      generateProgressiveFlow();
     }
-  ];
+  }, [conversationState, isAnalyzing, useAutogenFlow, setNodes, setEdges]);
 
-  const mockModels: Model[] = usedModels.length > 0 ? usedModels : [
-    {
-      id: 'model-1',
-      name: 'GPT-4o-mini',
-      description: 'OpenAI GPT-4 optimized mini',
-      provider: 'OpenAI',
-      type: 'LLM',
-      version: '4'
-    },
-    {
-      id: 'model-2',
-      name: 'Claude-3',
-      description: 'Anthropic Claude 3',
-      provider: 'Anthropic',
-      type: 'LLM',
-      version: '3'
-    }
-  ];
-
-  const mockTools: Tool[] = usedTools.length > 0 ? usedTools : [
-    {
-      id: 'tool-1',
-      name: 'Calculator',
-      description: 'Mathematical calculations',
-      category: 'Math',
-      provider: 'Built-in'
-    },
-    {
-      id: 'tool-2',
-      name: 'Web Search',
-      description: 'Search the internet',
-      category: 'Information',
-      provider: 'External'
-    }
-  ];
-
-  // Progressive flow generation based on conversation state
+  // Generate progressive flow based on enhanced state
   const generateProgressiveFlow = useCallback(() => {
+    const flowState = getFlowState();
+    const teamProgress = getTeamProgress();
     const newNodes: Node[] = [];
     const newEdges: Edge[] = [];
     let yOffset = 50;
 
-    // Step 1: Always show user input first
-    const userStep = agentFlow.find(step => step.type === 'user');
-    if (conversationState !== 'idle' || userStep) {
+    // Step 1: Show user input with analysis status
+    if (flowState.userInput.shown || conversationState !== 'idle') {
       newNodes.push({
         id: 'user-input',
         type: 'userNode',
@@ -266,10 +515,11 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
           label: 'User Input',
           description: conversationState === 'listening' ? 'Speaking...' : 
                       conversationState === 'processing' ? 'Processing voice...' : 
-                      userStep ? 'Voice input received' : 'Ready to listen',
+                      flowState.userInput.shown ? 'Voice input received' : 'Ready to listen',
           status: conversationState === 'listening' ? 'active' : 
-                  userStep ? 'completed' : 'pending',
-          timestamp: userStep?.timestamp
+                  flowState.userInput.shown ? 'completed' : 'pending',
+          timestamp: flowState.userInput.timestamp,
+          processed: flowState.userInput.processed
         },
         sourcePosition: Position.Bottom,
         targetPosition: Position.Top,
@@ -278,22 +528,21 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
       yOffset += 180;
     }
 
-    // Step 2: Show AI Team once identified (when processing starts or team is mentioned)
-    const teamStep = agentFlow.find(step => step.type === 'agent' || step.type === 'decision');
-    const shouldShowTeam = conversationState === 'processing' || conversationState === 'responding' || teamStep;
-    
-    if (shouldShowTeam) {
+    // Step 2: Show AI Team with enhanced data
+    if (flowState.team) {
       newNodes.push({
         id: 'agent-team',
         type: 'teamNode',
         position: { x: 250, y: yOffset },
         data: {
-          label: mockTeam.name,
-          aiTeamType: mockTeam.aiTeamType,
-          description: mockTeam.description,
-          agentCount: mockAgents.length,
+          label: flowState.team.name,
+          teamType: flowState.team.type,
+          description: flowState.team.description,
+          agentCount: flowState.agents.length,
+          confidence: flowState.team.confidence,
+          source: flowState.team.source,
           status: conversationState === 'processing' || conversationState === 'responding' ? 'active' : 
-                  teamStep ? 'completed' : 'pending'
+                  flowState.team.status === 'identified' ? 'completed' : 'pending'
         },
         sourcePosition: Position.Bottom,
         targetPosition: Position.Top,
@@ -306,14 +555,14 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
           source: 'user-input',
           target: 'agent-team',
           type: 'smoothstep',
-          animated: conversationState === 'processing',
+          animated: conversationState === 'processing' || isAnalyzing,
           style: { 
-            stroke: conversationState === 'processing' || conversationState === 'responding' ? '#3b82f6' : '#6b7280',
+            stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' || conversationState === 'responding' ? '#3b82f6' : '#6b7280',
             strokeWidth: 3 
           },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: conversationState === 'processing' || conversationState === 'responding' ? '#3b82f6' : '#6b7280',
+            color: isAnalyzing ? '#f59e0b' : conversationState === 'processing' || conversationState === 'responding' ? '#3b82f6' : '#6b7280',
           },
         });
       }
@@ -321,30 +570,26 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
       yOffset += 200;
     }
 
-    // Step 3: Show individual agents as they get identified/activated
-    const shouldShowAgents = conversationState === 'responding' || teamStep;
-    
-    if (shouldShowAgents) {
-      const agentPositions = generateAgentPositions(mockTeam.aiTeamType, mockAgents.length);
+    // Step 3: Show individual agents with enhanced data
+    if (flowState.agents.length > 0 && flowState.team) {
+      const agentPositions = generateAgentPositions(flowState.team.type, flowState.agents.length);
       
-      mockAgents.forEach((agent, index) => {
-        const agentStep = agentFlow.find(step => step.type === 'agent' && step.label.includes(agent.name));
-        const model = mockModels.find(m => m.id === agent.modelId);
-        const agentTools = mockTools.filter(t => agent.toolIds.includes(t.id));
-
+      flowState.agents.forEach((agent, index) => {
         newNodes.push({
           id: agent.id,
           type: 'agentNode',
           position: { x: agentPositions[index].x, y: yOffset },
           data: {
             label: agent.name,
-            agentType: getAgentTypeFromName(agent.name),
-            modelName: model?.name,
-            modelProvider: model?.provider,
-            tools: agentTools,
-            status: conversationState === 'responding' && agentStep ? 'active' : 
-                    agentStep ? 'completed' : 'pending',
-            duration: agentStep?.duration
+            agentType: agent.type,
+            modelName: agent.modelName,
+            modelProvider: agent.modelProvider,
+            tools: agent.tools,
+            confidence: agent.confidence,
+            source: agent.source,
+            status: conversationState === 'responding' ? 'active' : 
+                    agent.status === 'identified' ? 'completed' : 'pending',
+            duration: agent.timestamp ? Date.now() - agent.timestamp : undefined
           },
           sourcePosition: Position.Bottom,
           targetPosition: Position.Top,
@@ -371,14 +616,16 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
       });
 
       // Add team-type specific inter-agent connections
-      addTeamTypeConnections(mockTeam.aiTeamType, mockAgents, newEdges, conversationState);
+      if (flowState.team) {
+        addTeamTypeConnections(flowState.team.type, flowState.agents, newEdges, conversationState);
+      }
     }
 
     setNodes(newNodes);
     setEdges(newEdges);
-  }, [conversationState, agentFlow, setNodes, setEdges]);
+  }, [conversationState, isAnalyzing, setNodes, setEdges]);
 
-  // Generate agent positions based on team type
+  // Generate agent positions based on team type (enhanced)
   const generateAgentPositions = (teamType: string, agentCount: number) => {
     const positions = [];
     const baseX = 300;
@@ -387,11 +634,12 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
     switch (teamType) {
       case 'RoundRobinGroupChat':
         // Circular arrangement for round-robin
+        const radius = Math.max(120, agentCount * 30);
         for (let i = 0; i < agentCount; i++) {
           const angle = (i * 2 * Math.PI) / agentCount;
           positions.push({
-            x: baseX + Math.cos(angle) * 120,
-            y: 0 // Will be offset by yOffset
+            x: baseX + Math.cos(angle) * radius,
+            y: Math.sin(angle) * radius
           });
         }
         break;
@@ -400,19 +648,46 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
         // Hierarchical tree structure
         positions.push({ x: baseX, y: 0 }); // Main agent at center
         for (let i = 1; i < agentCount; i++) {
+          const row = Math.floor((i - 1) / 3) + 1;
+          const col = (i - 1) % 3;
           positions.push({
-            x: baseX + (i - 1) * spacing - ((agentCount - 2) * spacing) / 2,
-            y: 100 // Subordinates below
+            x: baseX + (col - 1) * spacing,
+            y: row * 120
           });
         }
         break;
       
       case 'CascadingGroupChat':
-        // Linear cascade
+        // Linear cascade with slight stagger
         for (let i = 0; i < agentCount; i++) {
           positions.push({
             x: baseX + i * spacing - ((agentCount - 1) * spacing) / 2,
-            y: i * 50 // Staggered vertically
+            y: i * 30 // Slight vertical stagger
+          });
+        }
+        break;
+      
+      case 'BroadcastGroupChat':
+        // Star pattern around center
+        const starRadius = Math.max(150, agentCount * 25);
+        for (let i = 0; i < agentCount; i++) {
+          const angle = (i * 2 * Math.PI) / agentCount;
+          positions.push({
+            x: baseX + Math.cos(angle) * starRadius,
+            y: Math.sin(angle) * starRadius
+          });
+        }
+        break;
+      
+      case 'ConcurrentGroupChat':
+        // Parallel arrangement
+        const cols = Math.ceil(Math.sqrt(agentCount));
+        for (let i = 0; i < agentCount; i++) {
+          const row = Math.floor(i / cols);
+          const col = i % cols;
+          positions.push({
+            x: baseX + (col - (cols - 1) / 2) * spacing,
+            y: row * 120
           });
         }
         break;
@@ -430,8 +705,10 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
     return positions;
   };
 
-  // Add team-type specific connections between agents
-  const addTeamTypeConnections = (teamType: string, agents: Agent[], edges: Edge[], state: string) => {
+  // Enhanced team-type specific connections
+  const addTeamTypeConnections = (teamType: string, agents: TempAgentData[], edges: Edge[], state: string) => {
+    const isActive = state === 'responding';
+    
     switch (teamType) {
       case 'RoundRobinGroupChat':
         // Connect agents in a circle for round-robin communication
@@ -442,7 +719,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
             source: agents[i].id,
             target: agents[nextIndex].id,
             type: 'smoothstep',
-            animated: state === 'responding',
+            animated: isActive,
             style: { 
               stroke: '#f59e0b',
               strokeWidth: 2,
@@ -452,6 +729,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
               type: MarkerType.ArrowClosed,
               color: '#f59e0b',
             },
+            label: `Round ${i + 1}`,
           });
         }
         break;
@@ -465,7 +743,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
               source: agents[0].id,
               target: agents[i].id,
               type: 'smoothstep',
-              animated: state === 'responding',
+              animated: isActive,
               style: { 
                 stroke: '#8b5cf6',
                 strokeWidth: 2,
@@ -475,6 +753,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
                 type: MarkerType.ArrowClosed,
                 color: '#8b5cf6',
               },
+              label: 'Delegate',
             });
           }
         }
@@ -488,7 +767,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
             source: agents[i].id,
             target: agents[i + 1].id,
             type: 'smoothstep',
-            animated: state === 'responding',
+            animated: isActive,
             style: { 
               stroke: '#ef4444',
               strokeWidth: 2,
@@ -498,56 +777,150 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
               type: MarkerType.ArrowClosed,
               color: '#ef4444',
             },
+            label: 'Fallback',
           });
         }
+        break;
+        
+      case 'BroadcastGroupChat':
+        // No inter-agent connections needed - all receive same message
+        break;
+        
+      case 'ConcurrentGroupChat':
+        // Add aggregation connections if needed
         break;
     }
   };
 
-  // Helper function to determine agent type from name
-  const getAgentTypeFromName = (name: string): string => {
-    if (name.toLowerCase().includes('assistant')) return 'AssistantAgent';
-    if (name.toLowerCase().includes('proxy')) return 'UserProxyAgent';
-    if (name.toLowerCase().includes('code')) return 'CodeInterpreterAgent';
-    return 'AssistantAgent';
-  };
-
   useEffect(() => {
-    generateProgressiveFlow();
-  }, [generateProgressiveFlow]);
+    generateFlow();
+  }, [generateFlow]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
 
+  const handleExportAutogen = () => {
+    const autogenStructure = getCurrentAutogenStructure();
+    if (autogenStructure) {
+      const dataStr = JSON.stringify(autogenStructure, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = 'autogen_team_structure.json';
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    }
+  };
+
   if (!isVisible) return null;
+
+  const flowState = getFlowState();
+  const teamProgress = getTeamProgress();
 
   return (
     <motion.div
+      ref={windowRef}
       initial={{ scale: 0.9, x: 50 }}
       animate={{ scale: 1, x: 0 }}
       exit={{ scale: 0.9, x: 50 }}
       className={`bg-dark-surface border border-dark-border rounded-xl shadow-xl transition-all duration-300 ${
-        isMinimized ? 'w-80 h-16' : 'w-[600px] h-[500px]'
-      }`}
+        isMinimized ? 'w-80 h-16' : ''
+      } ${isDragging ? 'cursor-grabbing' : ''} ${isResizing ? 'cursor-nw-resize' : ''}`}
+      style={{
+        position: 'fixed',
+        left: position.x,
+        top: position.y,
+        width: isMinimized ? 320 : size.width,
+        height: isMinimized ? 64 : size.height,
+        zIndex: 1000,
+        userSelect: isDragging || isResizing ? 'none' : 'auto'
+      }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-dark-border">
+      {/* Resize handles */}
+      {!isMinimized && (
+        <>
+          {/* Corner handles */}
+          <div 
+            data-resize-direction="bottom-right"
+            className="absolute bottom-0 right-0 w-4 h-4 cursor-nw-resize bg-gray-600 opacity-50 hover:opacity-100"
+            style={{ clipPath: 'polygon(100% 0, 0 100%, 100% 100%)' }}
+          />
+          <div 
+            data-resize-direction="bottom-left"
+            className="absolute bottom-0 left-0 w-4 h-4 cursor-ne-resize bg-gray-600 opacity-50 hover:opacity-100"
+            style={{ clipPath: 'polygon(0 0, 0 100%, 100% 100%)' }}
+          />
+          <div 
+            data-resize-direction="top-right"
+            className="absolute top-0 right-0 w-4 h-4 cursor-ne-resize bg-gray-600 opacity-50 hover:opacity-100"
+            style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%)' }}
+          />
+          <div 
+            data-resize-direction="top-left"
+            className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize bg-gray-600 opacity-50 hover:opacity-100"
+            style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
+          />
+          
+          {/* Edge handles */}
+          <div 
+            data-resize-direction="right"
+            className="absolute top-4 bottom-4 right-0 w-2 cursor-ew-resize bg-gray-600 opacity-0 hover:opacity-50"
+          />
+          <div 
+            data-resize-direction="left"
+            className="absolute top-4 bottom-4 left-0 w-2 cursor-ew-resize bg-gray-600 opacity-0 hover:opacity-50"
+          />
+          <div 
+            data-resize-direction="bottom"
+            className="absolute bottom-0 left-4 right-4 h-2 cursor-ns-resize bg-gray-600 opacity-0 hover:opacity-50"
+          />
+          <div 
+            data-resize-direction="top"
+            className="absolute top-0 left-4 right-4 h-2 cursor-ns-resize bg-gray-600 opacity-0 hover:opacity-50"
+          />
+        </>
+      )}
+
+      {/* Enhanced Header with drag handle */}
+      <div 
+        data-drag-handle
+        className={`flex items-center justify-between p-3 border-b border-dark-border ${
+          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
+      >
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+            isAnalyzing ? 'bg-orange-500 animate-pulse' :
             conversationState === 'listening' ? 'bg-blue-500 animate-pulse' :
             conversationState === 'processing' ? 'bg-yellow-500 animate-pulse' :
             conversationState === 'responding' ? 'bg-green-500 animate-pulse' :
             'bg-gray-500'
           }`} />
           <h3 className="text-sm font-medium text-white">Agent Team Flow</h3>
-          <span className="text-xs text-gray-400 capitalize">({conversationState})</span>
-          {mockTeam.aiTeamType && (
-            <span className="text-xs text-gray-500">• {mockTeam.aiTeamType}</span>
+          <span className="text-xs text-gray-400 capitalize">
+            ({isAnalyzing ? 'analyzing' : conversationState})
+          </span>
+          {flowState.team?.type && (
+            <span className="text-xs text-gray-500">• {flowState.team.type}</span>
+          )}
+          {isAnalyzing && (
+            <SparklesIcon className="h-3 w-3 text-orange-500 animate-spin" />
           )}
         </div>
         <div className="flex items-center gap-1">
+          {teamProgress.hasAutogenStructure && (
+            <button
+              onClick={handleExportAutogen}
+              className="p-1 text-gray-400 hover:text-white transition-colors"
+              title="Export Autogen Structure"
+            >
+              <DocumentArrowDownIcon className="h-4 w-4" />
+            </button>
+          )}
           <button
             onClick={() => setIsMinimized(!isMinimized)}
             className="p-1 text-gray-400 hover:text-white transition-colors"
@@ -565,7 +938,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
 
       {/* Content */}
       {!isMinimized && (
-        <div className="h-[440px] bg-dark-background">
+        <div className="bg-dark-background" style={{ height: size.height - 64 }}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -589,11 +962,19 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
         </div>
       )}
 
-      {/* Status indicator when minimized */}
+      {/* Enhanced status indicator when minimized */}
       {isMinimized && (
         <div className="p-2 text-center">
-          <p className="text-xs text-gray-400 capitalize">
-            {conversationState === 'idle' ? 'Ready' : conversationState} • {agentFlow.length} steps
+          <p className="text-xs text-gray-400">
+            {isAnalyzing ? '🤖 AI Analyzing...' : 
+             teamProgress.readyForDeployment ? '✅ Ready for deployment' :
+             `${flowState.conversationStage} • ${flowState.agents.length} agents`}
+            {teamProgress.averageAgentConfidence > 0 && (
+              <span className="ml-2">• {Math.round(teamProgress.averageAgentConfidence * 100)}% confidence</span>
+            )}
+            {teamProgress.hasAutogenStructure && (
+              <span className="ml-2">• Autogen Ready</span>
+            )}
           </p>
         </div>
       )}
