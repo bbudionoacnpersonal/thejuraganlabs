@@ -33,11 +33,10 @@ const Chatbox = forwardRef<ChatboxHandle, ChatboxProps>(({
   const [showVoiceOverlay, setShowVoiceOverlay] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const micButtonRef = useRef<HTMLButtonElement>(null);
 
   useImperativeHandle(ref, () => ({
     triggerMicClick: () => {
-      micButtonRef.current?.click();
+      handleVoiceClick();
     }
   }));
 
@@ -138,7 +137,6 @@ const Chatbox = forwardRef<ChatboxHandle, ChatboxProps>(({
           />
           <div className="absolute right-2 top-1/2 -translate-y-2/3 flex gap-2">
             <button
-              ref={micButtonRef}
               type="button"
               onClick={handleVoiceClick}
               className="p-2 rounded-md text-gray-300 bg-secondary-600 hover:bg-primary-600 transition-colors"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/common/Navbar';
 import Chatbox from '@/components/create-agent/Chatbox';
@@ -8,6 +8,7 @@ import OnboardingGuide from '@/components/create-agent/OnboardingGuide';
 import Footer from '@/components/common/Footer';
 import { teamStructure } from '@/mockdata/teamStructure';
 import useAuthStore from '@/store/authStore';
+import { ChatboxHandle } from '@/types';
 
 const CreateAgentPage: React.FC = () => {
   const navigate = useNavigate();
@@ -18,6 +19,9 @@ const CreateAgentPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [prompt, setPrompt] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  
+  // Create ref for Chatbox
+  const chatboxRef = useRef<ChatboxHandle>(null);
   
   const [agentConfig] = useState({
     name: "Customer Support Assistant",
@@ -81,6 +85,7 @@ const CreateAgentPage: React.FC = () => {
             {/* Chat Interface - Expands when library is collapsed */}
             <div className={`${isLibraryCollapsed ? 'col-span-4' : 'col-span-3'} bg-dark-background transition-all duration-300`}>
               <Chatbox 
+                ref={chatboxRef}
                 expanded={isLibraryCollapsed} 
                 onVoiceStart={handleVoiceInput}
                 prompt={prompt}
@@ -123,6 +128,7 @@ const CreateAgentPage: React.FC = () => {
           setPrompt={setPrompt}
           isRecording={isRecording}
           setIsRecording={setIsRecording}
+          chatboxRef={chatboxRef}
         />
       )}
       

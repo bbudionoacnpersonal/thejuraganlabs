@@ -11,7 +11,6 @@ import {
   MicrophoneIcon
 } from '@heroicons/react/24/outline';
 import {MailWarning, Wrench} from 'lucide-react';
-import VoiceSDKOverlay from './VoiceSDKOverlay';
 
 interface OnboardingGuideProps {
   isVisible: boolean;
@@ -25,6 +24,7 @@ interface OnboardingGuideProps {
   setPrompt: (val: string) => void;
   isRecording: boolean;
   setIsRecording: (val: boolean) => void;
+  chatboxRef?: React.RefObject<{ triggerMicClick: () => void }>;
 }
 
 const steps = [
@@ -55,9 +55,9 @@ const OnboardingGuide: React.FC<OnboardingGuideProps> = ({
   currentStep,
   onNextStep,
   onPrevStep,
+  chatboxRef,
 }) => {
   const [mode, setMode] = useState<'select' | 'guided' | 'voice'>('select');
-  const [showVoiceOverlay, setShowVoiceOverlay] = useState(false);
   const [showVoiceMessage, setShowVoiceMessage] = useState(false);
   const [selections, setSelections] = useState<Record<string, any>>({
     name: '',
@@ -139,7 +139,11 @@ const OnboardingGuide: React.FC<OnboardingGuideProps> = ({
   const handleModeSelect = (selectedMode: 'guided' | 'voice') => {
     setMode(selectedMode);
     if (selectedMode === 'voice') {
-      setShowVoiceOverlay(true);
+      // Trigger the voice click from chatbox instead of showing overlay directly
+      if (chatboxRef?.current) {
+        chatboxRef.current.triggerMicClick();
+      }
+      onClose(); // Close the onboarding guide
     }
   };
 
@@ -170,18 +174,7 @@ const OnboardingGuide: React.FC<OnboardingGuideProps> = ({
 
   return (
     <AnimatePresence>
-      {showVoiceOverlay && (
-        <VoiceSDKOverlay 
-          isVisible={showVoiceOverlay} 
-          onClose={() => {
-            setShowVoiceOverlay(false);
-            onClose();
-          }}
-          onMessage={() => {}}
-        />
-      )}
-      
-      {isVisible && !showVoiceOverlay && (
+      {isVisible && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
