@@ -479,7 +479,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         let llmProvider = 'OpenAI';
         let tools: any[] = [];
 
-        if (teamStructure && teamStructure.config.participants && teamStructure.config.participants[index]) {
+        if (teamStructure?.config?.participants && teamStructure.config.participants[index]) {
           const participant = teamStructure.config.participants[index];
           llmModel = participant.config.model_client?.config.model || 'gpt-4o-mini';
           llmProvider = participant.config.model_client?.provider.split('.').pop() || 'OpenAI';
