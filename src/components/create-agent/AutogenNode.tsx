@@ -302,18 +302,6 @@ const AutogenNode: React.FC<AutogenNodeProps> = ({ data }) => {
               {agent.description && (
                 <p className="ml-4 mt-0.5 text-[9px] text-gray-500">{agent.description}</p>
               )}
-              {agent.model && (
-                <div className="ml-4 mt-0.5 flex items-center gap-1">
-                  <SparklesIcon className="w-2 h-2 text-gray-500" />
-                  <span className="text-[9px] text-gray-600">{agent.model.name}</span>
-                </div>
-              )}
-              {agent.tools && agent.tools.length > 0 && (
-                <div className="ml-4 mt-0.5 flex items-center gap-1">
-                  <Wrench className="w-2 h-2 text-gray-500" />
-                  <span className="text-[9px] text-gray-600">{agent.tools.length} tools</span>
-                </div>
-              )}
             </div>
           ))}
           <div className="mt-1.5 border border-dashed border-gray-200 rounded p-1.5 text-[9px] text-gray-400">
