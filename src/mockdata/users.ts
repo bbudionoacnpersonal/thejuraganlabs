@@ -16,7 +16,7 @@ export const mockUsers: StoredUser[] = [
   {
     id: '1',
     name: 'Business User',
-    email: 'business@accenture.com',
+    email: 'business@example.com',
     username: 'business',
     password: 'business@123!',
     role: 'business',
