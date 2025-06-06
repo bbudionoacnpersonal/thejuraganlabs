@@ -94,6 +94,7 @@ export const industries = [
         - Consumer behavior analysis
         - Brand reputation management
         - Market trend identification
+        - Sales and distribution
         - Product development support
         - Customer feedback analysis`,
       toolPriorities: ['market_analyzer', 'sentiment_analyzer', 'trend_predictor']
