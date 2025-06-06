@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
+import { industries, focusAreas } from '@/mockdata/agents';
 
 const NavbarLogo: React.FC = () => {
   const { user } = useAuthStore();
@@ -11,6 +12,15 @@ const NavbarLogo: React.FC = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   
   const isCreateAgentPage = location.pathname === '/agents/create';
+
+  // Get stored preferences
+  const userIndustry = localStorage.getItem('user_industry');
+  const userFocusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
+  
+  const industryLabel = industries.find(i => i.value === userIndustry)?.label;
+  const focusAreaLabels = userFocusAreas
+    .map((area: string) => focusAreas.find(f => f.value === area)?.label)
+    .filter(Boolean);
   
   const handleLogoClick = (e: React.MouseEvent) => {
     if (isCreateAgentPage) {
@@ -28,7 +38,6 @@ const NavbarLogo: React.FC = () => {
     } else if (action === 'discard') {
       navigate(user ? '/dashboard' : '/');
     }
-    // For 'cancel', just close the modal and stay on the page
   };
 
   return (
@@ -51,33 +60,38 @@ const NavbarLogo: React.FC = () => {
         {/* Right Texts */}
         <div className="flex flex-col justify-center leading-tight">
           <span className="text-xl font-extrabold bg-gradient-to-r from-[#4DACFF] via-[#774DFF] to-[#FF73FF] bg-clip-text text-transparent ml-1">Juragan Labs</span>
-          <span className="text-[10px] text-gray-600 ml-1">Powered by Accenture Indonesia</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-gray-600 ml-1">Powered by Accenture Indonesia</span>
+            {user && userIndustry && (
+              <>
+                <span className="text-[10px] text-gray-400">|</span>
+                <Link to="/onboarding" className="group">
+                  <span className="text-[10px] text-gray-400 hover:text-gray-300">{industryLabel}</span>
+                  {focusAreaLabels.length > 0 && (
+                    <span className="text-[10px] text-gray-500 group-hover:text-gray-400">
+                      {' '}• {focusAreaLabels.join(', ')}
+                    </span>
+                  )}
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </Link>
 
-      {/* Blur Overlay */}
-      {showConfirmation && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center"
-          aria-hidden="true"
-        />
-      )}
-
-   
       <Modal
         isOpen={showConfirmation}
         onClose={() => setShowConfirmation(false)}
         title="Save Changes?"
         size="md"
       >
-         
         <div className="space-y-4">
           <p className="text-gray-300">
             You have unsaved changes in your AI agents team configuration. What would you like to do?
           </p>
           
           <div className="flex justify-start gap-2">
-           <Button
+            <Button
               variant="primary"
               size="sm"
               className="px-1 py-1"
@@ -92,12 +106,9 @@ const NavbarLogo: React.FC = () => {
             >
               Discard Changes
             </Button>
-          
           </div>
         </div>
-       
       </Modal>
-      
     </>
   );
 };
