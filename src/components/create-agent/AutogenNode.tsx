@@ -294,14 +294,11 @@ const AutogenNode: React.FC<AutogenNodeProps> = ({ data }) => {
             AGENTS ({data.agents?.length || 0})
           </div>
           {data.agents?.map((agent, index) => (
-            <div key={index} className="mt-2">
+            <div key={index} className="mt-1">
               <div className="flex items-center gap-1.5">
                 <Bot className="w-2 h-2 text-gray-500" />
                 <span className="text-[10px] font-medium text-gray-700">{agent.name}</span>
               </div>
-              {agent.description && (
-                <p className="ml-4 mt-0.5 text-[9px] text-gray-500">{agent.description}</p>
-              )}
             </div>
           ))}
           <div className="mt-1.5 border border-dashed border-gray-200 rounded p-1.5 text-[9px] text-gray-400">
