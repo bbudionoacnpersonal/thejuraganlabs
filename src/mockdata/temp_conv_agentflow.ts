@@ -1,5 +1,7 @@
-// Enhanced conversation agent flow data that follows Anthropic AI analysis results
+// Enhanced conversation agent flow data that follows Autogen structure format
 // This will be populated progressively as the conversation develops based on AI insights
+
+import { TeamStructure } from '@/types';
 
 export interface TempTeamData {
   id: string;
@@ -10,6 +12,7 @@ export interface TempTeamData {
   timestamp: number;
   confidence?: number; // AI confidence level (0-1)
   source: 'user_input' | 'ai_analysis' | 'manual'; // How this data was identified
+  autogenStructure?: TeamStructure; // Full Autogen structure
 }
 
 export interface TempAgentData {
@@ -50,6 +53,7 @@ export interface ConversationFlowState {
   lastAnalysis: number; // When the last AI analysis was performed
   analysisInProgress: boolean; // Whether AI analysis is currently running
   pendingUpdates: string[]; // Queue of updates waiting to be processed
+  autogenStructure?: TeamStructure; // Current Autogen structure
 }
 
 // Initial empty state
@@ -81,6 +85,58 @@ export const updateUserInput = (content: string) => {
   conversationFlowState.pendingUpdates.push('user_input');
 };
 
+export const updateFromAutogenStructure = (autogenStructure: TeamStructure, analysis: any) => {
+  const timestamp = Date.now();
+  
+  // Update conversation stage
+  conversationFlowState.conversationStage = analysis.conversationStage;
+  conversationFlowState.autogenStructure = autogenStructure;
+  
+  // Update team data from Autogen structure
+  if (autogenStructure) {
+    updateTeamData({
+      name: autogenStructure.label,
+      description: autogenStructure.description,
+      type: autogenStructure.provider.split('.').pop() || 'RoundRobinGroupChat',
+      status: 'identified',
+      confidence: analysis.confidence || 0.8,
+      source: 'ai_analysis',
+      autogenStructure
+    });
+    
+    // Update agents from participants
+    autogenStructure.config.participants.forEach(participant => {
+      const tools = participant.config.tools?.map((tool, index) => ({
+        id: `tool-${participant.label}-${index}`,
+        name: tool.config.name,
+        description: tool.description,
+        confidence: 0.8
+      })) || [];
+      
+      addOrUpdateAgent({
+        name: participant.label,
+        description: participant.description,
+        type: participant.provider.split('.').pop() || 'AssistantAgent',
+        modelName: participant.config.model_client?.config.model,
+        modelProvider: participant.config.model_client?.provider.split('.').pop(),
+        tools,
+        toolIds: tools.map(t => t.name),
+        status: 'identified',
+        confidence: 0.8,
+        source: 'ai_analysis'
+      });
+    });
+  }
+  
+  // Mark user input as processed
+  conversationFlowState.userInput.processed = true;
+  conversationFlowState.lastAnalysis = timestamp;
+  conversationFlowState.analysisInProgress = false;
+  conversationFlowState.lastUpdate = timestamp;
+  conversationFlowState.pendingUpdates = []; // Clear pending updates
+};
+
+// Legacy function for backward compatibility
 export const updateFromAnthropicAnalysis = (analysis: {
   teamIdentified: boolean;
   teamName?: string;
@@ -274,7 +330,8 @@ export const getAnalysisReadyData = () => {
     currentTeam: conversationFlowState.team,
     currentAgents: conversationFlowState.agents,
     conversationStage: conversationFlowState.conversationStage,
-    pendingUpdates: conversationFlowState.pendingUpdates
+    pendingUpdates: conversationFlowState.pendingUpdates,
+    autogenStructure: conversationFlowState.autogenStructure
   };
 };
 
@@ -310,7 +367,8 @@ export const getTeamProgress = () => {
     stage: state.conversationStage,
     readyForDeployment: state.conversationStage === 'finalization' && 
                        state.agents.length > 0 && 
-                       !!state.team
+                       !!state.team,
+    hasAutogenStructure: !!state.autogenStructure
   };
 };
 
@@ -351,3 +409,27 @@ export const getRecentUpdates = (timeWindow: number = 30000) => {
   
   return updates.sort((a, b) => b.timestamp - a.timestamp);
 };
+
+// Get current Autogen structure for export/deployment
+export const getCurrentAutogenStructure = (): TeamStructure | null => {
+  return conversationFlowState.autogenStructure || null;
+};
+
+// Update flow state with new Autogen structure
+export const updateAutogenStructure = (structure: TeamStructure) => {
+  conversationFlowState.autogenStructure = structure;
+  conversationFlowState.lastUpdate = Date.now();
+  
+  // Also update the simplified team/agent data for compatibility
+  updateTeamData({
+    name: structure.label,
+    description: structure.description,
+    type: structure.provider.split('.').pop() || 'RoundRobinGroupChat',
+    status: 'configured',
+    confidence: 0.9,
+    source: 'ai_analysis',
+    autogenStructure: structure
+  });
+};
+
+export { conversationFlowState }
