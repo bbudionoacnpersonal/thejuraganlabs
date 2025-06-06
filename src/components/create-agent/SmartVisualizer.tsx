@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Split from 'react-split';
 import { v4 as uuidv4 } from 'uuid';
@@ -521,7 +521,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     return () => clearTimeout(timeoutId);
   }, [messages, lastMessageCount, isAnalyzing, conversationId, analysisStage, teamStructure, hasGeneratedTask]);
 
-  // Generate dynamic flow based on conversation progress with error handling
+  // 🎯 CRITICAL FIX: Memoize generateProgressiveFlow to prevent infinite rerendering
   const generateProgressiveFlow = useCallback(() => {
     try {
       console.log('🎨 Generating progressive flow visualization:', {
@@ -536,6 +536,26 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       const newNodes: Node[] = [];
       const newEdges: Edge[] = [];
       let yPosition = 50;
+
+      // Generate final task example based on progressive elements
+      const generateFinalTaskExample = (elements: any) => {
+        try {
+          if (elements.teamName && elements.identifiedAgents && Array.isArray(elements.identifiedAgents)) {
+            const agentNames = elements.identifiedAgents.map((a: any) => a.name || 'Agent').join(', ');
+            const teamType = elements.teamType || 'RoundRobinGroupChat';
+            const teamTypeName = teamType.split('GroupChat')[0].replace(/([A-Z])/g, ' $1').trim();
+            
+            return `Deploy ${elements.teamName} using ${teamTypeName} coordination with specialized agents: ${agentNames}. The team will process user requests efficiently through coordinated agent collaboration.`;
+          }
+          if (elements.teamName) {
+            return `Deploy ${elements.teamName} for coordinated AI task processing with intelligent agent collaboration.`;
+          }
+          return 'Deploy AI agents team to handle complex user requests through intelligent multi-agent coordination and task distribution.';
+        } catch (error) {
+          console.error('Error generating final task example:', error);
+          return 'Deploy AI agents team to handle complex user requests through intelligent multi-agent coordination.';
+        }
+      };
 
       // 🎯 CRITICAL FIX: Replace user input with final task when conversation ends
       if (conversationEnded && hasGeneratedTask) {
@@ -717,27 +737,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     }
   }, [analysisStage, progressiveElements, teamStructure, conversationState, isAnalyzing, messages, hasGeneratedTask, conversationEnded]);
 
-  // Generate final task example based on progressive elements
-  const generateFinalTaskExample = (elements: any) => {
-    try {
-      if (elements.teamName && elements.identifiedAgents && Array.isArray(elements.identifiedAgents)) {
-        const agentNames = elements.identifiedAgents.map((a: any) => a.name || 'Agent').join(', ');
-        const teamType = elements.teamType || 'RoundRobinGroupChat';
-        const teamTypeName = teamType.split('GroupChat')[0].replace(/([A-Z])/g, ' $1').trim();
-        
-        return `Deploy ${elements.teamName} using ${teamTypeName} coordination with specialized agents: ${agentNames}. The team will process user requests efficiently through coordinated agent collaboration.`;
-      }
-      if (elements.teamName) {
-        return `Deploy ${elements.teamName} for coordinated AI task processing with intelligent agent collaboration.`;
-      }
-      return 'Deploy AI agents team to handle complex user requests through intelligent multi-agent coordination and task distribution.';
-    } catch (error) {
-      console.error('Error generating final task example:', error);
-      return 'Deploy AI agents team to handle complex user requests through intelligent multi-agent coordination.';
-    }
-  };
-
-  // Update flow when analysis changes with error handling
+  // 🎯 CRITICAL FIX: Update flow when analysis changes with stable dependencies
   useEffect(() => {
     try {
       const { nodes: newNodes, edges: newEdges } = generateProgressiveFlow();
@@ -778,7 +778,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       console.error('Error updating flow:', error);
       setError('Failed to update flow visualization');
     }
-  }, [generateProgressiveFlow, setNodes, setEdges, fitView, progressiveElements.teamType]);
+  }, [generateProgressiveFlow, setNodes, setEdges, fitView]);
 
   // 🎯 NEW: Auto-layout function using Dagre
   const handleAutoLayout = useCallback(() => {
