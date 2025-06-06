@@ -74,25 +74,17 @@ export const transformTeamStructureToFlow = (
       }
     });
 
-    // Add edge from team to participant
+    // Add simple edge from team to participant
     edges.push({
       id: `e-team-${participant.label}`,
       source: 'team',
       target: participant.label,
       animated: true,
-      style: { stroke: '#4D9CFF' },
-      label: getTeamTypeConnectionLabel(extractedTeamType, index)
+      style: { stroke: '#4D9CFF' }
     });
   });
 
-  // Add team-type specific inter-agent connections
-  addTeamTypeSpecificConnections(
-    extractedTeamType,
-    teamStructure.config.participants,
-    edges
-  );
-
-  console.log('✅ Generated enhanced flow:', {
+  console.log('✅ Generated simplified flow:', {
     nodeCount: nodes.length,
     edgeCount: edges.length,
     teamType: extractedTeamType
@@ -239,132 +231,4 @@ const generateTeamTypePositions = (teamType: string, agentCount: number) => {
   }
 
   return positions;
-};
-
-// Get connection labels based on team type
-const getTeamTypeConnectionLabel = (teamType: string, index: number): string => {
-  switch (teamType) {
-    case 'RoundRobinGroupChat':
-      return `Turn ${index + 1}`;
-    case 'SelectorGroupChat':
-      return index === 0 ? 'Selector' : 'Selected';
-    case 'MagenticOneGroupChat':
-      return 'Magnetic';
-    case 'Swarm':
-      return 'Handoff';
-    case 'GraphFlow':
-      return 'Flow';
-    case 'HierarchicalGroupChat':
-      return index === 0 ? 'Manager' : 'Subordinate';
-    case 'CascadingGroupChat':
-      return `Cascade ${index + 1}`;
-    case 'BroadcastGroupChat':
-      return 'Broadcast';
-    default:
-      return `Agent ${index + 1}`;
-  }
-};
-
-// Add team-type specific connections between agents
-const addTeamTypeSpecificConnections = (
-  teamType: string,
-  participants: any[],
-  edges: Edge[]
-): void => {
-  const connectionStyle = { stroke: '#f59e0b', strokeWidth: 2, strokeDasharray: '5,5' };
-  
-  switch (teamType) {
-    case 'RoundRobinGroupChat':
-      // Connect agents in a circle for round-robin
-      for (let i = 0; i < participants.length; i++) {
-        const nextIndex = (i + 1) % participants.length;
-        edges.push({
-          id: `round-${i}`,
-          source: participants[i].label,
-          target: participants[nextIndex].label,
-          animated: true,
-          style: connectionStyle,
-          label: `Round ${i + 1}→${nextIndex + 1}`
-        });
-      }
-      break;
-    
-    case 'SelectorGroupChat':
-      // Connect first agent (selector) to all others
-      if (participants.length > 1) {
-        for (let i = 1; i < participants.length; i++) {
-          edges.push({
-            id: `selector-${i}`,
-            source: participants[0].label,
-            target: participants[i].label,
-            animated: true,
-            style: { ...connectionStyle, stroke: '#8b5cf6' },
-            label: 'Select'
-          });
-        }
-      }
-      break;
-    
-    case 'Swarm':
-      // Connect agents for handoff pattern
-      for (let i = 0; i < participants.length - 1; i++) {
-        edges.push({
-          id: `swarm-${i}`,
-          source: participants[i].label,
-          target: participants[i + 1].label,
-          animated: true,
-          style: { ...connectionStyle, stroke: '#10b981' },
-          label: 'Handoff'
-        });
-      }
-      break;
-    
-    case 'GraphFlow':
-      // Add complex graph connections
-      for (let i = 0; i < participants.length; i++) {
-        for (let j = i + 1; j < participants.length; j++) {
-          if (Math.random() > 0.7) { // Selective connections for complexity
-            edges.push({
-              id: `graph-${i}-${j}`,
-              source: participants[i].label,
-              target: participants[j].label,
-              animated: true,
-              style: { ...connectionStyle, stroke: '#6366f1' },
-              label: 'Flow'
-            });
-          }
-        }
-      }
-      break;
-    
-    case 'HierarchicalGroupChat':
-      // Connect manager to subordinates
-      if (participants.length > 1) {
-        for (let i = 1; i < participants.length; i++) {
-          edges.push({
-            id: `hierarchy-${i}`,
-            source: participants[0].label,
-            target: participants[i].label,
-            animated: true,
-            style: { ...connectionStyle, stroke: '#8b5cf6' },
-            label: 'Delegate'
-          });
-        }
-      }
-      break;
-    
-    case 'CascadingGroupChat':
-      // Connect agents in sequence for cascading
-      for (let i = 0; i < participants.length - 1; i++) {
-        edges.push({
-          id: `cascade-${i}`,
-          source: participants[i].label,
-          target: participants[i + 1].label,
-          animated: true,
-          style: { ...connectionStyle, stroke: '#ef4444' },
-          label: 'Fallback'
-        });
-      }
-      break;
-  }
 };
