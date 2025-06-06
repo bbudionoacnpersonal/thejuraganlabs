@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { useConversation } from '@elevenlabs/react';
 import ConversationAnalysis from './ConversationAnalysis';
 import { Message } from '@/types';
-import { industries, focusAreas } from '@/mockdata/industry_functions';
 
 interface VoiceSDKOverlayProps {
   isVisible: boolean;
@@ -30,37 +29,6 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  
-
-  // Get industry and focus area from localStorage
-  const userIndustry = localStorage.getItem('user_industry') || '';
-  const userFocusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
-
-  const createSystemPrompt = (industryValue: string, focusAreaValues: string[]): string => {
-    const industryConfig = industries.find(i => i.value === industryValue);
-    const focusAreaConfigs = focusAreas.filter(fa => focusAreaValues.includes(fa.value));
-    
-    if (!industryConfig) {
-      return 'You are an AI agent development expert. Help users create effective AI agent teams.';
-    }
-
-    let prompt = industryConfig.keyPrompts.systemInstructions;
-
-    if (focusAreaConfigs.length > 0) {
-      prompt += '\n\nAdditional focus areas to consider:';
-      focusAreaConfigs.forEach(fa => {
-        prompt += `\n${fa.label}:\n- ${fa.keyConsiderations.join('\n- ')}`;
-      });
-    }
-
-    prompt += '\n\nKey agent considerations:\n- ';
-    prompt += industryConfig.keyPrompts.agentConsiderations.join('\n- ');
-
-    prompt += '\n\nRecommended tools:\n- ';
-    prompt += industryConfig.keyPrompts.toolPriorities.join('\n- ');
-
-    return prompt;
-  };
 
   const handleTaskGenerator = async (input: any): Promise<void> => {
     try {
@@ -75,14 +43,14 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const conversation = useConversation({
     agentId: 'agent_01jvw7ms1jfbe8c3ptec0na5z9',
     onConnect: () => {
-      console.log("connected");   
+      console.log("connected");
     },
     onDisconnect: () => {
       console.log("disconnected");
     },
     onError: error => {
       console.log(error);
-      setError("An error occurred during the conversation")
+      setError("An error occurred during the conversation");
     },
     onMessage: message => {
       console.log(message);
@@ -105,30 +73,13 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     }
     
     try {
-      const systemPrompt = createSystemPrompt(userIndustry, userFocusAreas);
-
-      // ========== CHANGE #2: Simplified Payload in startSession ==========
-      // The context object now only contains simple identifiers, not large config objects.
       const sessionId = await conversation.startSession({
-        /*context: {
-          industry: userIndustry,
-          focus_areas: userFocusAreas,
-        },
-        prompt: {
-          preamble: systemPrompt,
-        },*/
         clientTools: {
           task_generator: handleTaskGenerator
         }
       });
-
       setConversationId(sessionId);
-      console.log('ConversationID with context:', sessionId);
-
-      // ========== CHANGE #3: Removed Redundant State Update ==========
-      // We no longer set `setIsSessionActive(true)` here.
-      // The `onConnect` callback is the single source of truth for an active session.
-
+      console.log('ConversationID: ', sessionId);
     } catch (err) {
       setError("Failed to start conversation");
       console.error(err);
@@ -180,7 +131,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 
             <div className="flex flex-col items-center justify-center p-2">
               <h3 className="text-lg font-medium text-white text-center mb-2">
-              {conversation.status === "connected"
+                {conversation.status === "connected"
                   ? conversation.isSpeaking
                     ? "Speaking..."
                     : "Listening..."
@@ -203,7 +154,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                 }}
                 className="relative my-8"
               >
-                {conversation.status === "connected"  && (
+                {conversation.status === "connected" && (
                   <>
                     <motion.div
                       animate={{
@@ -233,10 +184,10 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                   </>
                 )}
                 <div 
-                  className={`w-20 h-20 rounded-full flex items-center justify-center ${
-                   conversation.status === "connected"  && conversation.isSpeaking
+                  className={`w-20 h-30 rounded-full flex items-center justify-center ${
+                    conversation.status === "connected" && conversation.isSpeaking
                       ? "bg-secondary-600"
-                      : conversation.status === "connected" 
+                      : conversation.status === "connected"
                       ? "bg-primary-400"
                       : "bg-dark-400"
                   }`}
@@ -244,9 +195,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                   <img 
                     src="/juragan-logo.svg" 
                     alt="Juragan Logo"
-                    className="w-17 h-17" // Adjusted size for better fit
+                    className="w-17 h-17"
                     style={{ 
-                      filter:'invert(100%) sepia(79%) saturate(2476%) hue-rotate(190deg) brightness(118%) contrast(119%)'
+                      filter: 'invert(100%) sepia(79%) saturate(2476%) hue-rotate(190deg) brightness(118%) contrast(119%)'
                     }}
                   />
                 </div>
@@ -257,7 +208,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                   onClick={startConversation}
                   disabled={conversation.status === "connected"}
                   className={
-                    conversation.status === "connected" 
+                    conversation.status === "connected"
                       ? "px-2 py-2 rounded-lg text-white text-sm bg-gray-600 cursor-not-allowed"
                       : "px-2 py-2 rounded-lg text-white text-sm bg-secondary-600 hover:bg-primary-400 transition-colors"
                   }
@@ -267,9 +218,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 
                 <button
                   onClick={stopConversation}
-                  disabled={!conversation.status === "connected" }
+                  disabled={conversation.status !== "connected"}
                   className={
-                    conversation.status !== "connected" 
+                    conversation.status !== "connected"
                       ? "px-2 py-2 rounded-lg text-white text-sm bg-gray-600 cursor-not-allowed"
                       : "px-2 py-2 rounded-lg text-white text-sm bg-error-600 hover:bg-error-500 transition-colors"
                   }
