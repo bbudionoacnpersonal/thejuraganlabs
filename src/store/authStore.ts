@@ -84,8 +84,8 @@ const useAuthStore = create<AuthState>((set) => ({
         throw new Error(Object.values(validationErrors)[0]);
       }
       
-      // Register new user
-      const newUser = registerUser(name, email, username, password, role);
+      // Register new user and send verification email
+      await registerUser(name, email, username, password, role);
       
       set({
         isLoading: false,
