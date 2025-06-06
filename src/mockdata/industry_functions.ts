@@ -7,7 +7,7 @@ export const industries = [
       agentConsiderations: [
         'Regulatory compliance (SOX, Basel III, GDPR)',
         'Real-time transaction processing',
-        'Fraud detection and prevention',
+        'Underwriting process',
         'Fraud detection and prevention',
         'Risk assessment and management'
       ],
