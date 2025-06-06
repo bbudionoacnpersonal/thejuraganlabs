@@ -185,41 +185,6 @@ const generateTeamTypePositions = (teamType: string, agentCount: number) => {
       }
       break;
     
-    case 'HierarchicalGroupChat':
-      // Tree structure for hierarchical coordination
-      positions.push({ x: 0, y: 0 }); // Manager at center
-      for (let i = 1; i < agentCount; i++) {
-        const row = Math.floor((i - 1) / 3) + 1;
-        const col = (i - 1) % 3;
-        positions.push({
-          x: (col - 1) * spacing,
-          y: row * 120
-        });
-      }
-      break;
-    
-    case 'CascadingGroupChat':
-      // Linear cascade for fallback coordination
-      for (let i = 0; i < agentCount; i++) {
-        positions.push({
-          x: i * spacing - ((agentCount - 1) * spacing) / 2,
-          y: i * 30
-        });
-      }
-      break;
-    
-    case 'BroadcastGroupChat':
-      // Star pattern for broadcast coordination
-      const starRadius = Math.max(160, agentCount * 25);
-      for (let i = 0; i < agentCount; i++) {
-        const angle = (i * 2 * Math.PI) / agentCount;
-        positions.push({
-          x: Math.cos(angle) * starRadius,
-          y: Math.sin(angle) * starRadius
-        });
-      }
-      break;
-    
     default:
       // Default horizontal layout
       for (let i = 0; i < agentCount; i++) {
