@@ -80,7 +80,6 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     },
     onDisconnect: () => {
       console.log("disconnected");
-   
     },
     onError: error => {
       console.log(error);
