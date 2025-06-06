@@ -113,7 +113,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         stopConversation();
       }
     };
-  }, [isSessionActive]);
+  }, []);
 
    // In your startConversation function
     async function startConversation() {
