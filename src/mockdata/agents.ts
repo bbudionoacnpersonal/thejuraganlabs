@@ -4,7 +4,7 @@ export const industries = [
   { value: 'healthcare', label: 'Healthcare & Life Sciences' },
   { value: 'retail', label: 'Retail & E-commerce' },
   { value: 'manufacturing', label: 'Manufacturing & Supply Chain' },
-  { value: 'consumergoods', label: 'Manufacturing & Supply Chain' },
+  { value: 'consumergoods', label: 'Consumer Goods & Services' },
   { value: 'technology', label: 'Technology & Software' },
   { value: 'telecom', label: 'Telecommunications' },
   { value: 'energy', label: 'Energy & Utilities' },
