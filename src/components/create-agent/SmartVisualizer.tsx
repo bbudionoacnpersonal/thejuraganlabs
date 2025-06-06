@@ -318,7 +318,7 @@ const nodeTypes = {
 // Custom hook for resizable functionality with error handling
 const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
   const [isResizing, setIsResizing] = useState(false);
-  const [size, setSize] = useState({ width: 1000, height: 800 }); // 🎯 INCREASED HEIGHT
+  const [size, setSize] = useState({ width: 600, height: 800 }); // 🎯 INCREASED HEIGHT
 
   useEffect(() => {
     try {
