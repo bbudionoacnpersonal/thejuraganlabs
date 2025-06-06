@@ -84,25 +84,8 @@ const UserInputNode = ({ data }: { data: any }) => (
   </div>
 );
 
-const ExpectedOutputNode = ({ data }: { data: any }) => (
-  <div className="p-4 rounded-lg shadow-lg border-2 min-w-[200px] bg-green-500 border-green-600 text-white">
-    <div className="flex items-center gap-2 justify-center mb-2">
-      <Target className="h-5 w-5" />
-      <span className="text-sm font-medium">Expected Output</span>
-    </div>
-    <div className="bg-white/10 rounded p-2 mb-2">
-      <p className="text-xs text-center">{data.description}</p>
-    </div>
-    <div className="flex items-center justify-center mt-2">
-      <CheckCircleIcon className="h-4 w-4 text-green-300" />
-      <span className="text-xs ml-1">Ready</span>
-    </div>
-  </div>
-);
-
 const nodeTypes = {
   userInput: UserInputNode,
-  expectedOutput: ExpectedOutputNode,
   custom: AutogenNode,
 };
 
@@ -188,10 +171,6 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   const [isMinimized, setIsMinimized] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [lastMessageCount, setLastMessageCount] = useState(0);
-  const [taskGenerated, setTaskGenerated] = useState(false);
-  const [generatedTask, setGeneratedTask] = useState('');
-  const [expectedOutput, setExpectedOutput] = useState('');
-  const [hasInitialStructure, setHasInitialStructure] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   
   const windowRef = useRef<HTMLDivElement>(null);
@@ -207,10 +186,6 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       
       // Reset all state for new conversation
       resetFlowState();
-      setHasInitialStructure(false);
-      setTaskGenerated(false);
-      setGeneratedTask('');
-      setExpectedOutput('');
       setLastMessageCount(0);
       setIsAnalyzing(false);
       setCurrentConversationId(conversationId);
@@ -237,14 +212,11 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         
         // Only restore if we have meaningful structure (not just empty state)
         if (storedData.autogenStructure.config.participants.length > 0) {
-          setHasInitialStructure(true);
-          
-          // Check if task was already generated
-          if (storedData.metadata.stage === 'finalization') {
-            setTaskGenerated(true);
-            setGeneratedTask(storedData.autogenStructure?.description || 'AI agents team task');
-            setExpectedOutput(`The AI agents team will process user inputs through ${storedData.autogenStructure?.config.participants.length || 0} specialized agents.`);
-          }
+          // Restore the autogen structure to flow state
+          updateFromAutogenStructure(storedData.autogenStructure, {
+            conversationStage: storedData.metadata.stage,
+            confidence: storedData.metadata.confidence
+          });
         } else {
           console.log('📭 Stored data exists but has no meaningful structure - starting fresh');
         }
@@ -300,7 +272,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         // For NEW conversations, explicitly pass null as existing structure
         // Only use existing structure if we're resuming a conversation with meaningful data
         let existingStructure = null;
-        if (hasInitialStructure && analysisData.autogenStructure) {
+        if (analysisData.autogenStructure && analysisData.autogenStructure.config.participants.length > 0) {
           existingStructure = analysisData.autogenStructure;
           console.log('📂 Using existing structure for analysis context (resuming conversation)');
         } else {
@@ -316,7 +288,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           userFocusAreas,
           hasExistingStructure: !!existingStructure,
           conversationId,
-          isNewConversation: !hasInitialStructure
+          isNewConversation: !existingStructure
         });
         
         // 🎯 Perform contextual analysis to get Autogen structure FROM SCRATCH
@@ -332,7 +304,6 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         // Update flow state with NEW Autogen structure
         if (analysis.teamStructure) {
           updateFromAutogenStructure(analysis.teamStructure, analysis);
-          setHasInitialStructure(true);
           
           // Update localStorage with new analysis
           if (conversationId) {
@@ -348,13 +319,6 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             });
             
             console.log(`💾 Updated localStorage with NEW analysis for ${conversationId}`);
-          }
-          
-          // Check if conversation is in finalization stage
-          if (analysis.conversationStage === 'finalization') {
-            setTaskGenerated(true);
-            setGeneratedTask(analysis.teamStructure.description || 'AI agents team task');
-            setExpectedOutput(`The AI agents team will process user inputs through ${analysis.teamStructure.config.participants.length} specialized agents using ${analysis.teamStructure.provider.split('.').pop()} coordination pattern to deliver structured responses.`);
           }
         }
         
@@ -380,49 +344,17 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     // Debounce analysis
     const timeoutId = setTimeout(performAnalysis, 1500);
     return () => clearTimeout(timeoutId);
-  }, [messages, lastMessageCount, isAnalyzing, conversationId, hasInitialStructure]);
+  }, [messages, lastMessageCount, isAnalyzing, conversationId]);
 
-  // Check for task generator trigger from agentFlow
-  useEffect(() => {
-    const hasTaskGenerator = agentFlow.some(step => 
-      step.type === 'tool' && 
-      step.label === 'Task Generator' && 
-      step.status === 'completed'
-    );
-    
-    if (hasTaskGenerator && !taskGenerated) {
-      setTaskGenerated(true);
-      const flowState = getFlowState();
-      if (flowState.team) {
-        setGeneratedTask(`Create ${flowState.team.name} for ${flowState.team.description}`);
-        setExpectedOutput(`The system will generate a structured AI agents team with ${flowState.agents.length} agents working in ${flowState.team.type} pattern to handle user requests efficiently.`);
-      }
-      
-      // Update localStorage with task generation
-      if (conversationId) {
-        updateConversationData(conversationId, {
-          status: 'completed',
-          metadata: {
-            totalMessages: messages.length,
-            analysisCount: 1,
-            confidence: 0.9,
-            stage: 'finalization'
-          }
-        });
-      }
-    }
-  }, [agentFlow, taskGenerated, conversationId, messages.length]);
-
-  // Generate ReactFlow visualization from CURRENT Autogen structure (not mockdata)
-  const generateAutogenFlow = useCallback(() => {
+  // 🎨 Generate ReactFlow visualization PURELY from conversation-generated Autogen structure
+  const generateConversationFlow = useCallback(() => {
     const autogenStructure = getCurrentAutogenStructure();
     const flowState = getFlowState();
     
-    console.log('🎨 Generating flow visualization:', {
+    console.log('🎨 Generating conversation-based flow visualization:', {
       hasStructure: !!autogenStructure,
       hasUserInput: flowState.userInput.shown,
       conversationState,
-      taskGenerated,
       conversationId,
       participantCount: autogenStructure?.config.participants.length || 0
     });
@@ -431,7 +363,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     const newEdges: Edge[] = [];
     let yPosition = 50;
 
-    // 🎯 CRITICAL: Only show user input node when team structure exists
+    // 🎯 STEP 1: Only show user input node when team structure exists (as per requirement)
     if (autogenStructure && autogenStructure.config.participants.length > 0 && flowState.userInput.shown) {
       newNodes.push({
         id: 'user-input',
@@ -450,9 +382,9 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       yPosition += 150;
     }
 
-    // 2. Team Node (ONLY from current conversation analysis, not mockdata)
+    // 🎯 STEP 2: Team Node (ONLY from conversation-generated Autogen structure)
     if (autogenStructure && autogenStructure.config.participants.length > 0) {
-      // 🎯 CRITICAL: Extract team type from provider attribute
+      // Extract team type from provider attribute
       const teamType = extractTeamTypeFromProvider(autogenStructure.provider);
       
       const teamNode: Node = {
@@ -467,19 +399,11 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           model: autogenStructure.config.model_client?.config.model || 'gpt-4o-mini',
           agents: autogenStructure.config.participants.map(p => ({
             name: p.label,
-            description: p.description,
-            model: {
-              name: p.config.model_client?.config.model || 'gpt-4o-mini',
-              provider: p.config.model_client?.provider.split('.').pop() || 'OpenAI'
-            },
-            tools: p.config.tools?.map(t => ({
-              name: t.config.name,
-              description: t.description
-            })) || []
+            // 🎯 REMOVED: No longer show agent descriptions, models, or tools in team node
           })),
-          terminations: autogenStructure.config.termination_condition.config.conditions.map(c => ({
+          terminations: autogenStructure.config.termination_condition.config.conditions?.map(c => ({
             name: c.label
-          })),
+          })) || [{ name: autogenStructure.config.termination_condition.label }],
           onEdit: (nodeData: any) => console.log('Edit team:', nodeData),
         },
         sourcePosition: Position.Bottom,
@@ -508,7 +432,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
 
       yPosition += 250;
 
-      // 3. Individual Agent Nodes (from current conversation analysis)
+      // 🎯 STEP 3: Individual Agent Nodes (from conversation-generated structure)
       const participants = autogenStructure.config.participants;
       if (participants.length > 0) {
         const agentPositions = generateAgentPositions(
@@ -537,7 +461,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           };
           newNodes.push(agentNode);
 
-          // Edge from team to agent
+          // Simple edge from team to agent
           newEdges.push({
             id: `edge-team-agent-${index}`,
             source: 'team',
@@ -555,86 +479,16 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           });
         });
       }
-
-      // 4. Task Generator Output Nodes (if task is generated)
-      if (taskGenerated) {
-        yPosition += 200;
-        
-        // Generated Task Node
-        newNodes.push({
-          id: 'generated-task',
-          type: 'userInput',
-          position: { x: 150, y: yPosition },
-          data: {
-            content: generatedTask,
-            status: 'completed',
-            timestamp: Date.now(),
-            processed: true
-          },
-          sourcePosition: Position.Bottom,
-          targetPosition: Position.Top,
-        });
-
-        // Expected Output Node
-        newNodes.push({
-          id: 'expected-output',
-          type: 'expectedOutput',
-          position: { x: 450, y: yPosition },
-          data: {
-            description: expectedOutput,
-            status: 'completed'
-          },
-          sourcePosition: Position.Bottom,
-          targetPosition: Position.Top,
-        });
-
-        // Edges from agents to output nodes
-        participants.forEach((_, index) => {
-          newEdges.push({
-            id: `edge-agent-task-${index}`,
-            source: `agent-${index}`,
-            target: 'generated-task',
-            type: 'smoothstep',
-            animated: false,
-            style: { 
-              stroke: '#22c55e',
-              strokeWidth: 2,
-              strokeDasharray: '5,5'
-            },
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              color: '#22c55e',
-            },
-          });
-
-          newEdges.push({
-            id: `edge-agent-output-${index}`,
-            source: `agent-${index}`,
-            target: 'expected-output',
-            type: 'smoothstep',
-            animated: false,
-            style: { 
-              stroke: '#22c55e',
-              strokeWidth: 2,
-              strokeDasharray: '5,5'
-            },
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              color: '#22c55e',
-            },
-          });
-        });
-      }
     }
 
-    console.log('🎨 Generated flow:', { 
+    console.log('🎨 Generated conversation-based flow:', { 
       nodeCount: newNodes.length, 
       edgeCount: newEdges.length,
       hasStructure: !!autogenStructure,
       participantCount: autogenStructure?.config.participants.length || 0
     });
     return { nodes: newNodes, edges: newEdges };
-  }, [conversationState, isAnalyzing, taskGenerated, generatedTask, expectedOutput, hasInitialStructure]);
+  }, [conversationState, isAnalyzing]);
 
   // 🎯 CRITICAL: Extract team type from provider attribute
   const extractTeamTypeFromProvider = (provider: string): string => {
@@ -728,41 +582,6 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         }
         break;
       
-      case 'HierarchicalGroupChat':
-        // Tree structure
-        positions.push({ x: 0, y: 0 }); // Main agent at center
-        for (let i = 1; i < agentCount; i++) {
-          const row = Math.floor((i - 1) / 3) + 1;
-          const col = (i - 1) % 3;
-          positions.push({
-            x: (col - 1) * spacing,
-            y: row * 100
-          });
-        }
-        break;
-      
-      case 'CascadingGroupChat':
-        // Linear cascade
-        for (let i = 0; i < agentCount; i++) {
-          positions.push({
-            x: i * spacing - ((agentCount - 1) * spacing) / 2,
-            y: i * 20
-          });
-        }
-        break;
-      
-      case 'BroadcastGroupChat':
-        // Star pattern
-        const starRadius = Math.max(120, agentCount * 20);
-        for (let i = 0; i < agentCount; i++) {
-          const angle = (i * 2 * Math.PI) / agentCount;
-          positions.push({
-            x: Math.cos(angle) * starRadius,
-            y: Math.sin(angle) * starRadius
-          });
-        }
-        break;
-      
       default:
         // Default horizontal layout
         for (let i = 0; i < agentCount; i++) {
@@ -778,14 +597,14 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
 
   // Update flow when structure changes
   useEffect(() => {
-    const { nodes: newNodes, edges: newEdges } = generateAutogenFlow();
-    console.log('🔄 Updating ReactFlow with new nodes/edges:', { 
+    const { nodes: newNodes, edges: newEdges } = generateConversationFlow();
+    console.log('🔄 Updating ReactFlow with conversation-based nodes/edges:', { 
       nodeCount: newNodes.length, 
       edgeCount: newEdges.length 
     });
     setNodes(newNodes);
     setEdges(newEdges);
-  }, [generateAutogenFlow, setNodes, setEdges]);
+  }, [generateConversationFlow, setNodes, setEdges]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -901,7 +720,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           {isAnalyzing && (
             <SparklesIcon className="h-3 w-3 text-orange-500 animate-spin" />
           )}
-          {taskGenerated && (
+          {teamProgress.hasAutogenStructure && (
             <CheckCircleIcon className="h-3 w-3 text-green-500" />
           )}
         </div>
@@ -970,7 +789,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         <div className="p-2 text-center">
           <p className="text-xs text-gray-400">
             {isAnalyzing ? '🤖 AI Analyzing...' : 
-             taskGenerated ? '✅ Task Generated' :
+             teamProgress.hasAutogenStructure ? '✅ Team Generated' :
              teamProgress.readyForDeployment ? '🚀 Ready for deployment' :
              `${flowState.conversationStage} • ${flowState.agents.length} agents`}
             {teamProgress.averageAgentConfidence > 0 && (
