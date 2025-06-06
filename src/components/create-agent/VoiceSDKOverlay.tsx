@@ -173,7 +173,8 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       }
       
       setConversationMessages([]);
-      setShowSmartVisualizer(false);
+      // 🎯 FIXED: Don't auto-close SmartVisualizer on disconnect
+      // setShowSmartVisualizer(false);
       resetFlowState(); // Reset the flow state when disconnecting
       setConversationId(null); // Clear conversation ID
     },
@@ -328,7 +329,8 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       }
       
       await conversation.endSession();
-      setShowSmartVisualizer(false);
+      // 🎯 FIXED: Don't auto-close SmartVisualizer when stopping conversation
+      // setShowSmartVisualizer(false);
       setAgentFlow([]);
       setConversationMessages([]);
       setConversationState('idle');
@@ -341,16 +343,35 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 
   const handleClose = async () => {
     await stopConversation();
+    // 🎯 FIXED: Close SmartVisualizer when main overlay closes
+    setShowSmartVisualizer(false);
     onClose();
   };
 
   const handleAnalysisClick = () => {
-    if (!conversationId) {
+    // 🎯 FIXED: Allow analysis button to work even without active conversation
+    // if (!conversationId) {
+    //   setError("No conversation data available yet");
+    //   return;
+    // }
+    
+    // Use the current conversationId or the last one if available
+    const targetConversationId = conversationId || localStorage.getItem('last_conversation_id');
+    
+    if (!targetConversationId) {
       setError("No conversation data available yet");
       return;
     }
+    
     setShowAnalysis(true);
   };
+
+  // 🎯 FIXED: Store last conversation ID for analysis access
+  useEffect(() => {
+    if (conversationId) {
+      localStorage.setItem('last_conversation_id', conversationId);
+    }
+  }, [conversationId]);
 
   return (
     <AnimatePresence>
@@ -496,11 +517,11 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                     <button
                       onClick={handleAnalysisClick}
                       className={`flex items-center gap-2 text-sm border rounded-lg px-3 py-2 border-dark-border transition-colors ${
-                        conversationId 
+                        conversationId || localStorage.getItem('last_conversation_id')
                           ? 'text-gray-100 hover:text-secondary-600 hover:border-secondary-600 cursor-pointer'
                           : 'text-gray-500 cursor-not-allowed'
                       }`}
-                      disabled={!conversationId}
+                      disabled={!conversationId && !localStorage.getItem('last_conversation_id')}
                     >
                       <ChartBarIcon className="h-4 w-4" />
                       Conversation Analysis
@@ -513,7 +534,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
               {showSmartVisualizer && (
                 <SmartVisualizer
                   isVisible={showSmartVisualizer}
-                  onClose={() => setShowSmartVisualizer(false)}
+                  onClose={() => setShowSmartVisualizer(false)} // 🎯 FIXED: Allow manual close
                   conversationState={conversationState}
                   agentFlow={agentFlow}
                   messages={conversationMessages}
@@ -524,11 +545,11 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
           </div>
 
           {/* Analysis Modal */}
-          {showAnalysis && conversationId && (
+          {showAnalysis && (
             <ConversationAnalysis
               isVisible={showAnalysis}
               onClose={() => setShowAnalysis(false)}
-              conversationId={conversationId}
+              conversationId={conversationId || localStorage.getItem('last_conversation_id') || ''}
             />
           )}
         </>
