@@ -6,7 +6,7 @@ export const industries = [
     keyPrompts: {
       agentConsiderations: [
         'Regulatory compliance (SOX, Basel III, GDPR)',
-        'Real-time transaction processing',
+        'Real-time transaction and mobile banking',
         'Underwriting process',
         'Fraud detection and prevention',
         'Risk assessment and management'
