@@ -250,7 +250,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                     alt="Juragan Logo"
                     className="w-17 h-17" // Adjusted size for better fit
                     style={{ 
-                      filter: 'invert(1) drop-shadow(0 0 2px #fff)' // Simplified filter for white logo
+                      filter:'invert(100%) sepia(79%) saturate(2476%) hue-rotate(190deg) brightness(118%) contrast(119%)'
                     }}
                   />
                 </div>
