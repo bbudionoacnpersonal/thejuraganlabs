@@ -12,6 +12,7 @@ const IndustryOnboardingPage: React.FC = () => {
   const { user } = useAuthStore();
   const [selectedIndustry, setSelectedIndustry] = useState<string>('');
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([]);
+  const [dontAskAgain, setDontAskAgain] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = () => {
@@ -25,10 +26,16 @@ const IndustryOnboardingPage: React.FC = () => {
       return;
     }
 
-    // Here you would typically save these preferences to your backend
-    // For now, we'll just store them in localStorage
+    // Save preferences
     localStorage.setItem('user_industry', selectedIndustry);
     localStorage.setItem('user_focus_areas', JSON.stringify(selectedFocusAreas));
+    
+    // Save the "don't ask again" preference if checked
+    if (dontAskAgain) {
+      localStorage.setItem('skip_industry_confirmation', 'true');
+    } else {
+      localStorage.removeItem('skip_industry_confirmation');
+    }
 
     navigate('/dashboard');
   };
@@ -74,6 +81,19 @@ const IndustryOnboardingPage: React.FC = () => {
                   isMulti
                   helperText="Select all that apply"
                 />
+              </div>
+
+              <div className="flex items-center mt-4">
+                <input
+                  type="checkbox"
+                  id="dontAskAgain"
+                  checked={dontAskAgain}
+                  onChange={(e) => setDontAskAgain(e.target.checked)}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-dark-border rounded bg-dark-400"
+                />
+                <label htmlFor="dontAskAgain" className="ml-2 block text-sm text-gray-300">
+                  Don't ask this question again
+                </label>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">

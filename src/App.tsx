@@ -42,13 +42,18 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const OnboardingRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
+  const skipConfirmation = localStorage.getItem('skip_industry_confirmation') === 'true';
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
 
-  // Always show onboarding for confirmation
-  return <Navigate to="/onboarding" />;
+  // Only show onboarding if user hasn't chosen to skip it
+  if (!skipConfirmation) {
+    return <Navigate to="/onboarding" />;
+  }
+
+  return <>{children}</>;
 };
 
 const App: React.FC = () => {
