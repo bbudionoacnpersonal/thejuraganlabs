@@ -32,7 +32,7 @@ export interface Team {
   members: User[];
   ownerId: string;
   createdAt: string;
-  aiTeamType: strig;
+  aiTeamType: string; // Fixed typo: was 'strig'
   agents: string[];
 }
 
