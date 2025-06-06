@@ -124,11 +124,11 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       // ========== CHANGE #2: Simplified Payload in startSession ==========
       // The context object now only contains simple identifiers, not large config objects.
       const sessionId = await conversation.startSession({
-        context: {
+        /*context: {
           industry: userIndustry,
           focus_areas: userFocusAreas,
         },
-        /*prompt: {
+        prompt: {
           preamble: systemPrompt,
         },*/
         clientTools: {
