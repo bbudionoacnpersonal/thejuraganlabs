@@ -18,7 +18,10 @@ import {
   EyeIcon,
   EyeSlashIcon,
   DocumentArrowDownIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  ArrowPathIcon,
+  MagnifyingGlassMinusIcon,
+  MagnifyingGlassPlusIcon
 } from '@heroicons/react/24/outline';
 import { Coins, Bot, Users, Wrench, Zap, Network, Target, RotateCcw, GitBranch, ArrowRight, Podcast as Broadcast } from 'lucide-react';
 import ReactFlow, { 
@@ -37,6 +40,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { analyzeConversationProgressive } from '@/services/geminiService';
 import { TeamStructure } from '@/types';
+import { getAutoLayout, relayoutNodes } from '@/utils/dagreLayout';
 
 interface SmartVisualizerProps {
   isVisible: boolean;
@@ -406,7 +410,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   
   const windowRef = useRef<HTMLDivElement>(null);
   const { size, isResizing } = useResizable(windowRef);
-  const { fitView } = useReactFlow();
+  const { fitView, zoomIn, zoomOut } = useReactFlow();
 
   // Reset state when conversation ID changes with error handling
   useEffect(() => {
@@ -607,7 +611,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             animated: true, // 🎯 CRITICAL: ALWAYS animated like FlowVisualizer
             style: { 
               stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#4D9CFF',
-              strokeWidth: 3 
+              strokeWidth: 2 // 🎯 CONSISTENT: Match Visual Editor stroke width
             },
             markerEnd: {
               type: MarkerType.ArrowClosed,
@@ -679,7 +683,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
               animated: true, // 🎯 CRITICAL: ALWAYS animated like FlowVisualizer
               style: { 
                 stroke: conversationState === 'responding' ? '#10b981' : '#4D9CFF',
-                strokeWidth: 2 
+                strokeWidth: 2 // 🎯 CONSISTENT: Match Visual Editor stroke width
               },
               markerEnd: {
                 type: MarkerType.ArrowClosed,
@@ -741,8 +745,24 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         nodeCount: newNodes.length, 
         edgeCount: newEdges.length 
       });
-      setNodes(newNodes);
-      setEdges(newEdges);
+      
+      // 🎯 CRITICAL: Apply Dagre layout for optimal positioning
+      if (newNodes.length > 0) {
+        const teamType = progressiveElements.teamType || 'RoundRobinGroupChat';
+        const layoutedElements = getAutoLayout(newNodes, newEdges, teamType);
+        
+        console.log('✅ Applied Dagre layout to Smart Visualizer:', {
+          originalNodes: newNodes.length,
+          layoutedNodes: layoutedElements.nodes.length,
+          teamType
+        });
+        
+        setNodes(layoutedElements.nodes);
+        setEdges(layoutedElements.edges);
+      } else {
+        setNodes(newNodes);
+        setEdges(newEdges);
+      }
       
       // Auto-fit view when nodes change
       if (newNodes.length > 0) {
@@ -758,7 +778,40 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       console.error('Error updating flow:', error);
       setError('Failed to update flow visualization');
     }
-  }, [generateProgressiveFlow, setNodes, setEdges, fitView]);
+  }, [generateProgressiveFlow, setNodes, setEdges, fitView, progressiveElements.teamType]);
+
+  // 🎯 NEW: Auto-layout function using Dagre
+  const handleAutoLayout = useCallback(() => {
+    try {
+      const teamType = progressiveElements.teamType || 'RoundRobinGroupChat';
+      const layouted = relayoutNodes(nodes, edges, teamType);
+      
+      setNodes(layouted.nodes);
+      setEdges(layouted.edges);
+      
+      // Fit view after layout
+      setTimeout(() => {
+        fitView({ padding: 0.2, duration: 800 });
+      }, 100);
+      
+      console.log('🔄 Smart Visualizer auto-layout applied:', {
+        nodeCount: layouted.nodes.length,
+        teamType
+      });
+    } catch (error) {
+      console.error('Error applying auto-layout:', error);
+      setError('Failed to apply auto-layout');
+    }
+  }, [nodes, edges, progressiveElements.teamType, setNodes, setEdges, fitView]);
+
+  // 🎯 NEW: Fit view function
+  const handleFitView = useCallback(() => {
+    try {
+      fitView({ padding: 0.2, duration: 800 });
+    } catch (error) {
+      console.error('Error fitting view:', error);
+    }
+  }, [fitView]);
 
   const handleExportStructure = () => {
     try {
@@ -922,8 +975,10 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                   className="bg-dark-surface border border-dark-border rounded"
                   showInteractive={false}
                 />
+                
+                {/* 🎯 NEW: Enhanced Control Panel with Dagre Layout Controls */}
                 <Panel position="top-left" className="bg-dark-surface/50 backdrop-blur-sm p-2 rounded-md border border-dark-border">
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
                     <span>Stage: {analysisStage}</span>
                     {progressiveElements.teamType && (
                       <>
@@ -939,15 +994,62 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                     )}
                   </div>
                   {progressiveElements.identifiedAgents && Array.isArray(progressiveElements.identifiedAgents) && progressiveElements.identifiedAgents.length > 0 && (
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 mb-3">
                       Agents: {progressiveElements.identifiedAgents.length}
                     </div>
                   )}
                   {hasGeneratedTask && (
-                    <div className="text-xs text-green-500 mt-1">
+                    <div className="text-xs text-green-500 mb-3">
                       ✅ Final Task Generated
                     </div>
                   )}
+                  
+                  {/* Layout Controls */}
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      onClick={handleAutoLayout}
+                      className="text-xs px-2 py-1 border border-dark-border hover:bg-dark-400"
+                      leftIcon={<ArrowPathIcon className="h-3 w-3" />}
+                    >
+                      Auto Layout
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      onClick={handleFitView}
+                      className="text-xs px-2 py-1 border border-dark-border hover:bg-dark-400"
+                    >
+                      Fit View
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      onClick={() => zoomIn({ duration: 300 })}
+                      className="text-xs px-1 py-1 border border-dark-border hover:bg-dark-400"
+                    >
+                      <MagnifyingGlassPlusIcon className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      onClick={() => zoomOut({ duration: 300 })}
+                      className="text-xs px-1 py-1 border border-dark-border hover:bg-dark-400"
+                    >
+                      <MagnifyingGlassMinusIcon className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </Panel>
+                
+                {/* 🎯 NEW: Status Panel */}
+                <Panel position="top-right" className="bg-dark-surface/50 backdrop-blur-sm p-2 rounded-md border border-dark-border">
+                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <span>Dagre Layout: Active</span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Nodes: {nodes.length} | Edges: {edges.length}
+                  </div>
                 </Panel>
               </ReactFlow>
             )}
