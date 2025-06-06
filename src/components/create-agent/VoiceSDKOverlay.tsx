@@ -184,7 +184,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 
             <div className="flex flex-col items-center justify-center p-2">
               <h3 className="text-lg font-medium text-white text-center mb-2">
-                      {conversation.status === "connected"
+              {conversation.status === "connected"
                   ? conversation.isSpeaking
                     ? "Speaking..."
                     : "Listening..."
