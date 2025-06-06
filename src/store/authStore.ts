@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { User, Role } from '@/types';
 import { validateNewUser, registerUser, verifyEmail } from '@/services/authService';
+import { mockUsers } from '@/mockdata/users';
 
 interface AuthState {
   user: User | null;
