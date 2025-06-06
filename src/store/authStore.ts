@@ -10,7 +10,7 @@ interface AuthState {
   error: string | null;
   login: (username: string, password: string, role: Role) => Promise<void>;
   logout: () => void;
-  signup: (name: string, email: string, password: string, role: Role) => Promise<void>;
+  signup: (name: string, email: string, username: string, password: string, role: Role) => Promise<void>;
   verifyEmailToken: (token: string) => Promise<void>;
   setState: (state: Partial<AuthState>) => void;
 }
@@ -74,12 +74,10 @@ const useAuthStore = create<AuthState>((set) => ({
     });
   },
   
-  signup: async (name, email, password, role) => {
+  signup: async (name, email, username, password, role) => {
     set({ isLoading: true, error: null });
     
     try {
-      const username = email.split('@')[0];
-      
       // Validate unique email and username
       const validationErrors = validateNewUser(email, username);
       if (Object.keys(validationErrors).length > 0) {
