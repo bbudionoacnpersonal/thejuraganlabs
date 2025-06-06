@@ -113,7 +113,7 @@ const VisualEditor: React.FC<VisualEditorProps> = ({ teamStructure }) => {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
-        fitView
+        fitViewPort
         minZoom={0.2}
         maxZoom={1.2}
         defaultViewport={{ x: 0, y: 00, zoom: 0.5 }}
