@@ -42,17 +42,13 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const OnboardingRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
-  const hasCompletedOnboarding = localStorage.getItem('user_industry');
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
 
-  if (!hasCompletedOnboarding) {
-    return <Navigate to="/onboarding" />;
-  }
-
-  return <>{children}</>;
+  // Always show onboarding for confirmation
+  return <Navigate to="/onboarding" />;
 };
 
 const App: React.FC = () => {
