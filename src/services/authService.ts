@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { findUserByEmail, findUserByUsername, findUserByVerificationToken, addUser, updateUser } from '@/mockdata/users';
+import { sendVerificationEmail } from './emailService';
 
 const VERIFICATION_EXPIRY_HOURS = 24;
 
@@ -26,7 +27,7 @@ export const validateNewUser = (email: string, username: string) => {
   return errors;
 };
 
-export const registerUser = (name: string, email: string, username: string, password: string, role: string) => {
+export const registerUser = async (name: string, email: string, username: string, password: string, role: string) => {
   const verificationToken = generateVerificationToken();
   const verificationExpires = Date.now() + (VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000);
 
@@ -44,8 +45,9 @@ export const registerUser = (name: string, email: string, username: string, pass
 
   addUser(newUser);
 
-  // In a real application, you would send an email here
-  console.log('Verification URL:', generateVerificationUrl(verificationToken));
+  // Send verification email
+  const verificationUrl = generateVerificationUrl(verificationToken);
+  await sendVerificationEmail(email, verificationUrl);
 
   return newUser;
 };
