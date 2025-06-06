@@ -14,8 +14,8 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { XMarkIcon, EyeIcon, EyeSlashIcon, SparklesIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline';
-import { Bot, User, Users, Zap, Clock, Wrench, Brain } from 'lucide-react';
+import { XMarkIcon, EyeIcon, EyeSlashIcon, SparklesIcon, DocumentArrowDownIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { Bot, User, Users, Zap, Clock, Wrench, Brain, Target, ArrowRight } from 'lucide-react';
 import { 
   conversationFlowState, 
   updateUserInput, 
@@ -31,7 +31,7 @@ import {
   getCurrentAutogenStructure
 } from '@/mockdata/temp_conv_agentflow';
 import { analyzeConversationForAutogenStructure } from '@/services/anthropicService';
-import { transformTeamStructureToFlow } from '@/utils/visualEditorUtils';
+import AutogenNode from './AutogenNode';
 
 interface SmartVisualizerProps {
   isVisible: boolean;
@@ -49,164 +49,60 @@ interface SmartVisualizerProps {
   messages?: Array<{ role: string; content: string; timestamp: number }>;
 }
 
-// Enhanced custom node components with confidence indicators
-const UserNode = ({ data }: { data: any }) => (
-  <div className={`p-4 rounded-lg shadow-lg border-2 min-w-[160px] transition-all duration-300 ${
+// Enhanced custom node components for conversation flow
+const UserInputNode = ({ data }: { data: any }) => (
+  <div className={`p-4 rounded-lg shadow-lg border-2 min-w-[200px] transition-all duration-300 ${
     data.status === 'active' 
       ? 'bg-blue-500 border-blue-600 text-white animate-pulse' 
       : data.status === 'completed'
       ? 'bg-blue-400 border-blue-500 text-white'
       : 'bg-gray-400 border-gray-500 text-white'
   }`}>
-    <div className="flex items-center gap-2 justify-center">
+    <div className="flex items-center gap-2 justify-center mb-2">
       <User className="h-5 w-5" />
-      <span className="text-sm font-medium">{data.label}</span>
+      <span className="text-sm font-medium">User Input</span>
     </div>
-    {data.description && (
-      <p className="text-xs mt-2 opacity-90 text-center">{data.description}</p>
-    )}
+    <div className="bg-white/10 rounded p-2 mb-2">
+      <p className="text-xs text-center">{data.content || 'Voice input...'}</p>
+    </div>
     {data.timestamp && (
-      <p className="text-xs mt-1 opacity-70 text-center">
+      <p className="text-xs opacity-70 text-center">
         {new Date(data.timestamp).toLocaleTimeString()}
       </p>
     )}
-    {data.processed !== undefined && (
-      <div className="flex items-center justify-center mt-2">
-        <div className={`w-2 h-2 rounded-full ${data.processed ? 'bg-green-300' : 'bg-yellow-300'}`} />
-        <span className="text-xs ml-1">{data.processed ? 'Analyzed' : 'Pending'}</span>
-      </div>
-    )}
+    <div className="flex items-center justify-center mt-2">
+      <div className={`w-2 h-2 rounded-full ${data.processed ? 'bg-green-300' : 'bg-yellow-300'}`} />
+      <span className="text-xs ml-1">{data.processed ? 'Analyzed' : 'Processing'}</span>
+    </div>
   </div>
 );
 
-const TeamNode = ({ data }: { data: any }) => (
-  <div className={`p-4 rounded-lg shadow-lg border-2 min-w-[220px] transition-all duration-300 ${
-    data.status === 'active' 
-      ? 'bg-purple-500 border-purple-600 text-white animate-pulse' 
-      : data.status === 'completed'
-      ? 'bg-purple-400 border-purple-500 text-white'
-      : 'bg-gray-400 border-gray-500 text-white'
-  }`}>
+const ExpectedOutputNode = ({ data }: { data: any }) => (
+  <div className="p-4 rounded-lg shadow-lg border-2 min-w-[200px] bg-green-500 border-green-600 text-white">
     <div className="flex items-center gap-2 justify-center mb-2">
-      <Users className="h-5 w-5" />
-      <span className="text-sm font-medium">{data.label}</span>
-      {data.confidence && (
-        <div className="flex items-center gap-1">
-          <Brain className="h-3 w-3" />
-          <span className="text-xs">{Math.round(data.confidence * 100)}%</span>
-        </div>
-      )}
+      <Target className="h-5 w-5" />
+      <span className="text-sm font-medium">Expected Output</span>
     </div>
-    {data.teamType && (
-      <div className="text-center mb-2">
-        <span className="text-xs bg-white/20 px-2 py-1 rounded font-mono">{data.teamType}</span>
-      </div>
-    )}
-    {data.description && (
-      <p className="text-xs opacity-80 text-center mb-2">{data.description}</p>
-    )}
-    {data.agentCount !== undefined && (
-      <p className="text-xs opacity-70 text-center">{data.agentCount} agents configured</p>
-    )}
-    {data.source && (
-      <div className="text-center mt-2">
-        <span className="text-xs bg-white/10 px-2 py-1 rounded">
-          {data.source === 'ai_analysis' ? '🤖 AI Detected' : '👤 User Input'}
-        </span>
-      </div>
-    )}
-  </div>
-);
-
-const AgentNode = ({ data }: { data: any }) => (
-  <div className={`p-3 rounded-lg shadow-lg border-2 min-w-[180px] transition-all duration-300 ${
-    data.status === 'active' 
-      ? 'bg-green-500 border-green-600 text-white animate-pulse' 
-      : data.status === 'completed'
-      ? 'bg-green-400 border-green-500 text-white'
-      : data.status === 'pending'
-      ? 'bg-yellow-400 border-yellow-500 text-white'
-      : 'bg-gray-400 border-gray-500 text-white'
-  }`}>
-    <div className="flex items-center gap-2 justify-center mb-2">
-      <Bot className="h-4 w-4" />
-      <span className="text-sm font-medium">{data.label}</span>
-      {data.confidence && (
-        <div className="flex items-center gap-1">
-          <Brain className="h-3 w-3" />
-          <span className="text-xs">{Math.round(data.confidence * 100)}%</span>
-        </div>
-      )}
+    <div className="bg-white/10 rounded p-2 mb-2">
+      <p className="text-xs text-center">{data.description}</p>
     </div>
-    
-    {data.agentType && (
-      <p className="text-xs opacity-90 text-center mb-1">{data.agentType}</p>
-    )}
-    
-    {/* Embedded Model Info */}
-    {data.modelName && (
-      <div className="bg-white/10 rounded p-2 mb-2">
-        <div className="flex items-center gap-1 justify-center mb-1">
-          <Zap className="h-3 w-3" />
-          <span className="text-xs font-medium">Model</span>
-        </div>
-        <p className="text-xs text-center">{data.modelName}</p>
-        {data.modelProvider && (
-          <p className="text-xs opacity-80 text-center">{data.modelProvider}</p>
-        )}
-      </div>
-    )}
-    
-    {/* Embedded Tools Info */}
-    {data.tools && data.tools.length > 0 && (
-      <div className="bg-white/10 rounded p-2 mb-2">
-        <div className="flex items-center gap-1 justify-center mb-1">
-          <Wrench className="h-3 w-3" />
-          <span className="text-xs font-medium">Tools ({data.tools.length})</span>
-        </div>
-        <div className="space-y-1">
-          {data.tools.slice(0, 2).map((tool: any, idx: number) => (
-            <div key={idx} className="flex items-center justify-between">
-              <p className="text-xs text-center opacity-90">{tool.name}</p>
-              {tool.confidence && (
-                <span className="text-xs opacity-70">{Math.round(tool.confidence * 100)}%</span>
-              )}
-            </div>
-          ))}
-          {data.tools.length > 2 && (
-            <p className="text-xs text-center opacity-70">+{data.tools.length - 2} more</p>
-          )}
-        </div>
-      </div>
-    )}
-    
-    {data.source && (
-      <div className="text-center mt-2">
-        <span className="text-xs bg-white/10 px-2 py-1 rounded">
-          {data.source === 'ai_analysis' ? '🤖 AI Detected' : '👤 User Input'}
-        </span>
-      </div>
-    )}
-    
-    {data.duration && (
-      <div className="flex items-center gap-1 mt-2 justify-center">
-        <Clock className="h-3 w-3" />
-        <span className="text-xs">{data.duration}ms</span>
-      </div>
-    )}
+    <div className="flex items-center justify-center mt-2">
+      <CheckCircleIcon className="h-4 w-4 text-green-300" />
+      <span className="text-xs ml-1">Ready</span>
+    </div>
   </div>
 );
 
 const nodeTypes = {
-  userNode: UserNode,
-  teamNode: TeamNode,
-  agentNode: AgentNode,
+  userInput: UserInputNode,
+  expectedOutput: ExpectedOutputNode,
+  custom: AutogenNode,
 };
 
 // Custom hook for resizable functionality only
 const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
   const [isResizing, setIsResizing] = useState(false);
-  const [size, setSize] = useState({ width: 800, height: 600 }); // Bigger default size
+  const [size, setSize] = useState({ width: 800, height: 600 });
   const [resizeDirection, setResizeDirection] = useState<string>('');
 
   useEffect(() => {
@@ -232,13 +128,13 @@ const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
       let newHeight = size.height;
 
       if (resizeDirection.includes('right')) {
-        newWidth = Math.max(600, e.clientX - rect.left); // Increased minimum width
+        newWidth = Math.max(600, e.clientX - rect.left);
       }
       if (resizeDirection.includes('left')) {
         newWidth = Math.max(600, rect.right - e.clientX);
       }
       if (resizeDirection.includes('bottom')) {
-        newHeight = Math.max(400, e.clientY - rect.top); // Increased minimum height
+        newHeight = Math.max(400, e.clientY - rect.top);
       }
       if (resizeDirection.includes('top')) {
         newHeight = Math.max(400, rect.bottom - e.clientY);
@@ -252,7 +148,6 @@ const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
       setResizeDirection('');
     };
 
-    // Add resize handles
     const resizeHandles = element.querySelectorAll('[data-resize-direction]');
     resizeHandles.forEach(handle => {
       handle.addEventListener('mousedown', handleMouseDown);
@@ -285,9 +180,10 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   const [isMinimized, setIsMinimized] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [lastMessageCount, setLastMessageCount] = useState(0);
-  const [useAutogenFlow, setUseAutogenFlow] = useState(false);
+  const [taskGenerated, setTaskGenerated] = useState(false);
+  const [generatedTask, setGeneratedTask] = useState('');
+  const [expectedOutput, setExpectedOutput] = useState('');
   
-  // Ref for resizable functionality only
   const windowRef = useRef<HTMLDivElement>(null);
   const { size, isResizing } = useResizable(windowRef);
 
@@ -296,7 +192,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     updateConversationState(conversationState);
   }, [conversationState]);
 
-  // Enhanced AI analysis with Autogen structure generation
+  // Enhanced AI analysis with Anthropic service
   useEffect(() => {
     const performAnalysis = async () => {
       if (messages.length === 0 || messages.length === lastMessageCount) return;
@@ -318,7 +214,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         // Prepare messages for analysis
         const messageTexts = messages.map(m => `${m.role}: ${m.content}`);
         
-        console.log('Starting Autogen AI analysis with context:', {
+        console.log('🤖 Starting Anthropic AI analysis with context:', {
           messageCount: messages.length,
           userIndustry,
           userFocusAreas,
@@ -333,18 +229,24 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           userFocusAreas
         );
         
-        console.log('Autogen AI Analysis completed:', analysis);
+        console.log('✅ Anthropic AI Analysis completed:', analysis);
         
         // Update flow state with Autogen structure
         if (analysis.teamStructure) {
           updateFromAutogenStructure(analysis.teamStructure, analysis);
-          setUseAutogenFlow(true); // Switch to Autogen-based flow
+          
+          // Check if conversation is in finalization stage
+          if (analysis.conversationStage === 'finalization') {
+            setTaskGenerated(true);
+            setGeneratedTask(analysis.teamStructure.description || 'AI agents team task');
+            setExpectedOutput(`The AI agents team will process user inputs through ${analysis.teamStructure.config.participants.length} specialized agents using ${analysis.teamStructure.provider.split('.').pop()} coordination pattern to deliver structured responses.`);
+          }
         }
         
         setLastMessageCount(messages.length);
         
       } catch (error) {
-        console.error('Error in Autogen AI analysis:', error);
+        console.error('❌ Error in Anthropic AI analysis:', error);
         
         // Fallback: Update user input manually if AI analysis fails
         if (messages.length > 0) {
@@ -365,40 +267,43 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     return () => clearTimeout(timeoutId);
   }, [messages, lastMessageCount]);
 
-  // Generate flow based on Autogen structure or progressive flow
-  const generateFlow = useCallback(() => {
-    const flowState = getFlowState();
-    const autogenStructure = getCurrentAutogenStructure();
+  // Check for task generator trigger from agentFlow
+  useEffect(() => {
+    const hasTaskGenerator = agentFlow.some(step => 
+      step.type === 'tool' && 
+      step.label === 'Task Generator' && 
+      step.status === 'completed'
+    );
     
-    if (useAutogenFlow && autogenStructure) {
-      // Use Autogen structure to generate flow
-      const { nodes: autogenNodes, edges: autogenEdges } = transformTeamStructureToFlow(
-        autogenStructure,
-        (nodeData) => console.log('Node edit:', nodeData)
-      );
-      
-      // Convert to our node format with enhanced data
-      const enhancedNodes = autogenNodes.map(node => ({
-        ...node,
-        type: node.data.type === 'team' ? 'teamNode' : 'agentNode',
-        data: {
-          ...node.data,
-          status: conversationState === 'processing' || conversationState === 'responding' ? 'active' : 'completed',
-          confidence: 0.9,
-          source: 'ai_analysis'
-        }
-      }));
-      
-      // Add user input node
-      const userNode: Node = {
+    if (hasTaskGenerator && !taskGenerated) {
+      setTaskGenerated(true);
+      const flowState = getFlowState();
+      if (flowState.team) {
+        setGeneratedTask(`Create ${flowState.team.name} for ${flowState.team.description}`);
+        setExpectedOutput(`The system will generate a structured AI agents team with ${flowState.agents.length} agents working in ${flowState.team.type} pattern to handle user requests efficiently.`);
+      }
+    }
+  }, [agentFlow, taskGenerated]);
+
+  // Generate ReactFlow visualization from Autogen structure
+  const generateAutogenFlow = useCallback(() => {
+    const autogenStructure = getCurrentAutogenStructure();
+    const flowState = getFlowState();
+    
+    if (!autogenStructure) return { nodes: [], edges: [] };
+
+    const newNodes: Node[] = [];
+    const newEdges: Edge[] = [];
+    let yPosition = 50;
+
+    // 1. User Input Node (always show if conversation started)
+    if (flowState.userInput.shown || conversationState !== 'idle') {
+      newNodes.push({
         id: 'user-input',
-        type: 'userNode',
-        position: { x: 300, y: -150 },
+        type: 'userInput',
+        position: { x: 400, y: yPosition },
         data: {
-          label: 'User Input',
-          description: conversationState === 'listening' ? 'Speaking...' : 
-                      conversationState === 'processing' ? 'Processing voice...' : 
-                      flowState.userInput.shown ? 'Voice input received' : 'Ready to listen',
+          content: flowState.userInput.content,
           status: conversationState === 'listening' ? 'active' : 
                   flowState.userInput.shown ? 'completed' : 'pending',
           timestamp: flowState.userInput.timestamp,
@@ -406,228 +311,238 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         },
         sourcePosition: Position.Bottom,
         targetPosition: Position.Top,
-      };
-      
-      const allNodes = [userNode, ...enhancedNodes];
-      
-      // Add edge from user to team
-      const teamNode = enhancedNodes.find(n => n.data.type === 'team');
-      const userToTeamEdge: Edge = {
+      });
+      yPosition += 150;
+    }
+
+    // 2. Team Node (from Autogen structure)
+    const teamNode: Node = {
+      id: 'team',
+      type: 'custom',
+      position: { x: 300, y: yPosition },
+      data: {
+        label: autogenStructure.label,
+        type: 'team',
+        description: autogenStructure.description,
+        model: autogenStructure.config.model_client?.config.model || '',
+        agents: autogenStructure.config.participants.map(p => ({
+          name: p.label,
+          description: p.description,
+          model: {
+            name: p.config.model_client?.config.model || '',
+            provider: p.config.model_client?.provider.split('.').pop() || ''
+          },
+          tools: p.config.tools?.map(t => ({
+            name: t.config.name,
+            description: t.description
+          })) || []
+        })),
+        terminations: autogenStructure.config.termination_condition.config.conditions.map(c => ({
+          name: c.label
+        })),
+        onEdit: (nodeData: any) => console.log('Edit team:', nodeData),
+      },
+      sourcePosition: Position.Bottom,
+      targetPosition: Position.Top,
+    };
+    newNodes.push(teamNode);
+
+    // Edge from user input to team
+    if (newNodes.find(n => n.id === 'user-input')) {
+      newEdges.push({
         id: 'edge-user-team',
         source: 'user-input',
-        target: teamNode?.id || 'team',
+        target: 'team',
         type: 'smoothstep',
         animated: conversationState === 'processing' || isAnalyzing,
         style: { 
-          stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' || conversationState === 'responding' ? '#3b82f6' : '#6b7280',
+          stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#6b7280',
           strokeWidth: 3 
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: isAnalyzing ? '#f59e0b' : conversationState === 'processing' || conversationState === 'responding' ? '#3b82f6' : '#6b7280',
+          color: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#6b7280',
         },
+      });
+    }
+
+    yPosition += 250;
+
+    // 3. Individual Agent Nodes (from Autogen participants)
+    const agentPositions = generateAgentPositions(
+      autogenStructure.provider.split('.').pop() || 'RoundRobinGroupChat',
+      autogenStructure.config.participants.length
+    );
+
+    autogenStructure.config.participants.forEach((participant, index) => {
+      const agentNode: Node = {
+        id: `agent-${index}`,
+        type: 'custom',
+        position: { 
+          x: 300 + agentPositions[index].x, 
+          y: yPosition + agentPositions[index].y 
+        },
+        data: {
+          label: participant.label,
+          type: 'agent',
+          description: participant.description,
+          model: participant.config.model_client?.config.model || '',
+          tools: participant.config.tools?.length || 0,
+          onEdit: (nodeData: any) => console.log('Edit agent:', nodeData),
+        },
+        sourcePosition: Position.Bottom,
+        targetPosition: Position.Top,
       };
-      
-      setNodes(allNodes);
-      setEdges([userToTeamEdge, ...autogenEdges]);
-      
-    } else {
-      // Use progressive flow generation
-      generateProgressiveFlow();
-    }
-  }, [conversationState, isAnalyzing, useAutogenFlow, setNodes, setEdges]);
+      newNodes.push(agentNode);
 
-  // Generate progressive flow based on enhanced state
-  const generateProgressiveFlow = useCallback(() => {
-    const flowState = getFlowState();
-    const teamProgress = getTeamProgress();
-    const newNodes: Node[] = [];
-    const newEdges: Edge[] = [];
-    let yOffset = 50;
+      // Edge from team to agent
+      newEdges.push({
+        id: `edge-team-agent-${index}`,
+        source: 'team',
+        target: `agent-${index}`,
+        type: 'smoothstep',
+        animated: conversationState === 'responding',
+        style: { 
+          stroke: conversationState === 'responding' ? '#10b981' : '#6b7280',
+          strokeWidth: 2 
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: conversationState === 'responding' ? '#10b981' : '#6b7280',
+        },
+      });
+    });
 
-    // Step 1: Show user input with analysis status
-    if (flowState.userInput.shown || conversationState !== 'idle') {
+    // Add team-type specific inter-agent connections
+    addTeamTypeConnections(
+      autogenStructure.provider.split('.').pop() || 'RoundRobinGroupChat',
+      autogenStructure.config.participants,
+      newEdges,
+      conversationState
+    );
+
+    // 4. Task Generator Output Nodes (if task is generated)
+    if (taskGenerated) {
+      yPosition += 200;
+      
+      // Generated Task Node
       newNodes.push({
-        id: 'user-input',
-        type: 'userNode',
-        position: { x: 300, y: yOffset },
+        id: 'generated-task',
+        type: 'userInput',
+        position: { x: 150, y: yPosition },
         data: {
-          label: 'User Input',
-          description: conversationState === 'listening' ? 'Speaking...' : 
-                      conversationState === 'processing' ? 'Processing voice...' : 
-                      flowState.userInput.shown ? 'Voice input received' : 'Ready to listen',
-          status: conversationState === 'listening' ? 'active' : 
-                  flowState.userInput.shown ? 'completed' : 'pending',
-          timestamp: flowState.userInput.timestamp,
-          processed: flowState.userInput.processed
+          content: generatedTask,
+          status: 'completed',
+          timestamp: Date.now(),
+          processed: true
         },
         sourcePosition: Position.Bottom,
         targetPosition: Position.Top,
       });
 
-      yOffset += 180;
-    }
-
-    // Step 2: Show AI Team with enhanced data
-    if (flowState.team) {
+      // Expected Output Node
       newNodes.push({
-        id: 'agent-team',
-        type: 'teamNode',
-        position: { x: 250, y: yOffset },
+        id: 'expected-output',
+        type: 'expectedOutput',
+        position: { x: 450, y: yPosition },
         data: {
-          label: flowState.team.name,
-          teamType: flowState.team.type,
-          description: flowState.team.description,
-          agentCount: flowState.agents.length,
-          confidence: flowState.team.confidence,
-          source: flowState.team.source,
-          status: conversationState === 'processing' || conversationState === 'responding' ? 'active' : 
-                  flowState.team.status === 'identified' ? 'completed' : 'pending'
+          description: expectedOutput,
+          status: 'completed'
         },
         sourcePosition: Position.Bottom,
         targetPosition: Position.Top,
       });
 
-      // Edge from user to team
-      if (newNodes.find(n => n.id === 'user-input')) {
+      // Edges from agents to output nodes
+      autogenStructure.config.participants.forEach((_, index) => {
         newEdges.push({
-          id: 'edge-user-team',
-          source: 'user-input',
-          target: 'agent-team',
+          id: `edge-agent-task-${index}`,
+          source: `agent-${index}`,
+          target: 'generated-task',
           type: 'smoothstep',
-          animated: conversationState === 'processing' || isAnalyzing,
+          animated: false,
           style: { 
-            stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' || conversationState === 'responding' ? '#3b82f6' : '#6b7280',
-            strokeWidth: 3 
+            stroke: '#22c55e',
+            strokeWidth: 2,
+            strokeDasharray: '5,5'
           },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: isAnalyzing ? '#f59e0b' : conversationState === 'processing' || conversationState === 'responding' ? '#3b82f6' : '#6b7280',
+            color: '#22c55e',
           },
         });
-      }
 
-      yOffset += 200;
-    }
-
-    // Step 3: Show individual agents with enhanced data
-    if (flowState.agents.length > 0 && flowState.team) {
-      const agentPositions = generateAgentPositions(flowState.team.type, flowState.agents.length);
-      
-      flowState.agents.forEach((agent, index) => {
-        newNodes.push({
-          id: agent.id,
-          type: 'agentNode',
-          position: { x: agentPositions[index].x, y: yOffset },
-          data: {
-            label: agent.name,
-            agentType: agent.type,
-            modelName: agent.modelName,
-            modelProvider: agent.modelProvider,
-            tools: agent.tools,
-            confidence: agent.confidence,
-            source: agent.source,
-            status: conversationState === 'responding' ? 'active' : 
-                    agent.status === 'identified' ? 'completed' : 'pending',
-            duration: agent.timestamp ? Date.now() - agent.timestamp : undefined
+        newEdges.push({
+          id: `edge-agent-output-${index}`,
+          source: `agent-${index}`,
+          target: 'expected-output',
+          type: 'smoothstep',
+          animated: false,
+          style: { 
+            stroke: '#22c55e',
+            strokeWidth: 2,
+            strokeDasharray: '5,5'
           },
-          sourcePosition: Position.Bottom,
-          targetPosition: Position.Top,
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: '#22c55e',
+          },
         });
-
-        // Edge from team to agent
-        if (newNodes.find(n => n.id === 'agent-team')) {
-          newEdges.push({
-            id: `edge-team-${agent.id}`,
-            source: 'agent-team',
-            target: agent.id,
-            type: 'smoothstep',
-            animated: conversationState === 'responding',
-            style: { 
-              stroke: conversationState === 'responding' ? '#10b981' : '#6b7280',
-              strokeWidth: 2 
-            },
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              color: conversationState === 'responding' ? '#10b981' : '#6b7280',
-            },
-          });
-        }
       });
-
-      // Add team-type specific inter-agent connections
-      if (flowState.team) {
-        addTeamTypeConnections(flowState.team.type, flowState.agents, newEdges, conversationState);
-      }
     }
 
-    setNodes(newNodes);
-    setEdges(newEdges);
-  }, [conversationState, isAnalyzing, setNodes, setEdges]);
+    return { nodes: newNodes, edges: newEdges };
+  }, [conversationState, isAnalyzing, taskGenerated, generatedTask, expectedOutput]);
 
-  // Generate agent positions based on team type (enhanced)
+  // Generate agent positions based on team type
   const generateAgentPositions = (teamType: string, agentCount: number) => {
     const positions = [];
-    const baseX = 300;
-    const spacing = 250;
+    const spacing = 200;
 
     switch (teamType) {
       case 'RoundRobinGroupChat':
-        // Circular arrangement for round-robin
-        const radius = Math.max(120, agentCount * 30);
+        // Circular arrangement
+        const radius = Math.max(100, agentCount * 25);
         for (let i = 0; i < agentCount; i++) {
           const angle = (i * 2 * Math.PI) / agentCount;
           positions.push({
-            x: baseX + Math.cos(angle) * radius,
+            x: Math.cos(angle) * radius,
             y: Math.sin(angle) * radius
           });
         }
         break;
       
       case 'HierarchicalGroupChat':
-        // Hierarchical tree structure
-        positions.push({ x: baseX, y: 0 }); // Main agent at center
+        // Tree structure
+        positions.push({ x: 0, y: 0 }); // Main agent at center
         for (let i = 1; i < agentCount; i++) {
           const row = Math.floor((i - 1) / 3) + 1;
           const col = (i - 1) % 3;
           positions.push({
-            x: baseX + (col - 1) * spacing,
-            y: row * 120
+            x: (col - 1) * spacing,
+            y: row * 100
           });
         }
         break;
       
       case 'CascadingGroupChat':
-        // Linear cascade with slight stagger
+        // Linear cascade
         for (let i = 0; i < agentCount; i++) {
           positions.push({
-            x: baseX + i * spacing - ((agentCount - 1) * spacing) / 2,
-            y: i * 30 // Slight vertical stagger
+            x: i * spacing - ((agentCount - 1) * spacing) / 2,
+            y: i * 20
           });
         }
         break;
       
       case 'BroadcastGroupChat':
-        // Star pattern around center
-        const starRadius = Math.max(150, agentCount * 25);
+        // Star pattern
+        const starRadius = Math.max(120, agentCount * 20);
         for (let i = 0; i < agentCount; i++) {
           const angle = (i * 2 * Math.PI) / agentCount;
           positions.push({
-            x: baseX + Math.cos(angle) * starRadius,
+            x: Math.cos(angle) * starRadius,
             y: Math.sin(angle) * starRadius
-          });
-        }
-        break;
-      
-      case 'ConcurrentGroupChat':
-        // Parallel arrangement
-        const cols = Math.ceil(Math.sqrt(agentCount));
-        for (let i = 0; i < agentCount; i++) {
-          const row = Math.floor(i / cols);
-          const col = i % cols;
-          positions.push({
-            x: baseX + (col - (cols - 1) / 2) * spacing,
-            y: row * 120
           });
         }
         break;
@@ -636,7 +551,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         // Default horizontal layout
         for (let i = 0; i < agentCount; i++) {
           positions.push({
-            x: baseX + i * spacing - ((agentCount - 1) * spacing) / 2,
+            x: i * spacing - ((agentCount - 1) * spacing) / 2,
             y: 0
           });
         }
@@ -645,19 +560,19 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     return positions;
   };
 
-  // Enhanced team-type specific connections
-  const addTeamTypeConnections = (teamType: string, agents: TempAgentData[], edges: Edge[], state: string) => {
+  // Add team-type specific connections
+  const addTeamTypeConnections = (teamType: string, participants: any[], edges: Edge[], state: string) => {
     const isActive = state === 'responding';
     
     switch (teamType) {
       case 'RoundRobinGroupChat':
-        // Connect agents in a circle for round-robin communication
-        for (let i = 0; i < agents.length; i++) {
-          const nextIndex = (i + 1) % agents.length;
+        // Connect agents in a circle
+        for (let i = 0; i < participants.length; i++) {
+          const nextIndex = (i + 1) % participants.length;
           edges.push({
             id: `edge-round-${i}`,
-            source: agents[i].id,
-            target: agents[nextIndex].id,
+            source: `agent-${i}`,
+            target: `agent-${nextIndex}`,
             type: 'smoothstep',
             animated: isActive,
             style: { 
@@ -675,13 +590,13 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         break;
       
       case 'HierarchicalGroupChat':
-        // Connect main agent to all subordinates
-        if (agents.length > 1) {
-          for (let i = 1; i < agents.length; i++) {
+        // Connect main agent to subordinates
+        if (participants.length > 1) {
+          for (let i = 1; i < participants.length; i++) {
             edges.push({
               id: `edge-hierarchy-${i}`,
-              source: agents[0].id,
-              target: agents[i].id,
+              source: 'agent-0',
+              target: `agent-${i}`,
               type: 'smoothstep',
               animated: isActive,
               style: { 
@@ -700,12 +615,12 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         break;
       
       case 'CascadingGroupChat':
-        // Connect agents in sequence for cascading flow
-        for (let i = 0; i < agents.length - 1; i++) {
+        // Connect agents in sequence
+        for (let i = 0; i < participants.length - 1; i++) {
           edges.push({
             id: `edge-cascade-${i}`,
-            source: agents[i].id,
-            target: agents[i + 1].id,
+            source: `agent-${i}`,
+            target: `agent-${i + 1}`,
             type: 'smoothstep',
             animated: isActive,
             style: { 
@@ -721,20 +636,15 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           });
         }
         break;
-        
-      case 'BroadcastGroupChat':
-        // No inter-agent connections needed - all receive same message
-        break;
-        
-      case 'ConcurrentGroupChat':
-        // Add aggregation connections if needed
-        break;
     }
   };
 
+  // Update flow when structure changes
   useEffect(() => {
-    generateFlow();
-  }, [generateFlow]);
+    const { nodes: newNodes, edges: newEdges } = generateAutogenFlow();
+    setNodes(newNodes);
+    setEdges(newEdges);
+  }, [generateAutogenFlow, setNodes, setEdges]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -821,7 +731,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         </>
       )}
 
-      {/* Header - no drag functionality */}
+      {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-dark-border">
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
@@ -840,6 +750,9 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           )}
           {isAnalyzing && (
             <SparklesIcon className="h-3 w-3 text-orange-500 animate-spin" />
+          )}
+          {taskGenerated && (
+            <CheckCircleIcon className="h-3 w-3 text-green-500" />
           )}
         </div>
         <div className="flex items-center gap-1">
@@ -879,9 +792,9 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             nodeTypes={nodeTypes}
             fitView
             fitViewOptions={{ padding: 0.15 }}
-            minZoom={0.4}
+            minZoom={0.3}
             maxZoom={1.5}
-            defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
+            defaultViewport={{ x: 0, y: 0, zoom: 0.6 }}
             proOptions={{ hideAttribution: true }}
           >
             <Background color="#374151" gap={20} />
@@ -898,7 +811,8 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         <div className="p-2 text-center">
           <p className="text-xs text-gray-400">
             {isAnalyzing ? '🤖 AI Analyzing...' : 
-             teamProgress.readyForDeployment ? '✅ Ready for deployment' :
+             taskGenerated ? '✅ Task Generated' :
+             teamProgress.readyForDeployment ? '🚀 Ready for deployment' :
              `${flowState.conversationStage} • ${flowState.agents.length} agents`}
             {teamProgress.averageAgentConfidence > 0 && (
               <span className="ml-2">• {Math.round(teamProgress.averageAgentConfidence * 100)}% confidence</span>
