@@ -130,7 +130,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         context: {
           industry: userIndustry,
           focus_areas: userFocusAreas,
-          industry_config: industries.find(i => i.value === userIndustry)?.keyPrompts || {},
+          industry_config: userIndustry)?.keyPrompts || {},
           focus_area_configs: focusAreas.filter(fa => userFocusAreas.includes(fa.value))
         },
         prompt: {
