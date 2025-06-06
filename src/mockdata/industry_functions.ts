@@ -2,7 +2,7 @@
 export const industries = [
   { 
     value: 'banking',
-    label: 'Finance & Banking',
+    label: 'Banking & Financing',
     keyPrompts: {
       agentConsiderations: [
         'Regulatory compliance (SOX, Basel III, GDPR)',
