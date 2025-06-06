@@ -183,6 +183,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   const [taskGenerated, setTaskGenerated] = useState(false);
   const [generatedTask, setGeneratedTask] = useState('');
   const [expectedOutput, setExpectedOutput] = useState('');
+  const [hasInitialStructure, setHasInitialStructure] = useState(false);
   
   const windowRef = useRef<HTMLDivElement>(null);
   const { size, isResizing } = useResizable(windowRef);
@@ -195,10 +196,27 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   // Enhanced AI analysis with Anthropic service
   useEffect(() => {
     const performAnalysis = async () => {
-      if (messages.length === 0 || messages.length === lastMessageCount) return;
+      // Skip if no new messages or already analyzing
+      if (messages.length === 0 || messages.length === lastMessageCount || isAnalyzing) return;
+      
+      console.log('🔍 Checking if analysis should be triggered...', {
+        messageCount: messages.length,
+        lastCount: lastMessageCount,
+        shouldTrigger: shouldTriggerAnalysis()
+      });
       
       // Check if analysis should be triggered
-      if (!shouldTriggerAnalysis()) return;
+      if (!shouldTriggerAnalysis()) {
+        // Still update user input for display
+        if (messages.length > 0) {
+          const userMessages = messages.filter(m => m.role === 'user');
+          if (userMessages.length > 0) {
+            const lastUserMessage = userMessages[userMessages.length - 1];
+            updateUserInput(lastUserMessage.content);
+          }
+        }
+        return;
+      }
       
       setIsAnalyzing(true);
       setAnalysisInProgress(true);
@@ -234,6 +252,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         // Update flow state with Autogen structure
         if (analysis.teamStructure) {
           updateFromAutogenStructure(analysis.teamStructure, analysis);
+          setHasInitialStructure(true);
           
           // Check if conversation is in finalization stage
           if (analysis.conversationStage === 'finalization') {
@@ -265,7 +284,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     // Debounce analysis
     const timeoutId = setTimeout(performAnalysis, 1500);
     return () => clearTimeout(timeoutId);
-  }, [messages, lastMessageCount]);
+  }, [messages, lastMessageCount, isAnalyzing]);
 
   // Check for task generator trigger from agentFlow
   useEffect(() => {
@@ -290,8 +309,13 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     const autogenStructure = getCurrentAutogenStructure();
     const flowState = getFlowState();
     
-    if (!autogenStructure) return { nodes: [], edges: [] };
-
+    console.log('🎨 Generating flow visualization:', {
+      hasStructure: !!autogenStructure,
+      hasUserInput: flowState.userInput.shown,
+      conversationState,
+      taskGenerated
+    });
+    
     const newNodes: Node[] = [];
     const newEdges: Edge[] = [];
     let yPosition = 50;
@@ -303,7 +327,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         type: 'userInput',
         position: { x: 400, y: yPosition },
         data: {
-          content: flowState.userInput.content,
+          content: flowState.userInput.content || 'Starting conversation...',
           status: conversationState === 'listening' ? 'active' : 
                   flowState.userInput.shown ? 'completed' : 'pending',
           timestamp: flowState.userInput.timestamp,
@@ -315,184 +339,198 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       yPosition += 150;
     }
 
-    // 2. Team Node (from Autogen structure)
-    const teamNode: Node = {
-      id: 'team',
-      type: 'custom',
-      position: { x: 300, y: yPosition },
-      data: {
-        label: autogenStructure.label,
-        type: 'team',
-        description: autogenStructure.description,
-        model: autogenStructure.config.model_client?.config.model || '',
-        agents: autogenStructure.config.participants.map(p => ({
-          name: p.label,
-          description: p.description,
-          model: {
-            name: p.config.model_client?.config.model || '',
-            provider: p.config.model_client?.provider.split('.').pop() || ''
-          },
-          tools: p.config.tools?.map(t => ({
-            name: t.config.name,
-            description: t.description
-          })) || []
-        })),
-        terminations: autogenStructure.config.termination_condition.config.conditions.map(c => ({
-          name: c.label
-        })),
-        onEdit: (nodeData: any) => console.log('Edit team:', nodeData),
-      },
-      sourcePosition: Position.Bottom,
-      targetPosition: Position.Top,
-    };
-    newNodes.push(teamNode);
-
-    // Edge from user input to team
-    if (newNodes.find(n => n.id === 'user-input')) {
-      newEdges.push({
-        id: 'edge-user-team',
-        source: 'user-input',
-        target: 'team',
-        type: 'smoothstep',
-        animated: conversationState === 'processing' || isAnalyzing,
-        style: { 
-          stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#6b7280',
-          strokeWidth: 3 
-        },
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#6b7280',
-        },
-      });
-    }
-
-    yPosition += 250;
-
-    // 3. Individual Agent Nodes (from Autogen participants)
-    const agentPositions = generateAgentPositions(
-      autogenStructure.provider.split('.').pop() || 'RoundRobinGroupChat',
-      autogenStructure.config.participants.length
-    );
-
-    autogenStructure.config.participants.forEach((participant, index) => {
-      const agentNode: Node = {
-        id: `agent-${index}`,
+    // 2. Team Node (from Autogen structure or placeholder)
+    if (autogenStructure || hasInitialStructure) {
+      const teamNode: Node = {
+        id: 'team',
         type: 'custom',
-        position: { 
-          x: 300 + agentPositions[index].x, 
-          y: yPosition + agentPositions[index].y 
-        },
+        position: { x: 300, y: yPosition },
         data: {
-          label: participant.label,
-          type: 'agent',
-          description: participant.description,
-          model: participant.config.model_client?.config.model || '',
-          tools: participant.config.tools?.length || 0,
-          onEdit: (nodeData: any) => console.log('Edit agent:', nodeData),
+          label: autogenStructure?.label || flowState.team?.name || 'AI Agents Team',
+          type: 'team',
+          description: autogenStructure?.description || flowState.team?.description || 'Processing your request...',
+          model: autogenStructure?.config.model_client?.config.model || 'gpt-4o-mini',
+          agents: autogenStructure?.config.participants.map(p => ({
+            name: p.label,
+            description: p.description,
+            model: {
+              name: p.config.model_client?.config.model || 'gpt-4o-mini',
+              provider: p.config.model_client?.provider.split('.').pop() || 'OpenAI'
+            },
+            tools: p.config.tools?.map(t => ({
+              name: t.config.name,
+              description: t.description
+            })) || []
+          })) || flowState.agents.map(a => ({
+            name: a.name,
+            description: a.description,
+            model: {
+              name: a.modelName || 'gpt-4o-mini',
+              provider: a.modelProvider || 'OpenAI'
+            },
+            tools: a.tools
+          })),
+          terminations: autogenStructure?.config.termination_condition.config.conditions.map(c => ({
+            name: c.label
+          })) || [{ name: 'Auto Termination' }],
+          onEdit: (nodeData: any) => console.log('Edit team:', nodeData),
         },
         sourcePosition: Position.Bottom,
         targetPosition: Position.Top,
       };
-      newNodes.push(agentNode);
+      newNodes.push(teamNode);
 
-      // Edge from team to agent
-      newEdges.push({
-        id: `edge-team-agent-${index}`,
-        source: 'team',
-        target: `agent-${index}`,
-        type: 'smoothstep',
-        animated: conversationState === 'responding',
-        style: { 
-          stroke: conversationState === 'responding' ? '#10b981' : '#6b7280',
-          strokeWidth: 2 
-        },
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: conversationState === 'responding' ? '#10b981' : '#6b7280',
-        },
-      });
-    });
-
-    // Add team-type specific inter-agent connections
-    addTeamTypeConnections(
-      autogenStructure.provider.split('.').pop() || 'RoundRobinGroupChat',
-      autogenStructure.config.participants,
-      newEdges,
-      conversationState
-    );
-
-    // 4. Task Generator Output Nodes (if task is generated)
-    if (taskGenerated) {
-      yPosition += 200;
-      
-      // Generated Task Node
-      newNodes.push({
-        id: 'generated-task',
-        type: 'userInput',
-        position: { x: 150, y: yPosition },
-        data: {
-          content: generatedTask,
-          status: 'completed',
-          timestamp: Date.now(),
-          processed: true
-        },
-        sourcePosition: Position.Bottom,
-        targetPosition: Position.Top,
-      });
-
-      // Expected Output Node
-      newNodes.push({
-        id: 'expected-output',
-        type: 'expectedOutput',
-        position: { x: 450, y: yPosition },
-        data: {
-          description: expectedOutput,
-          status: 'completed'
-        },
-        sourcePosition: Position.Bottom,
-        targetPosition: Position.Top,
-      });
-
-      // Edges from agents to output nodes
-      autogenStructure.config.participants.forEach((_, index) => {
+      // Edge from user input to team
+      if (newNodes.find(n => n.id === 'user-input')) {
         newEdges.push({
-          id: `edge-agent-task-${index}`,
-          source: `agent-${index}`,
-          target: 'generated-task',
+          id: 'edge-user-team',
+          source: 'user-input',
+          target: 'team',
           type: 'smoothstep',
-          animated: false,
+          animated: conversationState === 'processing' || isAnalyzing,
           style: { 
-            stroke: '#22c55e',
-            strokeWidth: 2,
-            strokeDasharray: '5,5'
+            stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#6b7280',
+            strokeWidth: 3 
           },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: '#22c55e',
+            color: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#6b7280',
           },
+        });
+      }
+
+      yPosition += 250;
+
+      // 3. Individual Agent Nodes (from Autogen participants)
+      const participants = autogenStructure?.config.participants || [];
+      if (participants.length > 0) {
+        const agentPositions = generateAgentPositions(
+          autogenStructure?.provider.split('.').pop() || 'RoundRobinGroupChat',
+          participants.length
+        );
+
+        participants.forEach((participant, index) => {
+          const agentNode: Node = {
+            id: `agent-${index}`,
+            type: 'custom',
+            position: { 
+              x: 300 + agentPositions[index].x, 
+              y: yPosition + agentPositions[index].y 
+            },
+            data: {
+              label: participant.label,
+              type: 'agent',
+              description: participant.description,
+              model: participant.config.model_client?.config.model || 'gpt-4o-mini',
+              tools: participant.config.tools?.length || 0,
+              onEdit: (nodeData: any) => console.log('Edit agent:', nodeData),
+            },
+            sourcePosition: Position.Bottom,
+            targetPosition: Position.Top,
+          };
+          newNodes.push(agentNode);
+
+          // Edge from team to agent
+          newEdges.push({
+            id: `edge-team-agent-${index}`,
+            source: 'team',
+            target: `agent-${index}`,
+            type: 'smoothstep',
+            animated: conversationState === 'responding',
+            style: { 
+              stroke: conversationState === 'responding' ? '#10b981' : '#6b7280',
+              strokeWidth: 2 
+            },
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: conversationState === 'responding' ? '#10b981' : '#6b7280',
+            },
+          });
         });
 
-        newEdges.push({
-          id: `edge-agent-output-${index}`,
-          source: `agent-${index}`,
-          target: 'expected-output',
-          type: 'smoothstep',
-          animated: false,
-          style: { 
-            stroke: '#22c55e',
-            strokeWidth: 2,
-            strokeDasharray: '5,5'
+        // Add team-type specific inter-agent connections
+        addTeamTypeConnections(
+          autogenStructure?.provider.split('.').pop() || 'RoundRobinGroupChat',
+          participants,
+          newEdges,
+          conversationState
+        );
+      }
+
+      // 4. Task Generator Output Nodes (if task is generated)
+      if (taskGenerated) {
+        yPosition += 200;
+        
+        // Generated Task Node
+        newNodes.push({
+          id: 'generated-task',
+          type: 'userInput',
+          position: { x: 150, y: yPosition },
+          data: {
+            content: generatedTask,
+            status: 'completed',
+            timestamp: Date.now(),
+            processed: true
           },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: '#22c55e',
-          },
+          sourcePosition: Position.Bottom,
+          targetPosition: Position.Top,
         });
-      });
+
+        // Expected Output Node
+        newNodes.push({
+          id: 'expected-output',
+          type: 'expectedOutput',
+          position: { x: 450, y: yPosition },
+          data: {
+            description: expectedOutput,
+            status: 'completed'
+          },
+          sourcePosition: Position.Bottom,
+          targetPosition: Position.Top,
+        });
+
+        // Edges from agents to output nodes
+        participants.forEach((_, index) => {
+          newEdges.push({
+            id: `edge-agent-task-${index}`,
+            source: `agent-${index}`,
+            target: 'generated-task',
+            type: 'smoothstep',
+            animated: false,
+            style: { 
+              stroke: '#22c55e',
+              strokeWidth: 2,
+              strokeDasharray: '5,5'
+            },
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: '#22c55e',
+            },
+          });
+
+          newEdges.push({
+            id: `edge-agent-output-${index}`,
+            source: `agent-${index}`,
+            target: 'expected-output',
+            type: 'smoothstep',
+            animated: false,
+            style: { 
+              stroke: '#22c55e',
+              strokeWidth: 2,
+              strokeDasharray: '5,5'
+            },
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: '#22c55e',
+            },
+          });
+        });
+      }
     }
 
+    console.log('🎨 Generated flow:', { nodeCount: newNodes.length, edgeCount: newEdges.length });
     return { nodes: newNodes, edges: newEdges };
-  }, [conversationState, isAnalyzing, taskGenerated, generatedTask, expectedOutput]);
+  }, [conversationState, isAnalyzing, taskGenerated, generatedTask, expectedOutput, hasInitialStructure]);
 
   // Generate agent positions based on team type
   const generateAgentPositions = (teamType: string, agentCount: number) => {
@@ -642,6 +680,10 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   // Update flow when structure changes
   useEffect(() => {
     const { nodes: newNodes, edges: newEdges } = generateAutogenFlow();
+    console.log('🔄 Updating ReactFlow with new nodes/edges:', { 
+      nodeCount: newNodes.length, 
+      edgeCount: newEdges.length 
+    });
     setNodes(newNodes);
     setEdges(newEdges);
   }, [generateAutogenFlow, setNodes, setEdges]);
