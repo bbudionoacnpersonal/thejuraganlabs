@@ -4,7 +4,7 @@ import { XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { useConversation } from '@elevenlabs/react';
 import ConversationAnalysis from './ConversationAnalysis';
 import SmartVisualizer from './SmartVisualizer';
-import { Message } from '@/types';
+import { Message, TeamStructure } from '@/types';
 import { industries, focusAreas } from '@/mockdata/industry_functions';
 import { resetFlowState, updateUserInput, getFlowState } from '@/mockdata/temp_conv_agentflow';
 import { 
@@ -17,6 +17,7 @@ interface VoiceSDKOverlayProps {
   isVisible: boolean;
   onClose: () => void;
   onMessage: (message: Message) => void;
+  onJsonGenerated?: (json: TeamStructure) => void; // 🎯 NEW: Callback for JSON generation
 }
 
 interface AgentFlowStep {
@@ -42,7 +43,8 @@ async function requestMicrophonePermission() {
 const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   isVisible,
   onClose,
-  onMessage
+  onMessage,
+  onJsonGenerated // 🎯 NEW: Receive callback prop
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
@@ -373,6 +375,14 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     }
   }, [conversationId]);
 
+  // 🎯 NEW: Handle JSON generation from Smart Visualizer
+  const handleJsonGenerated = (json: TeamStructure) => {
+    console.log('🎯 JSON generated from Smart Visualizer, forwarding to parent:', json);
+    if (onJsonGenerated) {
+      onJsonGenerated(json);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isVisible && (
@@ -539,6 +549,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                   agentFlow={agentFlow}
                   messages={conversationMessages}
                   conversationId={conversationId} // Pass conversation ID for storage access
+                  onJsonGenerated={handleJsonGenerated} // 🎯 NEW: Pass JSON generation callback
                 />
               )}
             </div>

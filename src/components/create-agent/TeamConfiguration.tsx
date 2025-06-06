@@ -17,11 +17,15 @@ interface TeamConfigurationProps {
   agentConfig?: any;
   viewMode: 'json' | 'visual';
   onViewModeChange: (mode: 'json' | 'visual') => void;
+  teamStructureData?: TeamStructure; // 🎯 NEW: Accept external team structure
+  onTeamStructureChange?: (structure: TeamStructure) => void; // 🎯 NEW: Callback for structure changes
 }
 
 const TeamConfiguration: React.FC<TeamConfigurationProps> = ({ 
   viewMode,
-  onViewModeChange
+  onViewModeChange,
+  teamStructureData, // 🎯 NEW: Receive external team structure
+  onTeamStructureChange // 🎯 NEW: Receive callback for changes
 }) => {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [selectedTermination, setSelectedTermination] = useState<any>(null);
@@ -32,6 +36,9 @@ const TeamConfiguration: React.FC<TeamConfigurationProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [showPlayground, setShowPlayground] = useState(false);
   const [showSessionModal, setShowSessionModal] = useState(false);
+
+  // 🎯 NEW: Use external team structure if provided, otherwise use default
+  const currentTeamStructure = teamStructureData || teamStructure;
 
   const getDisplayJson = () => {
     if (selectedTermination) {
@@ -44,9 +51,9 @@ const TeamConfiguration: React.FC<TeamConfigurationProps> = ({
       return selectedTeam;
     }
     if (selectedAgent) {
-      return teamStructure.config.participants.find(agent => agent.label === selectedAgent);
+      return currentTeamStructure.config.participants.find(agent => agent.label === selectedAgent);
     }
-    return teamStructure;
+    return currentTeamStructure;
   };
 
   const handleEditJson = () => {
@@ -57,7 +64,14 @@ const TeamConfiguration: React.FC<TeamConfigurationProps> = ({
 
   const handleSaveJson = () => {
     try {
-      JSON.parse(jsonContent);
+      const parsedJson = JSON.parse(jsonContent);
+      
+      // 🎯 NEW: If editing the main team structure and callback is available, update it
+      if (!selectedTermination && !selectedParticipant && !selectedTeam && !selectedAgent && onTeamStructureChange) {
+        console.log('🔄 Updating team structure from JSON editor');
+        onTeamStructureChange(parsedJson);
+      }
+      
       setIsEditing(false);
       setJsonError(null);
     } catch (error) {
@@ -152,7 +166,7 @@ const TeamConfiguration: React.FC<TeamConfigurationProps> = ({
         {viewMode === 'json' ? (
           <div className="h-full flex">
             <AgentTree
-              teamStructure={teamStructure}
+              teamStructure={currentTeamStructure}
               selectedAgent={selectedAgent}
               onSelect={handleAgentSelect}
               onTerminationSelect={handleTerminationSelect}
@@ -168,14 +182,14 @@ const TeamConfiguration: React.FC<TeamConfigurationProps> = ({
                 onCancel={handleCancelEdit}
                 onChange={setJsonContent}
                 error={jsonError}
-                title={selectedTermination?.label || selectedParticipant?.label || selectedTeam?.label || selectedAgent || teamStructure.label}
+                title={selectedTermination?.label || selectedParticipant?.label || selectedTeam?.label || selectedAgent || currentTeamStructure.label}
               />
             </div>
           </div>
         ) : (
           <div className="relative h-full">
             <ReactFlowProvider>
-              <VisualEditor teamStructure={teamStructure} />
+              <VisualEditor teamStructure={currentTeamStructure} />
             </ReactFlowProvider>
           </div>
         )}

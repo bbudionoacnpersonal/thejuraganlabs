@@ -13,7 +13,7 @@ import {
   ChatBubbleLeftRightIcon,
   MicrophoneIcon
 } from '@heroicons/react/24/outline';
-import { ChatboxHandle, Message } from '@/types';
+import { ChatboxHandle, Message, TeamStructure } from '@/types';
 
 interface ChatboxProps {
   expanded?: boolean;
@@ -22,12 +22,14 @@ interface ChatboxProps {
   setPrompt: (val: string) => void;
   isRecording?: boolean;
   setIsRecording?: (val: boolean) => void;
+  onJsonGenerated?: (json: TeamStructure) => void; // 🎯 NEW: Callback for JSON generation
 }
 
 const Chatbox = forwardRef<ChatboxHandle, ChatboxProps>(({
   onVoiceStart,
   prompt,
   setPrompt,
+  onJsonGenerated // 🎯 NEW: Receive callback prop
 }, ref) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showVoiceOverlay, setShowVoiceOverlay] = useState(false);
@@ -90,6 +92,14 @@ const Chatbox = forwardRef<ChatboxHandle, ChatboxProps>(({
 
   const handleVoiceMessage = (message: Message) => {
     setMessages(prev => [...prev, message]);
+  };
+
+  // 🎯 NEW: Handle JSON generation from Voice SDK
+  const handleJsonGenerated = (json: TeamStructure) => {
+    console.log('🎯 JSON generated from Voice SDK, forwarding to parent:', json);
+    if (onJsonGenerated) {
+      onJsonGenerated(json);
+    }
   };
 
   return (
@@ -168,6 +178,7 @@ const Chatbox = forwardRef<ChatboxHandle, ChatboxProps>(({
         isVisible={showVoiceOverlay}
         onClose={() => setShowVoiceOverlay(false)}
         onMessage={handleVoiceMessage}
+        onJsonGenerated={handleJsonGenerated} // 🎯 NEW: Pass JSON generation callback
       />
     </div>
   );

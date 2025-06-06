@@ -8,7 +8,7 @@ import OnboardingGuide from '@/components/create-agent/OnboardingGuide';
 import Footer from '@/components/common/Footer';
 import { teamStructure } from '@/mockdata/teamStructure';
 import useAuthStore from '@/store/authStore';
-import { ChatboxHandle } from '@/types';
+import { ChatboxHandle, TeamStructure } from '@/types';
 
 const CreateAgentPage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,6 +19,7 @@ const CreateAgentPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [prompt, setPrompt] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [currentTeamStructure, setCurrentTeamStructure] = useState<TeamStructure>(teamStructure); // 🎯 NEW: State for team structure
   
   // Create ref for Chatbox
   const chatboxRef = useRef<ChatboxHandle>(null);
@@ -76,6 +77,24 @@ const CreateAgentPage: React.FC = () => {
     console.log("Chat submitted:", message);
   };
 
+  // 🎯 NEW: Handle JSON generation from Smart Visualizer
+  const handleJsonGenerated = (json: TeamStructure) => {
+    console.log('🎯 JSON generated, updating editors:', json);
+    setCurrentTeamStructure(json);
+    
+    // Switch to visual mode to show the updated structure
+    setViewMode('visual');
+    
+    // Show a brief notification that the JSON has been updated
+    // You could add a toast notification here if you have one
+  };
+
+  // 🎯 NEW: Handle team structure changes from editors
+  const handleTeamStructureChange = (structure: TeamStructure) => {
+    console.log('🔄 Team structure updated from editor:', structure);
+    setCurrentTeamStructure(structure);
+  };
+
   return (
     <div className="min-h-screen bg-dark-background flex flex-col">
       <Navbar />
@@ -92,6 +111,7 @@ const CreateAgentPage: React.FC = () => {
                 setPrompt={setPrompt}
                 isRecording={isRecording}
                 setIsRecording={setIsRecording}
+                onJsonGenerated={handleJsonGenerated} // 🎯 NEW: Pass JSON generation callback
               />
             </div>
             {/* Configuration Editor */}
@@ -100,6 +120,8 @@ const CreateAgentPage: React.FC = () => {
                 agentConfig={agentConfig} 
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
+                teamStructureData={currentTeamStructure} // 🎯 NEW: Pass current team structure
+                onTeamStructureChange={handleTeamStructureChange} // 🎯 NEW: Pass change callback
               />
             </div>
 

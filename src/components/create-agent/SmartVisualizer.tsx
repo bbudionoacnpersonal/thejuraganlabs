@@ -57,6 +57,7 @@ interface SmartVisualizerProps {
   }>;
   messages?: Array<{ role: string; content: string; timestamp: number }>;
   conversationId?: string | null;
+  onJsonGenerated?: (json: TeamStructure) => void; // 🎯 NEW: Callback for JSON generation
 }
 
 // Enhanced error boundary component
@@ -393,7 +394,8 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   conversationState,
   agentFlow = [],
   messages = [],
-  conversationId = null
+  conversationId = null,
+  onJsonGenerated // 🎯 NEW: Receive callback prop
 }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
@@ -407,6 +409,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [hasGeneratedTask, setHasGeneratedTask] = useState(false);
   const [conversationEnded, setConversationEnded] = useState(false);
+  const [lastGeneratedJson, setLastGeneratedJson] = useState<TeamStructure | null>(null); // 🎯 NEW: Track last generated JSON
   
   const windowRef = useRef<HTMLDivElement>(null);
   const { size, isResizing } = useResizable(windowRef);
@@ -432,6 +435,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         setError(null);
         setHasGeneratedTask(false);
         setConversationEnded(false);
+        setLastGeneratedJson(null); // 🎯 NEW: Reset last generated JSON
         
         console.log('✅ Visualizer state reset for new conversation');
       }
@@ -492,6 +496,15 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         
         if (analysis.teamStructure) {
           setTeamStructure(analysis.teamStructure);
+          
+          // 🎯 NEW: Trigger JSON generation callback when structure is complete
+          if (analysis.analysisStage === 'structure_complete' && 
+              onJsonGenerated && 
+              (!lastGeneratedJson || JSON.stringify(lastGeneratedJson) !== JSON.stringify(analysis.teamStructure))) {
+            console.log('🎯 NEW JSON GENERATED - Triggering callback to update editors');
+            setLastGeneratedJson(analysis.teamStructure);
+            onJsonGenerated(analysis.teamStructure);
+          }
         }
 
         // Check if we should generate the final task
@@ -519,7 +532,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     }, 2000);
     
     return () => clearTimeout(timeoutId);
-  }, [messages, lastMessageCount, isAnalyzing, conversationId, analysisStage, teamStructure, hasGeneratedTask]);
+  }, [messages, lastMessageCount, isAnalyzing, conversationId, analysisStage, teamStructure, hasGeneratedTask, onJsonGenerated, lastGeneratedJson]);
 
   // 🎯 CRITICAL FIX: Memoize generateProgressiveFlow to prevent infinite rerendering
   const generateProgressiveFlow = useCallback(() => {
@@ -919,6 +932,13 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             {isAnalyzing && (
               <SparklesIcon className="h-3 w-3 text-orange-500 animate-spin" />
             )}
+            {/* 🎯 NEW: JSON Generated Indicator */}
+            {lastGeneratedJson && (
+              <span className="text-xs text-green-400 flex items-center gap-1">
+                <CheckIcon className="h-3 w-3" />
+                JSON Updated
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1">
             {teamStructure && (
@@ -1014,6 +1034,12 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                       ✅ Final Task Generated
                     </div>
                   )}
+                  {/* 🎯 NEW: JSON Status Indicator */}
+                  {lastGeneratedJson && (
+                    <div className="text-xs text-green-500 mb-3">
+                      📄 JSON Updated in Editors
+                    </div>
+                  )}
                   
                   {/* Layout Controls */}
                   <div className="flex items-center gap-1">
@@ -1061,6 +1087,12 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                   <div className="text-xs text-gray-500 mt-1">
                     Nodes: {nodes.length} | Edges: {edges.length}
                   </div>
+                  {/* 🎯 NEW: JSON Status */}
+                  {lastGeneratedJson && (
+                    <div className="text-xs text-green-500 mt-1">
+                      JSON: Synced with Editors
+                    </div>
+                  )}
                 </Panel>
               </ReactFlow>
             )}
@@ -1077,6 +1109,10 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
               )}
               {conversationId && (
                 <span className="ml-2">• Stored</span>
+              )}
+              {/* 🎯 NEW: JSON Status in minimized view */}
+              {lastGeneratedJson && (
+                <span className="ml-2 text-green-400">• JSON ✓</span>
               )}
             </p>
           </div>
