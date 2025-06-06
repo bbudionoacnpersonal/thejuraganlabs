@@ -40,7 +40,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
-  const [showFlowVisualizer, setShowFlowVisualizer] = useState(true);
+  const [showFlowVisualizer, setShowFlowVisualizer] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversationState, setConversationState] = useState<'idle' | 'listening' | 'processing' | 'responding'>('idle');
   const [agentFlow, setAgentFlow] = useState<AgentFlowStep[]>([]);
@@ -99,6 +99,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       console.log("disconnected");
       setConversationState('idle');
       setAgentFlow([]);
+      setShowFlowVisualizer(false);
     },
     onError: error => {
       console.log(error);
@@ -233,154 +234,163 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     <AnimatePresence>
       {isVisible && (
         <>
+          {/* Main overlay backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs"
-          >
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              className="relative bg-dark-surface/80 backdrop-blur-md p-4 border border-dark-border rounded-xl shadow-xl w-[300px]"
-            >
-              <button
-                onClick={handleClose}
-                className="absolute top-2 right-2 text-gray-400 hover:text-white transition-colors"
-              >
-                <XMarkIcon className="h-4 w-4" />
-              </button>
-
-              <div className="flex flex-col items-center justify-center p-2">
-                <h3 className="text-lg font-medium text-white text-center mb-2">
-                  {conversation.status === "connected"
-                    ? conversation.isSpeaking
-                      ? "Speaking..."
-                      : "Listening..."
-                    : "Disconnected"}
-                </h3>
-
-                {error && (
-                  <span className="text-error-500 text-sm mb-2">{error}</span>
-                )}
-
-                <motion.div
-                  animate={conversation.status === "connected" ? {
-                    scale: [1, 1.2, 1],
-                    opacity: [0.5, 1, 0.5]
-                  } : {}}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                  className="relative my-8"
-                >
-                  {conversation.status === "connected" && (
-                    <>
-                      <motion.div
-                        animate={{
-                          scale: [1, 2],
-                          opacity: [0.5, 0]
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeOut"
-                        }}
-                        className="absolute inset-0 rounded-full bg-secondary-600/20"
-                      />
-                      <motion.div
-                        animate={{
-                          scale: [1, 1.5],
-                          opacity: [0.5, 0]
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeOut",
-                          delay: 0.5
-                        }}
-                        className="absolute inset-0 rounded-full bg-secondary-600/20"
-                      />
-                    </>
-                  )}
-                  <div 
-                    className={`w-20 h-30 rounded-full flex items-center justify-center ${
-                      conversation.status === "connected" && conversation.isSpeaking
-                        ? "bg-secondary-600"
-                        : conversation.status === "connected"
-                        ? "bg-primary-400"
-                        : "bg-dark-400"
-                    }`}
-                  >
-                    <img 
-                      src="/juragan-logo.svg" 
-                      alt="Juragan Logo"
-                      className="w-17 h-17"
-                      style={{ 
-                        filter: 'invert(100%) sepia(79%) saturate(2476%) hue-rotate(190deg) brightness(118%) contrast(119%)'
-                      }}
-                    />
-                  </div>
-                </motion.div>
-
-                <div className="flex flex-col gap-2 w-full">
-                  <button
-                    onClick={startConversation}
-                    disabled={conversation.status === "connected"}
-                    className={
-                      conversation.status === "connected"
-                        ? "px-2 py-2 rounded-lg text-white text-sm bg-gray-600 cursor-not-allowed"
-                        : "px-2 py-2 rounded-lg text-white text-sm bg-secondary-600 hover:bg-primary-400 transition-colors"
-                    }
-                  >
-                    Start conversation
-                  </button>
-
-                  <button
-                    onClick={stopConversation}
-                    disabled={conversation.status !== "connected"}
-                    className={
-                      conversation.status !== "connected"
-                        ? "px-2 py-2 rounded-lg text-white text-sm bg-gray-600 cursor-not-allowed"
-                        : "px-2 py-2 rounded-lg text-white text-sm bg-error-600 hover:bg-error-500 transition-colors"
-                    }
-                  >
-                    End conversation
-                  </button>
-                </div>
-
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-4 flex justify-center"
-                >
-                  <button
-                    onClick={handleAnalysisClick}
-                    className={`flex items-center gap-2 text-sm border rounded-lg p-1 border-dark-border ${
-                      conversationId 
-                        ? 'text-gray-100 hover:text-secondary-600 cursor-pointer'
-                        : 'text-gray-500 cursor-not-allowed'
-                    }`}
-                    disabled={!conversationId}
-                  >
-                    <ChartBarIcon className="h-3 w-3" />
-                    Conversation Analysis
-                  </button>
-                </motion.div>
-              </div>
-            </motion.div>
-          </motion.div>
-
-          {/* Flow Visualizer */}
-          <ConversationFlowVisualizer
-            isVisible={showFlowVisualizer && conversation.status === "connected"}
-            onClose={() => setShowFlowVisualizer(false)}
-            conversationState={conversationState}
-            agentFlow={agentFlow}
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs"
           />
+
+          {/* Centered container for both components */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <div className="flex items-center gap-6 pointer-events-auto">
+              {/* Voice SDK Component */}
+              <motion.div
+                initial={{ scale: 0.9, x: -50 }}
+                animate={{ scale: 1, x: 0 }}
+                exit={{ scale: 0.9, x: -50 }}
+                className="relative bg-dark-surface/90 backdrop-blur-md p-6 border border-dark-border rounded-xl shadow-xl w-[350px]"
+              >
+                <button
+                  onClick={handleClose}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors z-10"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+
+                <div className="flex flex-col items-center justify-center">
+                  <h3 className="text-xl font-medium text-white text-center mb-3">
+                    {conversation.status === "connected"
+                      ? conversation.isSpeaking
+                        ? "Speaking..."
+                        : "Listening..."
+                      : "Voice Assistant"}
+                  </h3>
+
+                  {error && (
+                    <span className="text-error-500 text-sm mb-3 text-center">{error}</span>
+                  )}
+
+                  <motion.div
+                    animate={conversation.status === "connected" ? {
+                      scale: [1, 1.1, 1],
+                      opacity: [0.7, 1, 0.7]
+                    } : {}}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="relative my-8"
+                  >
+                    {conversation.status === "connected" && (
+                      <>
+                        <motion.div
+                          animate={{
+                            scale: [1, 2.5],
+                            opacity: [0.3, 0]
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeOut"
+                          }}
+                          className="absolute inset-0 rounded-full bg-secondary-600/30"
+                        />
+                        <motion.div
+                          animate={{
+                            scale: [1, 2],
+                            opacity: [0.4, 0]
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeOut",
+                            delay: 0.5
+                          }}
+                          className="absolute inset-0 rounded-full bg-secondary-600/40"
+                        />
+                      </>
+                    )}
+                    <div 
+                      className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        conversation.status === "connected" && conversation.isSpeaking
+                          ? "bg-secondary-600 shadow-lg"
+                          : conversation.status === "connected"
+                          ? "bg-primary-400 shadow-md"
+                          : "bg-dark-400"
+                      }`}
+                    >
+                      <img 
+                        src="/juragan-logo.svg" 
+                        alt="Juragan Logo"
+                        className="w-12 h-12"
+                        style={{ 
+                          filter: 'invert(100%) sepia(79%) saturate(2476%) hue-rotate(190deg) brightness(118%) contrast(119%)'
+                        }}
+                      />
+                    </div>
+                  </motion.div>
+
+                  <div className="flex flex-col gap-3 w-full">
+                    <button
+                      onClick={startConversation}
+                      disabled={conversation.status === "connected"}
+                      className={`px-4 py-3 rounded-lg text-white text-sm font-medium transition-colors ${
+                        conversation.status === "connected"
+                          ? "bg-gray-600 cursor-not-allowed"
+                          : "bg-secondary-600 hover:bg-primary-400"
+                      }`}
+                    >
+                      Start Conversation
+                    </button>
+
+                    <button
+                      onClick={stopConversation}
+                      disabled={conversation.status !== "connected"}
+                      className={`px-4 py-3 rounded-lg text-white text-sm font-medium transition-colors ${
+                        conversation.status !== "connected"
+                          ? "bg-gray-600 cursor-not-allowed"
+                          : "bg-error-600 hover:bg-error-500"
+                      }`}
+                    >
+                      End Conversation
+                    </button>
+                  </div>
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-4 flex justify-center"
+                  >
+                    <button
+                      onClick={handleAnalysisClick}
+                      className={`flex items-center gap-2 text-sm border rounded-lg px-3 py-2 border-dark-border transition-colors ${
+                        conversationId 
+                          ? 'text-gray-100 hover:text-secondary-600 hover:border-secondary-600 cursor-pointer'
+                          : 'text-gray-500 cursor-not-allowed'
+                      }`}
+                      disabled={!conversationId}
+                    >
+                      <ChartBarIcon className="h-4 w-4" />
+                      Conversation Analysis
+                    </button>
+                  </motion.div>
+                </div>
+              </motion.div>
+
+              {/* Flow Visualizer Component */}
+              {showFlowVisualizer && (
+                <ConversationFlowVisualizer
+                  isVisible={showFlowVisualizer}
+                  onClose={() => setShowFlowVisualizer(false)}
+                  conversationState={conversationState}
+                  agentFlow={agentFlow}
+                />
+              )}
+            </div>
+          </div>
 
           {/* Analysis Modal */}
           {showAnalysis && conversationId && (

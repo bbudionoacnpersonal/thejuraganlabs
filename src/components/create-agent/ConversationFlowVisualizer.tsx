@@ -129,7 +129,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
     const newNodes: Node[] = [];
     const newEdges: Edge[] = [];
     let yPosition = 0;
-    const nodeSpacing = 150;
+    const nodeSpacing = 120;
 
     // Always start with user input
     newNodes.push({
@@ -160,7 +160,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
           newNodes.push({
             id: nodeId,
             type: nodeType,
-            position: { x: (index % 2) * 200, y: yPosition },
+            position: { x: (index % 2) * 150, y: yPosition },
             data: {
               label: step.label,
               description: step.description,
@@ -254,77 +254,77 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
   if (!isVisible) return null;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, x: 300 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 300 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className={`fixed top-4 right-4 bg-dark-surface border border-dark-border rounded-lg shadow-xl z-40 ${
-          isMinimized ? 'w-64 h-16' : 'w-80 h-96'
-        }`}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-3 border-b border-dark-border">
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${
-              conversationState === 'listening' ? 'bg-blue-500 animate-pulse' :
-              conversationState === 'processing' ? 'bg-yellow-500 animate-pulse' :
-              conversationState === 'responding' ? 'bg-green-500 animate-pulse' :
-              'bg-gray-500'
-            }`} />
-            <h3 className="text-sm font-medium text-white">Agent Flow</h3>
-          </div>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setIsMinimized(!isMinimized)}
-              className="p-1 text-gray-400 hover:text-white transition-colors"
-            >
-              {isMinimized ? <EyeIcon className="h-4 w-4" /> : <EyeSlashIcon className="h-4 w-4" />}
-            </button>
-            <button
-              onClick={onClose}
-              className="p-1 text-gray-400 hover:text-white transition-colors"
-            >
-              <XMarkIcon className="h-4 w-4" />
-            </button>
-          </div>
+    <motion.div
+      initial={{ scale: 0.9, x: 50 }}
+      animate={{ scale: 1, x: 0 }}
+      exit={{ scale: 0.9, x: 50 }}
+      className={`bg-dark-surface border border-dark-border rounded-xl shadow-xl ${
+        isMinimized ? 'w-64 h-16' : 'w-[400px] h-[500px]'
+      }`}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 border-b border-dark-border">
+        <div className="flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full ${
+            conversationState === 'listening' ? 'bg-blue-500 animate-pulse' :
+            conversationState === 'processing' ? 'bg-yellow-500 animate-pulse' :
+            conversationState === 'responding' ? 'bg-green-500 animate-pulse' :
+            'bg-gray-500'
+          }`} />
+          <h3 className="text-sm font-medium text-white">Agent Flow</h3>
+          <span className="text-xs text-gray-400 capitalize">({conversationState})</span>
         </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="p-1 text-gray-400 hover:text-white transition-colors"
+          >
+            {isMinimized ? <EyeIcon className="h-4 w-4" /> : <EyeSlashIcon className="h-4 w-4" />}
+          </button>
+          <button
+            onClick={onClose}
+            className="p-1 text-gray-400 hover:text-white transition-colors"
+          >
+            <XMarkIcon className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
 
-        {/* Content */}
-        {!isMinimized && (
-          <div className="h-80 bg-dark-background">
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              nodeTypes={nodeTypes}
-              fitView
-              fitViewOptions={{ padding: 0.2 }}
-              minZoom={0.5}
-              maxZoom={1.5}
-              defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
-              proOptions={{ hideAttribution: true }}
-            >
-              <Background color="#374151" gap={16} />
-              <Controls 
-                className="bg-dark-surface border border-dark-border rounded"
-                showInteractive={false}
-              />
-            </ReactFlow>
-          </div>
-        )}
+      {/* Content */}
+      {!isMinimized && (
+        <div className="h-[440px] bg-dark-background">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            fitView
+            fitViewOptions={{ padding: 0.1 }}
+            minZoom={0.4}
+            maxZoom={1.2}
+            defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
+            proOptions={{ hideAttribution: true }}
+          >
+            <Background color="#374151" gap={16} />
+            <Controls 
+              className="bg-dark-surface border border-dark-border rounded"
+              showInteractive={false}
+            />
+          </ReactFlow>
+        </div>
+      )}
 
-        {/* Status indicator when minimized */}
-        {isMinimized && (
-          <div className="p-2 text-center">
-            <p className="text-xs text-gray-400 capitalize">{conversationState}</p>
-          </div>
-        )}
-      </motion.div>
-    </AnimatePresence>
+      {/* Status indicator when minimized */}
+      {isMinimized && (
+        <div className="p-2 text-center">
+          <p className="text-xs text-gray-400 capitalize">
+            {conversationState === 'idle' ? 'Ready' : conversationState}
+          </p>
+        </div>
+      )}
+    </motion.div>
   );
 };
 
