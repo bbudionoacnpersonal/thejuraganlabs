@@ -100,17 +100,6 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     }
   });
 
-  // ========== CHANGE #1: Corrected useEffect Hook ==========
-  // This effect now runs its cleanup function ONLY when the component unmounts.
-  useEffect(() => {
-    return () => {
-      // Ensure we end the session if the component is closed while active.
-      if (conversation.status === 'connected') {
-        conversation.endSession();
-      }
-    };
-  }, []); // The empty dependency array [] is the key fix.
-
   async function startConversation() {
     const hasPermission = await requestMicrophonePermission();
     if (!hasPermission) {
