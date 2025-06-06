@@ -351,3 +351,5 @@ export const getRecentUpdates = (timeWindow: number = 30000) => {
   
   return updates.sort((a, b) => b.timestamp - a.timestamp);
 };
+
+export { conversationFlowState }
