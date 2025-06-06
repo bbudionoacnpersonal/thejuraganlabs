@@ -19,7 +19,7 @@ import {
   EyeSlashIcon,
   DocumentArrowDownIcon
 } from '@heroicons/react/24/outline';
-import { Coins } from 'lucide-react';
+import { Coins, Bot, Users, Wrench, Zap, Network, Target, RotateCcw, GitBranch, ArrowRight, Broadcast } from 'lucide-react';
 import ReactFlow, { 
   Background, 
   Controls,
@@ -54,7 +54,7 @@ interface SmartVisualizerProps {
   conversationId?: string | null;
 }
 
-// Dynamic node components for conversation flow
+// Enhanced node components for conversation flow
 const ConversationNode = ({ data }: { data: any }) => {
   const getNodeStyle = () => {
     switch (data.type) {
@@ -74,7 +74,7 @@ const ConversationNode = ({ data }: { data: any }) => {
       case 'user':
         return '👤';
       case 'team':
-        return '🏢';
+        return getTeamTypeIcon(data.teamType);
       case 'agent':
         return '🤖';
       default:
@@ -82,12 +82,101 @@ const ConversationNode = ({ data }: { data: any }) => {
     }
   };
 
+  const getTeamTypeIcon = (teamType?: string) => {
+    if (!teamType) return '🏢';
+    
+    const type = teamType.toLowerCase();
+    if (type.includes('roundrobin')) return <RotateCcw className="w-4 h-4" />;
+    if (type.includes('selector')) return <Target className="w-4 h-4" />;
+    if (type.includes('magneticone') || type.includes('magenticone')) return <Zap className="w-4 h-4" />;
+    if (type.includes('swarm')) return <Network className="w-4 h-4" />;
+    if (type.includes('graphflow') || type.includes('graph')) return <GitBranch className="w-4 h-4" />;
+    if (type.includes('broadcast')) return <Broadcast className="w-4 h-4" />;
+    return <Users className="w-4 h-4" />;
+  };
+
+  const getTeamTypeName = (teamType?: string) => {
+    if (!teamType) return 'Team';
+    
+    const type = teamType.toLowerCase();
+    if (type.includes('roundrobin')) return 'Round Robin';
+    if (type.includes('selector')) return 'Selector';
+    if (type.includes('magneticone') || type.includes('magenticone')) return 'Magnetic One';
+    if (type.includes('swarm')) return 'Swarm';
+    if (type.includes('graphflow') || type.includes('graph')) return 'Graph Flow';
+    if (type.includes('broadcast')) return 'Broadcast';
+    return 'Custom';
+  };
+
   return (
-    <div className={`p-4 rounded-lg shadow-lg border-2 min-w-[200px] transition-all duration-300 ${getNodeStyle()}`}>
-      <div className="flex items-center gap-2 justify-center mb-2">
-        <span className="text-lg">{getIcon()}</span>
+    <div className={`p-4 rounded-lg shadow-lg border-2 min-w-[250px] transition-all duration-300 ${getNodeStyle()}`}>
+      <div className="flex items-center gap-2 justify-center mb-3">
+        <span className="text-lg">{typeof getIcon() === 'string' ? getIcon() : getIcon()}</span>
         <span className="text-sm font-medium">{data.label}</span>
       </div>
+      
+      {/* Team Type Display */}
+      {data.type === 'team' && data.teamType && (
+        <div className="bg-white/20 rounded p-2 mb-3">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            {getTeamTypeIcon(data.teamType)}
+            <span className="text-xs font-semibold">{getTeamTypeName(data.teamType)}</span>
+          </div>
+          <p className="text-xs text-center opacity-90">
+            {data.teamType.includes('roundrobin') && 'Agents take turns in sequence'}
+            {data.teamType.includes('selector') && 'LLM selects next speaker dynamically'}
+            {data.teamType.includes('magneticone') && 'Generalist multi-agent for web/file tasks'}
+            {data.teamType.includes('swarm') && 'HandoffMessage for explicit transitions'}
+            {data.teamType.includes('graphflow') && 'Complex workflows with branches & loops'}
+            {data.teamType.includes('broadcast') && 'All agents receive same message'}
+            {!data.teamType.includes('roundrobin') && !data.teamType.includes('selector') && 
+             !data.teamType.includes('magneticone') && !data.teamType.includes('swarm') && 
+             !data.teamType.includes('graphflow') && !data.teamType.includes('broadcast') && 'Custom team configuration'}
+          </p>
+        </div>
+      )}
+
+      {/* Agent LLM and Tools Display */}
+      {data.type === 'agent' && (
+        <div className="space-y-2">
+          {/* LLM Model */}
+          {data.llmModel && (
+            <div className="bg-white/20 rounded p-2">
+              <div className="flex items-center gap-2 mb-1">
+                <SparklesIcon className="w-3 h-3" />
+                <span className="text-xs font-semibold">LLM Model</span>
+              </div>
+              <p className="text-xs">{data.llmModel}</p>
+              {data.llmProvider && (
+                <p className="text-xs opacity-75">Provider: {data.llmProvider}</p>
+              )}
+            </div>
+          )}
+
+          {/* Tools */}
+          {data.tools && data.tools.length > 0 && (
+            <div className="bg-white/20 rounded p-2">
+              <div className="flex items-center gap-2 mb-1">
+                <Wrench className="w-3 h-3" />
+                <span className="text-xs font-semibold">Tools ({data.tools.length})</span>
+              </div>
+              <div className="space-y-1">
+                {data.tools.slice(0, 3).map((tool: any, idx: number) => (
+                  <div key={idx} className="text-xs">
+                    <span className="font-medium">{tool.name}</span>
+                    {tool.description && (
+                      <p className="opacity-75 truncate">{tool.description}</p>
+                    )}
+                  </div>
+                ))}
+                {data.tools.length > 3 && (
+                  <p className="text-xs opacity-75">+{data.tools.length - 3} more tools</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       
       {data.description && (
         <div className="bg-white/10 rounded p-2 mb-2">
@@ -258,15 +347,15 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         // Prepare conversation messages for analysis
         const conversationMessages = messages.map(m => `${m.role}: ${m.content}`);
         
-        console.log('🤖 Calling Anthropic for progressive analysis...');
+        console.log('🤖 Calling Gemini for progressive analysis...');
         
-        // Call Anthropic for progressive analysis
+        // Call Gemini for progressive analysis
         const analysis = await analyzeConversationProgressive(
           conversationMessages,
           teamStructure
         );
         
-        console.log('✅ Anthropic progressive analysis completed:', analysis);
+        console.log('✅ Gemini progressive analysis completed:', analysis);
         
         // Update state based on analysis
         setAnalysisStage(analysis.analysisStage);
@@ -303,11 +392,12 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     const newEdges: Edge[] = [];
     let yPosition = 50;
 
-    // Stage 1: User Input (only show when team is identified)
+    // Stage 1: User Input (show final task example instead of actual input)
     if (analysisStage !== 'initial' && messages.length > 0) {
       const userMessages = messages.filter(m => m.role === 'user');
       if (userMessages.length > 0) {
-        const lastUserMessage = userMessages[userMessages.length - 1];
+        // Show example final task instead of actual user input
+        const finalTaskExample = generateFinalTaskExample(progressiveElements);
         
         newNodes.push({
           id: 'user-input',
@@ -316,7 +406,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           data: {
             type: 'user',
             label: 'User Input',
-            description: lastUserMessage.content.substring(0, 100) + (lastUserMessage.content.length > 100 ? '...' : ''),
+            description: finalTaskExample,
             confidence: 1.0
           },
           sourcePosition: Position.Bottom,
@@ -337,7 +427,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           label: progressiveElements.teamName,
           description: progressiveElements.teamDescription || 'AI agents team',
           confidence: analysisStage === 'structure_complete' ? 0.9 : 0.7,
-          teamType: progressiveElements.teamType,
+          teamType: progressiveElements.teamType || 'RoundRobinGroupChat',
           agents: progressiveElements.identifiedAgents || []
         },
         sourcePosition: Position.Bottom,
@@ -345,7 +435,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       };
       newNodes.push(teamNode);
 
-      // Connect user input to team
+      // Connect user input to team with enhanced edge
       if (newNodes.find(n => n.id === 'user-input')) {
         newEdges.push({
           id: 'edge-user-team',
@@ -354,17 +444,20 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           type: 'smoothstep',
           animated: conversationState === 'processing' || isAnalyzing,
           style: { 
-            stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#6b7280',
+            stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#8b5cf6',
             strokeWidth: 3 
           },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#6b7280',
+            color: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#8b5cf6',
           },
+          label: 'Team Coordination',
+          labelStyle: { fontSize: 12, fontWeight: 600 },
+          labelBgStyle: { fill: '#1e1e1e', fillOpacity: 0.8 },
         });
       }
 
-      yPosition += 250;
+      yPosition += 280;
     }
 
     // Stage 3: Agent Nodes (when agents are emerging)
@@ -372,11 +465,26 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       const agents = progressiveElements.identifiedAgents || [];
       
       agents.forEach((agent: any, index: number) => {
+        // Extract LLM and tools info from team structure if available
+        let llmModel = 'gpt-4o-mini';
+        let llmProvider = 'OpenAI';
+        let tools: any[] = [];
+
+        if (teamStructure && teamStructure.config.participants[index]) {
+          const participant = teamStructure.config.participants[index];
+          llmModel = participant.config.model_client?.config.model || 'gpt-4o-mini';
+          llmProvider = participant.config.model_client?.provider.split('.').pop() || 'OpenAI';
+          tools = participant.config.tools?.map(tool => ({
+            name: tool.config.name || tool.label,
+            description: tool.description
+          })) || [];
+        }
+
         const agentNode: Node = {
           id: `agent-${index}`,
           type: 'conversation',
           position: { 
-            x: 200 + (index * 250), 
+            x: 200 + (index * 280), 
             y: yPosition 
           },
           data: {
@@ -384,14 +492,17 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             label: agent.name,
             description: agent.description,
             confidence: agent.confidence || 0.6,
-            role: agent.role
+            role: agent.role,
+            llmModel,
+            llmProvider,
+            tools
           },
           sourcePosition: Position.Bottom,
           targetPosition: Position.Top,
         };
         newNodes.push(agentNode);
 
-        // Connect team to agent
+        // Connect team to agent with enhanced edge
         if (newNodes.find(n => n.id === 'team')) {
           newEdges.push({
             id: `edge-team-agent-${index}`,
@@ -407,6 +518,9 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
               type: MarkerType.ArrowClosed,
               color: conversationState === 'responding' ? '#10b981' : '#6b7280',
             },
+            label: `Agent ${index + 1}`,
+            labelStyle: { fontSize: 10, fontWeight: 500 },
+            labelBgStyle: { fill: '#1e1e1e', fillOpacity: 0.7 },
           });
         }
       });
@@ -420,6 +534,18 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     
     return { nodes: newNodes, edges: newEdges };
   }, [analysisStage, progressiveElements, teamStructure, conversationState, isAnalyzing, messages]);
+
+  // Generate final task example based on progressive elements
+  const generateFinalTaskExample = (elements: any) => {
+    if (elements.teamName && elements.identifiedAgents) {
+      const agentNames = elements.identifiedAgents.map((a: any) => a.name).join(', ');
+      return `Create ${elements.teamName} with agents: ${agentNames} to handle the specified tasks efficiently.`;
+    }
+    if (elements.teamName) {
+      return `Set up ${elements.teamName} for coordinated task processing.`;
+    }
+    return 'Create an AI agents team to handle user requests efficiently.';
+  };
 
   // Update flow when analysis changes
   useEffect(() => {
