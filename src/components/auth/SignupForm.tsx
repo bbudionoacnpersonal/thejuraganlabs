@@ -9,12 +9,14 @@ import { Role } from '@/types';
 const SignupForm: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<Role>('business');
   const [errors, setErrors] = useState<{
     name?: string;
     email?: string;
+    username?: string;
     password?: string;
     confirmPassword?: string;
   }>({});
@@ -26,6 +28,7 @@ const SignupForm: React.FC = () => {
     const newErrors: {
       name?: string;
       email?: string;
+      username?: string;
       password?: string;
       confirmPassword?: string;
     } = {};
@@ -41,6 +44,14 @@ const SignupForm: React.FC = () => {
       isValid = false;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = 'Email is invalid';
+      isValid = false;
+    }
+
+    if (!username) {
+      newErrors.username = 'Username is required';
+      isValid = false;
+    } else if (username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters';
       isValid = false;
     }
     
@@ -72,8 +83,8 @@ const SignupForm: React.FC = () => {
     }
     
     try {
-      await signup(name, email, password, role);
-      navigate('/dashboard');
+      await signup(name, email, username, password, role);
+      // Don't navigate - wait for email verification
     } catch (err) {
       // Error is handled in the store
     }
@@ -110,6 +121,15 @@ const SignupForm: React.FC = () => {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="your@email.com"
           error={errors.email}
+        />
+
+        <Input
+          label="Username"
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Choose a username"
+          error={errors.username}
         />
         
         <Select

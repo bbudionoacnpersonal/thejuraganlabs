@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { User, Role } from '@/types';
+import { validateNewUser, registerUser, verifyEmail } from '@/services/authService';
 
 interface AuthState {
   user: User | null;
@@ -9,49 +10,10 @@ interface AuthState {
   error: string | null;
   login: (username: string, password: string, role: Role) => Promise<void>;
   logout: () => void;
-  signup: (name: string, email: string, password: string, role: Role) => Promise<void>;
+  signup: (name: string, email: string, username: string, password: string, role: Role) => Promise<void>;
+  verifyEmailToken: (token: string) => Promise<void>;
   setState: (state: Partial<AuthState>) => void;
 }
-
-// Mock users for demo purposes
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'Business User',
-    email: 'business@example.com',
-    username: 'business',
-    password: 'business@123!',
-    role: 'business',
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-  },
-  {
-    id: '2',
-    name: 'AI Engineer',
-    email: 'engineer@example.com',
-    username: 'engineer',
-    password: 'engineer@123!',
-    role: 'engineer',
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-  },
-  {
-    id: '3',
-    name: 'AI Architect',
-    email: 'architect@example.com',
-    username: 'architect',
-    password: 'password123',
-    role: 'architect',
-    avatar: 'https://randomuser.me/api/portraits/women/68.jpg',
-  },
-  {
-    id: '4',
-    name: 'AI Admin',
-    email: 'admin@example.com',
-    username: 'admin',
-    password: 'admin@123!',
-    role: 'admin',
-    avatar: 'https://randomuser.me/api/portraits/men/45.jpg',
-  },
-];
 
 const useAuthStore = create<AuthState>((set) => ({
   user: null,
@@ -69,10 +31,15 @@ const useAuthStore = create<AuthState>((set) => ({
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const user = mockUsers.find(u => u.username === username && u.password === password && u.role === role);
+      const user = mockUsers.find(u => 
+        u.username === username && 
+        u.password === password && 
+        u.role === role &&
+        u.isVerified
+      );
       
       if (!user) {
-        throw new Error('Invalid credentials');
+        throw new Error('Invalid credentials or email not verified');
       }
       
       const token = `mock-jwt-token-${Math.random()}`;
@@ -107,42 +74,50 @@ const useAuthStore = create<AuthState>((set) => ({
     });
   },
   
-  signup: async (name, email, password, role) => {
+  signup: async (name, email, username, password, role) => {
     set({ isLoading: true, error: null });
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Check if email is already in use
-      if (mockUsers.some(u => u.email === email)) {
-        throw new Error('Email already in use');
+      // Validate unique email and username
+      const validationErrors = validateNewUser(email, username);
+      if (Object.keys(validationErrors).length > 0) {
+        throw new Error(Object.values(validationErrors)[0]);
       }
       
-      // Create new user
-      const newUser: User = {
-        id: String(mockUsers.length + 1),
-        name,
-        email,
-        username: email.split('@')[0],
-        password,
-        role,
-      };
-      
-      mockUsers.push(newUser);
-      
-      const token = `mock-jwt-token-${Math.random()}`;
+      // Register new user and send verification email
+      await registerUser(name, email, username, password, role);
       
       set({
-        user: newUser,
-        token,
+        isLoading: false,
+        error: 'Please check your email to verify your account'
+      });
+      
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'An unknown error occurred',
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  verifyEmailToken: async (token: string) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const user = verifyEmail(token);
+      const authToken = `mock-jwt-token-${Math.random()}`;
+
+      set({
+        user,
+        token: authToken,
         isAuthenticated: true,
         isLoading: false,
       });
-      
-      localStorage.setItem('zeus_auth_token', token);
-      localStorage.setItem('zeus_user', JSON.stringify(newUser));
-      
+
+      localStorage.setItem('zeus_auth_token', authToken);
+      localStorage.setItem('zeus_user', JSON.stringify(user));
+
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'An unknown error occurred',
