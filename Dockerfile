@@ -1,30 +1,59 @@
-FROM node:20-slim as builder
+FROM node:20-slim as frontend-builder
 
-WORKDIR /app
+WORKDIR /app/frontend
 
-# Copy package files
+# Copy frontend package files
 COPY package*.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy source code
+# Copy frontend source code
 COPY . .
 
-# Build the application
+# Build the frontend
 RUN npm run build
 
-# Production stage
-FROM nginx:alpine
+# Build stage for backend
+FROM node:20-slim as backend-builder
 
-# Copy built assets from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+WORKDIR /app/backend
+
+# Copy backend package files
+COPY server/package*.json ./
+
+# Install backend dependencies
+RUN npm ci
+
+# Copy backend source code
+COPY server ./
+
+# Production stage
+FROM node:20-slim
+
+# Install nginx
+RUN apt-get update && apt-get install -y nginx && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy built frontend from frontend-builder
+COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Copy backend from backend-builder
+COPY --from=backend-builder /app/backend ./backend
+
+# Set environment variables
+ENV PORT=8080
+ENV NODE_ENV=production
+
 # Expose port 8080 (Cloud Run requirement)
 EXPOSE 8080
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start both nginx and backend server
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+CMD ["/start.sh"]
