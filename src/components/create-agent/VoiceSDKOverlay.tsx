@@ -325,7 +325,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                       <img 
                         src="/juragan-logo.svg" 
                         alt="Juragan Logo"
-                        className="w-12 h-12"
+                        className="w-17 h-17"
                         style={{ 
                           filter: 'invert(100%) sepia(79%) saturate(2476%) hue-rotate(190deg) brightness(118%) contrast(119%)'
                         }}
