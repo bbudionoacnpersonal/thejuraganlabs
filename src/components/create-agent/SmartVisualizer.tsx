@@ -538,8 +538,8 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         hasTeamStructure: !!teamStructure,
         progressiveElements,
         conversationState,
-        hasGeneratedTask,
-        conversationEnded
+        conversationEnded,
+        hasGeneratedTask
       });
       
       const newNodes: Node[] = [];
@@ -617,7 +617,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             source: sourceNodeId,
             target: 'team',
             type: 'smoothstep',
-            animated: true, // 🎯 ALWAYS animated like FlowVisualizer
+            animated: true, // 🎯 CRITICAL: ALWAYS animated like FlowVisualizer
             style: { 
               stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#4D9CFF',
               strokeWidth: 3 
@@ -689,7 +689,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
               source: 'team',
               target: `agent-${index}`,
               type: 'smoothstep',
-              animated: true, // 🎯 ALWAYS animated like FlowVisualizer
+              animated: true, // 🎯 CRITICAL: ALWAYS animated like FlowVisualizer
               style: { 
                 stroke: conversationState === 'responding' ? '#10b981' : '#4D9CFF',
                 strokeWidth: 2 
@@ -924,6 +924,11 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                 maxZoom={1.5}
                 defaultViewport={{ x: 0, y: 0, zoom: 0.6 }}
                 proOptions={{ hideAttribution: true }}
+                // 🎯 CRITICAL: Ensure ReactFlow properly handles animated edges
+                defaultEdgeOptions={{
+                  animated: true,
+                  style: { strokeWidth: 2 }
+                }}
               >
                 <Background color="#374151" gap={20} />
                 <Controls 
