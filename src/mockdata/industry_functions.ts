@@ -46,7 +46,7 @@ export const industries = [
         'Inventory management',
         'Customer experience optimization',
         'Order processing automation',
-        'Data monetization',
+        'Data and Ads monetization',
         'Omnichannel integration'
       ],
       systemInstructions: `You are a retail AI solutions expert. Focus on:
