@@ -158,7 +158,7 @@ export const industries = [
     }
   },
   { 
-    value: 'education',
+    value: 'Oil & Gas',
     label: 'Education & Training',
     keyPrompts: {
       agentConsiderations: [
