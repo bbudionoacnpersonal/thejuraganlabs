@@ -8,6 +8,7 @@ export const industries = [
         'Regulatory compliance (SOX, Basel III, GDPR)',
         'Real-time transaction and mobile banking',
         'Underwriting process',
+        'Consumer exprience and retail banking'
         'Fraud detection and prevention',
         'Risk assessment and management'
       ],
