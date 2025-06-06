@@ -288,6 +288,7 @@ export const focusAreas = [
       'Response time optimization',
       'Query categorization',
       'Sentiment analysis',
+       'Personal advisor',
       'Escalation protocols'
     ]
   },
@@ -303,7 +304,7 @@ export const focusAreas = [
   },
   { 
     value: 'marketing',
-    label: 'Marketing  Management',
+    label: 'Marketing & Brand Management',
     keyConsiderations: [
       'Campaign optimization',
       'Market analysis',
