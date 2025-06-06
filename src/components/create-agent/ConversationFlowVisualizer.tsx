@@ -203,66 +203,7 @@ const nodeTypes = {
   agentNode: AgentNode,
 };
 
-// Custom hook for draggable functionality
-const useDraggable = (ref: React.RefObject<HTMLDivElement>) => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-
-    const handleMouseDown = (e: MouseEvent) => {
-      // Only allow dragging from header area
-      const target = e.target as HTMLElement;
-      const header = element.querySelector('[data-drag-handle]');
-      if (!header?.contains(target)) return;
-
-      setIsDragging(true);
-      const rect = element.getBoundingClientRect();
-      setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      });
-      e.preventDefault();
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return;
-
-      const newX = e.clientX - dragOffset.x;
-      const newY = e.clientY - dragOffset.y;
-
-      // Constrain to viewport
-      const maxX = window.innerWidth - element.offsetWidth;
-      const maxY = window.innerHeight - element.offsetHeight;
-
-      setPosition({
-        x: Math.max(0, Math.min(newX, maxX)),
-        y: Math.max(0, Math.min(newY, maxY))
-      });
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    element.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-
-    return () => {
-      element.removeEventListener('mousedown', handleMouseDown);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, dragOffset, ref]);
-
-  return { position, isDragging };
-};
-
-// Custom hook for resizable functionality
+// Custom hook for resizable functionality only
 const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
   const [isResizing, setIsResizing] = useState(false);
   const [size, setSize] = useState({ width: 600, height: 500 });
@@ -346,9 +287,8 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const [useAutogenFlow, setUseAutogenFlow] = useState(false);
   
-  // Refs for draggable and resizable functionality
+  // Ref for resizable functionality only
   const windowRef = useRef<HTMLDivElement>(null);
-  const { position, isDragging } = useDraggable(windowRef);
   const { size, isResizing } = useResizable(windowRef);
 
   // Update conversation state in flow data
@@ -829,15 +769,11 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
       exit={{ scale: 0.9, x: 50 }}
       className={`bg-dark-surface border border-dark-border rounded-xl shadow-xl transition-all duration-300 ${
         isMinimized ? 'w-80 h-16' : ''
-      } ${isDragging ? 'cursor-grabbing' : ''} ${isResizing ? 'cursor-nw-resize' : ''}`}
+      } ${isResizing ? 'cursor-nw-resize' : ''}`}
       style={{
-        position: 'fixed',
-        left: position.x,
-        top: position.y,
         width: isMinimized ? 320 : size.width,
         height: isMinimized ? 64 : size.height,
-        zIndex: 1000,
-        userSelect: isDragging || isResizing ? 'none' : 'auto'
+        userSelect: isResizing ? 'none' : 'auto'
       }}
     >
       {/* Resize handles */}
@@ -885,13 +821,8 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
         </>
       )}
 
-      {/* Enhanced Header with drag handle */}
-      <div 
-        data-drag-handle
-        className={`flex items-center justify-between p-3 border-b border-dark-border ${
-          isDragging ? 'cursor-grabbing' : 'cursor-grab'
-        }`}
-      >
+      {/* Header - no drag functionality */}
+      <div className="flex items-center justify-between p-3 border-b border-dark-border">
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
             isAnalyzing ? 'bg-orange-500 animate-pulse' :
