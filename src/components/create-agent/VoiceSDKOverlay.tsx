@@ -146,9 +146,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   };
 
   const handleClose = async () => {
-    if (isSessionActive) {
-      await stopConversation();
-    }
+    await stopConversation();
     onClose();
   };
 
