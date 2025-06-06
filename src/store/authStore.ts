@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { User, Role } from '@/types';
-import { validateNewUser, registerUser, verifyEmail } from '@/services/authService';
+import { validateNewUser, registerUser } from '@/services/authService';
+import { mockUsers } from '@/mockdata/users';
 
 interface AuthState {
   user: User | null;
@@ -11,7 +12,6 @@ interface AuthState {
   login: (username: string, password: string, role: Role) => Promise<void>;
   logout: () => void;
   signup: (name: string, email: string, username: string, password: string, role: Role) => Promise<void>;
-  verifyEmailToken: (token: string) => Promise<void>;
   setState: (state: Partial<AuthState>) => void;
 }
 
@@ -34,25 +34,32 @@ const useAuthStore = create<AuthState>((set) => ({
       const user = mockUsers.find(u => 
         u.username === username && 
         u.password === password && 
-        u.role === role &&
-        u.isVerified
+        u.role === role
       );
       
       if (!user) {
-        throw new Error('Invalid credentials or email not verified');
+        throw new Error('Invalid credentials');
       }
       
       const token = `mock-jwt-token-${Math.random()}`;
       
+      const userWithoutPassword: User = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role as Role,
+        avatar: user.avatar
+      };
+      
       set({
-        user,
+        user: userWithoutPassword,
         token,
         isAuthenticated: true,
         isLoading: false,
       });
       
       localStorage.setItem('zeus_auth_token', token);
-      localStorage.setItem('zeus_user', JSON.stringify(user));
+      localStorage.setItem('zeus_user', JSON.stringify(userWithoutPassword));
       
     } catch (error) {
       set({
@@ -84,40 +91,29 @@ const useAuthStore = create<AuthState>((set) => ({
         throw new Error(Object.values(validationErrors)[0]);
       }
       
-      // Register new user and send verification email
-      await registerUser(name, email, username, password, role);
+      // Register new user - now automatically verified
+      const newUser = await registerUser(name, email, username, password, role);
+      
+      // Auto-login after registration
+      const token = `mock-jwt-token-${Math.random()}`;
+      
+      const userWithoutPassword: User = {
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role as Role,
+      };
       
       set({
-        isLoading: false,
-        error: 'Please check your email to verify your account'
-      });
-      
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'An unknown error occurred',
-        isLoading: false,
-      });
-      throw error;
-    }
-  },
-
-  verifyEmailToken: async (token: string) => {
-    set({ isLoading: true, error: null });
-
-    try {
-      const user = verifyEmail(token);
-      const authToken = `mock-jwt-token-${Math.random()}`;
-
-      set({
-        user,
-        token: authToken,
+        user: userWithoutPassword,
+        token,
         isAuthenticated: true,
         isLoading: false,
       });
-
-      localStorage.setItem('zeus_auth_token', authToken);
-      localStorage.setItem('zeus_user', JSON.stringify(user));
-
+      
+      localStorage.setItem('zeus_auth_token', token);
+      localStorage.setItem('zeus_user', JSON.stringify(userWithoutPassword));
+      
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'An unknown error occurred',

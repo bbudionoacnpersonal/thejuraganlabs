@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
@@ -21,7 +20,6 @@ const SignupForm: React.FC = () => {
     confirmPassword?: string;
   }>({});
   
-  const navigate = useNavigate();
   const { signup, isLoading, error: authError } = useAuthStore();
   
   const validate = () => {

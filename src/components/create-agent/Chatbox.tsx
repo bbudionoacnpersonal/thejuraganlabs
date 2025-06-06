@@ -13,7 +13,7 @@ import {
   ChatBubbleLeftRightIcon,
   MicrophoneIcon
 } from '@heroicons/react/24/outline';
-import { ChatboxHandle, Message } from '@/types';
+import { ChatboxHandle, Message, TeamStructure } from '@/types';
 
 interface ChatboxProps {
   expanded?: boolean;
@@ -22,22 +22,23 @@ interface ChatboxProps {
   setPrompt: (val: string) => void;
   isRecording?: boolean;
   setIsRecording?: (val: boolean) => void;
+  onJsonGenerated?: (json: TeamStructure) => void; // 🎯 NEW: Callback for JSON generation
 }
 
 const Chatbox = forwardRef<ChatboxHandle, ChatboxProps>(({
   onVoiceStart,
   prompt,
   setPrompt,
+  onJsonGenerated // 🎯 NEW: Receive callback prop
 }, ref) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showVoiceOverlay, setShowVoiceOverlay] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const micButtonRef = useRef<HTMLButtonElement>(null);
 
   useImperativeHandle(ref, () => ({
     triggerMicClick: () => {
-      micButtonRef.current?.click();
+      handleVoiceClick();
     }
   }));
 
@@ -93,6 +94,14 @@ const Chatbox = forwardRef<ChatboxHandle, ChatboxProps>(({
     setMessages(prev => [...prev, message]);
   };
 
+  // 🎯 NEW: Handle JSON generation from Voice SDK
+  const handleJsonGenerated = (json: TeamStructure) => {
+    console.log('🎯 JSON generated from Voice SDK, forwarding to parent:', json);
+    if (onJsonGenerated) {
+      onJsonGenerated(json);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-dark-background border-l border-t border-b border-dark-border/60 rounded-l-lg">
       <div className="flex-1 overflow-y-auto mt-2 space-y-2 px-2 max-h-[calc(100vh-290px)] min-h-[calc(100vh-290px)] scrollbar-hidden relative">
@@ -138,7 +147,6 @@ const Chatbox = forwardRef<ChatboxHandle, ChatboxProps>(({
           />
           <div className="absolute right-2 top-1/2 -translate-y-2/3 flex gap-2">
             <button
-              ref={micButtonRef}
               type="button"
               onClick={handleVoiceClick}
               className="p-2 rounded-md text-gray-300 bg-secondary-600 hover:bg-primary-600 transition-colors"
@@ -170,6 +178,7 @@ const Chatbox = forwardRef<ChatboxHandle, ChatboxProps>(({
         isVisible={showVoiceOverlay}
         onClose={() => setShowVoiceOverlay(false)}
         onMessage={handleVoiceMessage}
+        onJsonGenerated={handleJsonGenerated} // 🎯 NEW: Pass JSON generation callback
       />
     </div>
   );

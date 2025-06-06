@@ -1,7 +1,34 @@
-import { industries, focusAreas } from './industry_functions';
-
 // Pre-built AI agents that can be leveraged by other users
-export const prebuiltAgents = [
+export interface PrebuiltAgent {
+  id: string;
+  name: string;
+  description: string;
+  agentType: 'assistant' | 'userproxy' | 'code_interpreter';
+  industry: string;
+  focusAreas: string[];
+  modelClient: {
+    provider: string;
+    model: string;
+    modelContext: {
+      type: string;
+      config: Record<string, unknown>;
+    };
+    systemMessage: string;
+  };
+  streaming: boolean;
+  reflectOnTools: boolean;
+  tools: Array<{
+    name: string;
+    description: string;
+    config: Record<string, unknown>;
+  }>;
+  shareableTo: string[];
+  createdBy: string;
+  usage: number;
+  rating: number;
+}
+
+export const prebuiltAgents: PrebuiltAgent[] = [
   {
     id: 'cs_ticket_analyzer',
     name: 'Customer Ticket Analyzer',
@@ -351,36 +378,6 @@ export const prebuiltAgents = [
     rating: 4.8
   }
 ];
-
-// Export types for TypeScript support
-export interface PrebuiltAgent {
-  id: string;
-  name: string;
-  description: string;
-  agentType: 'assistant' | 'userproxy' | 'code_interpreter';
-  industry: string;
-  focusAreas: string[];
-  modelClient: {
-    provider: string;
-    model: string;
-    modelContext: {
-      type: string;
-      config: Record<string, unknown>;
-    };
-    systemMessage: string;
-  };
-  streaming: boolean;
-  reflectOnTools: boolean;
-  tools: Array<{
-    name: string;
-    description: string;
-    config: Record<string, unknown>;
-  }>;
-  shareableTo: string[];
-  createdBy: string;
-  usage: number;
-  rating: number;
-}
 
 // Department types for TypeScript
 export type Department = 
