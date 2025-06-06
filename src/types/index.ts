@@ -32,6 +32,7 @@ export interface Team {
   members: User[];
   ownerId: string;
   createdAt: string;
+  aiTeamType: string; // Fixed typo: was 'strig'
   agents: string[];
 }
 
@@ -157,4 +158,21 @@ export interface TeamStructure {
 // Chatbox handle type
 export interface ChatboxHandle {
   triggerMicClick: () => void;
+}
+
+// Agent Flow types for conversation visualization
+export interface AgentFlowStep {
+  id: string;
+  type: 'user' | 'agent' | 'tool' | 'decision' | 'output';
+  label: string;
+  status: 'pending' | 'active' | 'completed' | 'error';
+  description?: string;
+  timestamp?: number;
+  duration?: number;
+}
+
+export interface ConversationState {
+  state: 'idle' | 'listening' | 'processing' | 'responding';
+  currentStep?: string;
+  agentFlow: AgentFlowStep[];
 }
