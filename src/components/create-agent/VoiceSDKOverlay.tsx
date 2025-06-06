@@ -61,9 +61,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     prompt += '\n\nKey agent considerations:\n- ';
     prompt += industryConfig.keyPrompts.agentConsiderations.join('\n- ');
 
-    // Add tool priorities
+    /* remove tool priorities
     prompt += '\n\nRecommended tools:\n- ';
-    prompt += industryConfig.keyPrompts.toolPriorities.join('\n- ');
+    prompt += industryConfig.keyPrompts.toolPriorities.join('\n- ');*/
 
     return prompt;
   };
