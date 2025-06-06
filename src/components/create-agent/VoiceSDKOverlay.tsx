@@ -128,9 +128,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
           industry: userIndustry,
           focus_areas: userFocusAreas,
         },
-        prompt: {
+        /*prompt: {
           preamble: systemPrompt,
-        },
+        },*/
         clientTools: {
           task_generator: handleTaskGenerator
         }
