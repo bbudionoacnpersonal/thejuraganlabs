@@ -163,7 +163,7 @@ export const industries = [
     keyPrompts: {
       agentConsiderations: [
         'Renewable energy',
-        'Goethermalg',
+        'Goethermal',
         'Content adaptation',
         'Assessment automation'
       ],
