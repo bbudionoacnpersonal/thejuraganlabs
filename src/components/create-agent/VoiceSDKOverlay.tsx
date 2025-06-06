@@ -84,8 +84,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     },
     onError: error => {
       console.log(error);
-      setError("An error occurred during the conversation");
- 
+      setError("An error occurred during the conversation")
     },
     onMessage: message => {
       console.log(message);
