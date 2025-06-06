@@ -1,3 +1,5 @@
+import { industries, focusAreas } from './industry_functions';
+
 // Pre-built AI agents that can be leveraged by other users
 export const prebuiltAgents = [
   {
@@ -5,6 +7,8 @@ export const prebuiltAgents = [
     name: 'Customer Ticket Analyzer',
     description: 'Analyzes customer support tickets and categorizes them by priority and department',
     agentType: 'assistant',
+    industry: 'retail',
+    focusAreas: ['customer_service', 'operations'],
     modelClient: {
       provider: 'openai',
       model: 'gpt-4',
@@ -43,6 +47,8 @@ export const prebuiltAgents = [
     name: 'Mark. Content Generator',
     description: 'Creates marketing content based on brand guidelines and campaign objectives',
     agentType: 'assistant',
+    industry: 'retail',
+    focusAreas: ['marketing', 'digital'],
     modelClient: {
       provider: 'anthropic',
       model: 'claude-3',
@@ -83,6 +89,8 @@ export const prebuiltAgents = [
     name: 'Proc. Analysis Agent',
     description: 'Analyzes procurement data and suggests optimization strategies',
     agentType: 'userproxy',
+    industry: 'manufacturing',
+    focusAreas: ['operations', 'finance'],
     modelClient: {
       provider: 'openai',
       model: 'gpt-4',
@@ -123,6 +131,8 @@ export const prebuiltAgents = [
     name: 'Code Reviewer',
     description: 'Reviews code for best practices, security issues, and optimization opportunities',
     agentType: 'code_interpreter',
+    industry: 'technology',
+    focusAreas: ['innovation', 'risk'],
     modelClient: {
       provider: 'openai',
       model: 'gpt-4',
@@ -162,6 +172,8 @@ export const prebuiltAgents = [
     name: 'Talent Asses. Agent',
     description: 'Evaluates candidate profiles and assists in recruitment process',
     agentType: 'assistant',
+    industry: 'consulting',
+    focusAreas: ['hr', 'operations'],
     modelClient: {
       provider: 'anthropic',
       model: 'claude-3',
@@ -201,6 +213,8 @@ export const prebuiltAgents = [
     name: 'Fin. Analysis Agent',
     description: 'Analyzes financial data and generates insights and reports',
     agentType: 'assistant',
+    industry: 'finance',
+    focusAreas: ['finance', 'risk', 'data'],
     modelClient: {
       provider: 'openai',
       model: 'gpt-4',
@@ -240,6 +254,8 @@ export const prebuiltAgents = [
     name: 'SAP DWC Extractor',
     description: 'Extracts and processes data from SAP Data Warehouse Cloud',
     agentType: 'assistant',
+    industry: 'manufacturing',
+    focusAreas: ['data', 'operations'],
     modelClient: {
       provider: 'openai',
       model: 'gpt-4',
@@ -288,6 +304,8 @@ export const prebuiltAgents = [
     name: 'Web Researcher',
     description: 'Conducts comprehensive web research and synthesizes findings',
     agentType: 'assistant',
+    industry: 'consulting',
+    focusAreas: ['innovation', 'data'],
     modelClient: {
       provider: 'anthropic',
       model: 'claude-3',
@@ -340,6 +358,8 @@ export interface PrebuiltAgent {
   name: string;
   description: string;
   agentType: 'assistant' | 'userproxy' | 'code_interpreter';
+  industry: string;
+  focusAreas: string[];
   modelClient: {
     provider: string;
     model: string;
