@@ -1,7 +1,7 @@
 // Industry and Focus Area options with enhanced prompts and context
 export const industries = [
   { 
-    value: 'finance',
+    value: 'banking',
     label: 'Finance & Banking',
     keyPrompts: {
       agentConsiderations: [
