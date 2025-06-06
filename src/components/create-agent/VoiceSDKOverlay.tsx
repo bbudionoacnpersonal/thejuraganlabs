@@ -238,7 +238,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                 )}
                 <div 
                   className={`w-20 h-20 rounded-full flex items-center justify-center ${
-                    isSessionActive && conversation.isSpeaking
+                   conversation.status === "connected"  && conversation.isSpeaking
                       ? "bg-secondary-600"
                       : isSessionActive
                       ? "bg-primary-400"
