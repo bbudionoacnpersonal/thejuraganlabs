@@ -288,7 +288,7 @@ export const focusAreas = [
       'Response time optimization',
       'Query categorization',
       'Sentiment analysis',
-       'Personal advisor',
+      'Personal advisor',
       'Escalation protocols'
     ]
   },
