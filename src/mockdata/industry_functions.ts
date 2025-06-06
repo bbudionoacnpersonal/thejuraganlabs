@@ -168,9 +168,9 @@ export const industries = [
         'Downstream management'
       ],
       systemInstructions: `You are an energy, oil & gas AI expert. Focus on:
-        - Personalized learning
-        - Student assessment
-        - Content management
+        - Upstream process
+        - midstream process
+        - downstream process 
         - Progress tracking
         - Educational analytics`,
       toolPriorities: ['content_adapter', 'progress_tracker', 'assessment_generator']
