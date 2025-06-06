@@ -318,8 +318,7 @@ const nodeTypes = {
 // Custom hook for resizable functionality with error handling
 const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
   const [isResizing, setIsResizing] = useState(false);
-  const [size, setSize] = useState({ width: 800, height: 600 });
-  const [resizeDirection, setResizeDirection] = useState<string>('');
+  const [size, setSize] = useState({ width: 1000, height: 800 }); // 🎯 INCREASED HEIGHT
 
   useEffect(() => {
     try {
@@ -333,7 +332,6 @@ const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
           if (!direction) return;
 
           setIsResizing(true);
-          setResizeDirection(direction);
           e.preventDefault();
           e.stopPropagation();
         } catch (error) {
@@ -349,18 +347,8 @@ const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
           let newWidth = size.width;
           let newHeight = size.height;
 
-          if (resizeDirection.includes('right')) {
-            newWidth = Math.max(600, e.clientX - rect.left);
-          }
-          if (resizeDirection.includes('left')) {
-            newWidth = Math.max(600, rect.right - e.clientX);
-          }
-          if (resizeDirection.includes('bottom')) {
-            newHeight = Math.max(400, e.clientY - rect.top);
-          }
-          if (resizeDirection.includes('top')) {
-            newHeight = Math.max(400, rect.bottom - e.clientY);
-          }
+          newWidth = Math.max(800, e.clientX - rect.left);
+          newHeight = Math.max(600, e.clientY - rect.top);
 
           setSize({ width: newWidth, height: newHeight });
         } catch (error) {
@@ -370,7 +358,6 @@ const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
 
       const handleMouseUp = () => {
         setIsResizing(false);
-        setResizeDirection('');
       };
 
       const resizeHandles = element.querySelectorAll('[data-resize-direction]');
@@ -391,7 +378,7 @@ const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
     } catch (error) {
       console.error('Error in useResizable effect:', error);
     }
-  }, [isResizing, size, resizeDirection, ref]);
+  }, [isResizing, size, ref]);
 
   return { size, isResizing };
 };
