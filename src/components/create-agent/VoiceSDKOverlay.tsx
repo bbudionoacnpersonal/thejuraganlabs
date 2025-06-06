@@ -6,7 +6,12 @@ import ConversationAnalysis from './ConversationAnalysis';
 import SmartVisualizer from './SmartVisualizer';
 import { Message } from '@/types';
 import { industries, focusAreas } from '@/mockdata/industry_functions';
-import { resetFlowState } from '@/mockdata/temp_conv_agentflow';
+import { resetFlowState, updateUserInput, getFlowState } from '@/mockdata/temp_conv_agentflow';
+import { 
+  storeConversationData, 
+  getConversationData, 
+  updateConversationData 
+} from '@/services/conversationStorageService';
 
 interface VoiceSDKOverlayProps {
   isVisible: boolean;
@@ -55,6 +60,47 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const industryDetails = industries.find(i => i.value === userIndustry);
   const focusAreaDetails = focusAreas.filter(f => userFocusAreas.includes(f.value));
 
+  // Load existing conversation data when conversation ID is set
+  useEffect(() => {
+    if (conversationId) {
+      const existingData = getConversationData(conversationId);
+      if (existingData) {
+        console.log('📂 Loading existing conversation data:', existingData);
+        
+        // Restore conversation messages
+        setConversationMessages(existingData.messages);
+        
+        // Restore flow state
+        // Note: The flow state will be updated by SmartVisualizer when it processes the messages
+        
+        console.log(`🔄 Restored conversation ${conversationId} with ${existingData.messages.length} messages`);
+      } else {
+        console.log(`🆕 Starting new conversation: ${conversationId}`);
+      }
+    }
+  }, [conversationId]);
+
+  // Store conversation data whenever messages or flow state changes
+  useEffect(() => {
+    if (conversationId && conversationMessages.length > 0) {
+      const flowState = getFlowState();
+      
+      // Store/update conversation data in localStorage
+      storeConversationData(
+        conversationId,
+        flowState,
+        conversationMessages,
+        flowState.autogenStructure
+      );
+      
+      console.log(`💾 Stored conversation data for ${conversationId}:`, {
+        messageCount: conversationMessages.length,
+        hasAutogen: !!flowState.autogenStructure,
+        stage: flowState.conversationStage
+      });
+    }
+  }, [conversationId, conversationMessages]);
+
   const handleTaskGenerator = async (input: any): Promise<void> => {
     try {
       console.log('Simulating task generation for input:', input);
@@ -80,6 +126,19 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
           ? { ...step, status: 'completed', duration: 500 }
           : step
       ));
+
+      // Update conversation data with task generation
+      if (conversationId) {
+        updateConversationData(conversationId, {
+          status: 'completed',
+          metadata: {
+            totalMessages: conversationMessages.length,
+            analysisCount: 1,
+            confidence: 0.9,
+            stage: 'finalization'
+          }
+        });
+      }
     } catch (error) {
       console.error('Task Generator error:', error);
       setAgentFlow(prev => prev.map(step => 
@@ -101,9 +160,22 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       console.log("disconnected");
       setConversationState('idle');
       setAgentFlow([]);
+      
+      // Final save before disconnecting
+      if (conversationId && conversationMessages.length > 0) {
+        const flowState = getFlowState();
+        updateConversationData(conversationId, {
+          status: 'completed',
+          flowState,
+          messages: conversationMessages
+        });
+        console.log(`💾 Final save for conversation ${conversationId} before disconnect`);
+      }
+      
       setConversationMessages([]);
       setShowSmartVisualizer(false);
       resetFlowState(); // Reset the flow state when disconnecting
+      setConversationId(null); // Clear conversation ID
     },
     onError: error => {
       console.log(error);
@@ -119,7 +191,16 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         content: message.message,
         timestamp: Date.now()
       };
-      setConversationMessages(prev => [...prev, newMessage]);
+      setConversationMessages(prev => {
+        const updated = [...prev, newMessage];
+        
+        // Update user input in flow state for user messages
+        if (message.source === 'user') {
+          updateUserInput(message.message);
+        }
+        
+        return updated;
+      });
       
       // Update conversation state based on message source
       if (message.source === 'user') {
@@ -213,9 +294,20 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
           task_generator: handleTaskGenerator
         }
       });
+      
       setConversationId(sessionId);
       setShowSmartVisualizer(true);
-      console.log('ConversationID: ', sessionId);
+      
+      console.log('🎙️ Started new conversation with ID:', sessionId);
+      
+      // Check if this conversation already exists in storage
+      const existingData = getConversationData(sessionId);
+      if (existingData) {
+        console.log('📂 Found existing conversation data, will restore state');
+      } else {
+        console.log('🆕 New conversation, will create fresh storage');
+      }
+      
     } catch (err) {
       setError("Failed to start conversation");
       console.error(err);
@@ -224,12 +316,24 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 
   const stopConversation = async () => {
     try {
+      // Final save before stopping
+      if (conversationId && conversationMessages.length > 0) {
+        const flowState = getFlowState();
+        updateConversationData(conversationId, {
+          status: 'completed',
+          flowState,
+          messages: conversationMessages
+        });
+        console.log(`💾 Final save for conversation ${conversationId} before stopping`);
+      }
+      
       await conversation.endSession();
       setShowSmartVisualizer(false);
       setAgentFlow([]);
       setConversationMessages([]);
       setConversationState('idle');
       resetFlowState();
+      setConversationId(null);
     } catch (err) {
       console.error("Error ending conversation:", err);
     }
@@ -285,6 +389,13 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                         : "Listening..."
                       : "Voice Assistant"}
                   </h3>
+
+                  {/* Show conversation ID when connected */}
+                  {conversationId && (
+                    <div className="mb-2 px-2 py-1 bg-dark-background/50 rounded text-xs text-gray-400">
+                      ID: {conversationId.slice(-8)}
+                    </div>
+                  )}
 
                   {error && (
                     <span className="text-error-500 text-sm mb-3 text-center">{error}</span>
@@ -406,6 +517,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                   conversationState={conversationState}
                   agentFlow={agentFlow}
                   messages={conversationMessages}
+                  conversationId={conversationId} // Pass conversation ID for storage access
                 />
               )}
             </div>

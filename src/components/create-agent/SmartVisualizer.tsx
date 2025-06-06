@@ -14,7 +14,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { XMarkIcon, EyeIcon, EyeSlashIcon, SparklesIcon, DocumentArrowDownIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, EyeIcon, EyeSlashIcon, SparklesIcon, DocumentArrowDownIcon, CheckCircleIcon, FolderOpenIcon } from '@heroicons/react/24/outline';
 import { Bot, User, Users, Zap, Clock, Wrench, Brain, Target, ArrowRight } from 'lucide-react';
 import { 
   conversationFlowState, 
@@ -31,6 +31,11 @@ import {
   getCurrentAutogenStructure
 } from '@/mockdata/temp_conv_agentflow';
 import { analyzeConversationForAutogenStructure } from '@/services/anthropicService';
+import { 
+  getConversationData, 
+  updateConversationData,
+  exportConversationAsJSON 
+} from '@/services/conversationStorageService';
 import AutogenNode from './AutogenNode';
 
 interface SmartVisualizerProps {
@@ -47,6 +52,7 @@ interface SmartVisualizerProps {
     duration?: number;
   }>;
   messages?: Array<{ role: string; content: string; timestamp: number }>;
+  conversationId?: string | null; // Add conversation ID prop
 }
 
 // Enhanced custom node components for conversation flow
@@ -173,7 +179,8 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   onClose,
   conversationState,
   agentFlow = [],
-  messages = []
+  messages = [],
+  conversationId = null
 }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
@@ -188,12 +195,40 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   const windowRef = useRef<HTMLDivElement>(null);
   const { size, isResizing } = useResizable(windowRef);
 
+  // Load conversation data from localStorage when conversation ID changes
+  useEffect(() => {
+    if (conversationId) {
+      const storedData = getConversationData(conversationId);
+      if (storedData) {
+        console.log('📂 Loading stored conversation data for SmartVisualizer:', {
+          conversationId,
+          messageCount: storedData.messages.length,
+          hasAutogen: !!storedData.autogenStructure,
+          stage: storedData.metadata.stage
+        });
+        
+        // Restore state from stored data
+        if (storedData.autogenStructure) {
+          setHasInitialStructure(true);
+          // The flow state will be updated by the analysis effect
+        }
+        
+        // Check if task was already generated
+        if (storedData.metadata.stage === 'finalization') {
+          setTaskGenerated(true);
+          setGeneratedTask(storedData.autogenStructure?.description || 'AI agents team task');
+          setExpectedOutput(`The AI agents team will process user inputs through ${storedData.autogenStructure?.config.participants.length || 0} specialized agents.`);
+        }
+      }
+    }
+  }, [conversationId]);
+
   // Update conversation state in flow data
   useEffect(() => {
     updateConversationState(conversationState);
   }, [conversationState]);
 
-  // Enhanced AI analysis with Anthropic service
+  // Enhanced AI analysis with Anthropic service and localStorage integration
   useEffect(() => {
     const performAnalysis = async () => {
       // Skip if no new messages or already analyzing
@@ -202,7 +237,8 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       console.log('🔍 Checking if analysis should be triggered...', {
         messageCount: messages.length,
         lastCount: lastMessageCount,
-        shouldTrigger: shouldTriggerAnalysis()
+        shouldTrigger: shouldTriggerAnalysis(),
+        conversationId
       });
       
       // Check if analysis should be triggered
@@ -226,8 +262,18 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         const userIndustry = localStorage.getItem('user_industry') || undefined;
         const userFocusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
         
-        // Get current state for context
+        // Get current state for context (including any stored data)
         const analysisData = getAnalysisReadyData();
+        
+        // If we have a conversation ID, try to get stored structure for context
+        let existingStructure = analysisData.autogenStructure;
+        if (conversationId && !existingStructure) {
+          const storedData = getConversationData(conversationId);
+          if (storedData?.autogenStructure) {
+            existingStructure = storedData.autogenStructure;
+            console.log('📂 Using stored Autogen structure for analysis context');
+          }
+        }
         
         // Prepare messages for analysis
         const messageTexts = messages.map(m => `${m.role}: ${m.content}`);
@@ -236,13 +282,14 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           messageCount: messages.length,
           userIndustry,
           userFocusAreas,
-          currentState: analysisData
+          hasExistingStructure: !!existingStructure,
+          conversationId
         });
         
         // Perform contextual analysis to get Autogen structure
         const analysis = await analyzeConversationForAutogenStructure(
           messageTexts,
-          analysisData.autogenStructure,
+          existingStructure,
           userIndustry,
           userFocusAreas
         );
@@ -253,6 +300,22 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         if (analysis.teamStructure) {
           updateFromAutogenStructure(analysis.teamStructure, analysis);
           setHasInitialStructure(true);
+          
+          // Update localStorage with new analysis
+          if (conversationId) {
+            updateConversationData(conversationId, {
+              autogenStructure: analysis.teamStructure,
+              flowState: getFlowState(),
+              metadata: {
+                totalMessages: messages.length,
+                analysisCount: 1,
+                confidence: analysis.confidence,
+                stage: analysis.conversationStage
+              }
+            });
+            
+            console.log(`💾 Updated localStorage with new analysis for ${conversationId}`);
+          }
           
           // Check if conversation is in finalization stage
           if (analysis.conversationStage === 'finalization') {
@@ -284,7 +347,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     // Debounce analysis
     const timeoutId = setTimeout(performAnalysis, 1500);
     return () => clearTimeout(timeoutId);
-  }, [messages, lastMessageCount, isAnalyzing]);
+  }, [messages, lastMessageCount, isAnalyzing, conversationId]);
 
   // Check for task generator trigger from agentFlow
   useEffect(() => {
@@ -301,8 +364,21 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         setGeneratedTask(`Create ${flowState.team.name} for ${flowState.team.description}`);
         setExpectedOutput(`The system will generate a structured AI agents team with ${flowState.agents.length} agents working in ${flowState.team.type} pattern to handle user requests efficiently.`);
       }
+      
+      // Update localStorage with task generation
+      if (conversationId) {
+        updateConversationData(conversationId, {
+          status: 'completed',
+          metadata: {
+            totalMessages: messages.length,
+            analysisCount: 1,
+            confidence: 0.9,
+            stage: 'finalization'
+          }
+        });
+      }
     }
-  }, [agentFlow, taskGenerated]);
+  }, [agentFlow, taskGenerated, conversationId, messages.length]);
 
   // Generate ReactFlow visualization from Autogen structure
   const generateAutogenFlow = useCallback(() => {
@@ -313,7 +389,8 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       hasStructure: !!autogenStructure,
       hasUserInput: flowState.userInput.shown,
       conversationState,
-      taskGenerated
+      taskGenerated,
+      conversationId
     });
     
     const newNodes: Node[] = [];
@@ -699,12 +776,18 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       const dataStr = JSON.stringify(autogenStructure, null, 2);
       const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
       
-      const exportFileDefaultName = 'autogen_team_structure.json';
+      const exportFileDefaultName = `autogen_team_structure_${conversationId || 'unknown'}.json`;
       
       const linkElement = document.createElement('a');
       linkElement.setAttribute('href', dataUri);
       linkElement.setAttribute('download', exportFileDefaultName);
       linkElement.click();
+    }
+  };
+
+  const handleExportConversation = () => {
+    if (conversationId) {
+      exportConversationAsJSON(conversationId);
     }
   };
 
@@ -790,6 +873,9 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           {flowState.team?.type && (
             <span className="text-xs text-gray-500">• {flowState.team.type}</span>
           )}
+          {conversationId && (
+            <span className="text-xs text-gray-500">• {conversationId.slice(-8)}</span>
+          )}
           {isAnalyzing && (
             <SparklesIcon className="h-3 w-3 text-orange-500 animate-spin" />
           )}
@@ -798,6 +884,15 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           )}
         </div>
         <div className="flex items-center gap-1">
+          {conversationId && (
+            <button
+              onClick={handleExportConversation}
+              className="p-1 text-gray-400 hover:text-white transition-colors"
+              title="Export Full Conversation Data"
+            >
+              <FolderOpenIcon className="h-4 w-4" />
+            </button>
+          )}
           {teamProgress.hasAutogenStructure && (
             <button
               onClick={handleExportAutogen}
@@ -861,6 +956,9 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             )}
             {teamProgress.hasAutogenStructure && (
               <span className="ml-2">• Autogen Ready</span>
+            )}
+            {conversationId && (
+              <span className="ml-2">• Stored</span>
             )}
           </p>
         </div>
