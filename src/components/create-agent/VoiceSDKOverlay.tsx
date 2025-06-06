@@ -31,6 +31,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isSessionActive, setIsSessionActive] = useState(false);
+  const [sessionStarted, setSessionStarted] = useState(false);
 
   // Get user's industry and focus areas context
   const userIndustry = localStorage.getItem('user_industry');
@@ -65,12 +66,18 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     },
     onDisconnect: () => {
       console.log("Disconnected from Eleven Labs WebSocket");
-      setIsSessionActive(false);
+      if (sessionStarted) {
+        // Only set inactive if we had an active session
+        setIsSessionActive(false);
+        console.log("Attempting to reconnect...");
+        startConversation(); // Attempt to reconnect
+      }
     },
     onError: error => {
       console.error("WebSocket error:", error);
       setError("Connection error occurred. Please try again.");
       setIsSessionActive(false);
+      setSessionStarted(false);
     },
     onMessage: message => {
       console.log("Received message:", message);
@@ -86,13 +93,15 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   });
 
   useEffect(() => {
-    // Cleanup function
+    if (!isVisible && sessionStarted) {
+      stopConversation();
+    }
     return () => {
-      if (isSessionActive) {
+      if (sessionStarted) {
         stopConversation();
       }
     };
-  }, [isSessionActive]);
+  }, [isVisible, sessionStarted]);
 
   async function startConversation() {
     const hasPermission = await requestMicrophonePermission();
@@ -120,11 +129,13 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       
       setConversationId(sessionId);
       setIsSessionActive(true);
+      setSessionStarted(true);
       console.log('Started conversation session:', sessionId);
     } catch (err) {
       console.error("Failed to start conversation:", err);
       setError("Failed to start conversation. Please try again.");
       setIsSessionActive(false);
+      setSessionStarted(false);
     }
   }
 
@@ -132,6 +143,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     try {
       await conversation.endSession();
       setIsSessionActive(false);
+      setSessionStarted(false);
       console.log("Conversation session ended");
     } catch (err) {
       console.error("Error ending conversation:", err);
@@ -139,7 +151,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   };
 
   const handleClose = async () => {
-    if (isSessionActive) {
+    if (sessionStarted) {
       await stopConversation();
     }
     onClose();
