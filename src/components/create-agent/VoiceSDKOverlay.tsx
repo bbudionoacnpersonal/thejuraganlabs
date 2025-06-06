@@ -75,8 +75,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const conversation = useConversation({
     agentId: 'agent_01jvw7ms1jfbe8c3ptec0na5z9',
     onConnect: () => {
-      console.log("connected");
-    
+      console.log("connected");   
     },
     onDisconnect: () => {
       console.log("disconnected");
