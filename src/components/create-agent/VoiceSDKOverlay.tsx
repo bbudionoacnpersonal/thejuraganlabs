@@ -115,40 +115,41 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     };
   }, [isSessionActive]);
 
-  async function startConversation() {
-    const hasPermission = await requestMicrophonePermission();
-    if (!hasPermission) {
-      setError("No microphone permission");
-      return;
-    }
-    
-    try {
-      // Create system prompt based on industry and focus areas
-      const systemPrompt = createSystemPrompt(userIndustry, userFocusAreas);
-
-      const sessionId = await conversation.startSession({
-        context: {
-          industry: userIndustry,
-          focus_areas: userFocusAreas,
-          industry_config: userIndustry,
-          focus_area_configs: focusAreas
-        },
-        prompt: {
-          preamble: systemPrompt,
-        },
-        clientTools: {
-          task_generator: handleTaskGenerator
-        }
-      });
-
-      setConversationId(sessionId);
-      setIsSessionActive(true);
-      console.log('ConversationID with context:', sessionId);
-    } catch (err) {
-      setError("Failed to start conversation");
-      console.error(err);
-    }
+ // In your startConversation function
+async function startConversation() {
+  const hasPermission = await requestMicrophonePermission();
+  if (!hasPermission) {
+    setError("No microphone permission");
+    return;
   }
+  
+  try {
+    const systemPrompt = createSystemPrompt(userIndustry, userFocusAreas);
+
+    // --- KEY CHANGE: Simplify the context object ---
+    const sessionId = await conversation.startSession({
+      context: {
+        // Only send simple, key-value data.
+        // The detailed instructions are in the prompt.
+        industry: userIndustry,
+        focus_areas: userFocusAreas,
+      },
+      prompt: {
+        preamble: systemPrompt,
+      },
+      clientTools: {
+        task_generator: handleTaskGenerator
+      }
+    });
+
+    setConversationId(sessionId);
+    // You can remove setIsSessionActive(true) here, as onConnect will handle it.
+    console.log('ConversationID with context:', sessionId);
+  } catch (err) {
+    setError("Failed to start conversation");
+    console.error(err);
+  }
+}
 
   const stopConversation = async () => {
     try {
