@@ -1,4 +1,4 @@
-// Anthropic AI service for analyzing conversation messages and extracting Autogen structure
+// Gemini AI service for analyzing conversation messages and extracting Autogen structure
 import { TeamStructure } from '@/types';
 
 interface AnalysisResult {
