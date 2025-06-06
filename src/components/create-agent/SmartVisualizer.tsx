@@ -57,7 +57,7 @@ interface SmartVisualizerProps {
   }>;
   messages?: Array<{ role: string; content: string; timestamp: number }>;
   conversationId?: string | null;
-  onJsonGenerated?: (json: TeamStructure) => void; // 🎯 NEW: Callback for JSON generation
+  onJsonGenerated?: (json: TeamStructure) => void; // 🎯 Callback for JSON generation
 }
 
 // Enhanced error boundary component
@@ -395,7 +395,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   agentFlow = [],
   messages = [],
   conversationId = null,
-  onJsonGenerated // 🎯 NEW: Receive callback prop
+  onJsonGenerated // 🎯 Receive callback prop
 }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
@@ -409,7 +409,10 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [hasGeneratedTask, setHasGeneratedTask] = useState(false);
   const [conversationEnded, setConversationEnded] = useState(false);
-  const [lastGeneratedJson, setLastGeneratedJson] = useState<TeamStructure | null>(null); // 🎯 NEW: Track last generated JSON
+  
+  // 🎯 NEW: Store generated JSON but don't trigger callback until window closes
+  const [pendingJsonUpdate, setPendingJsonUpdate] = useState<TeamStructure | null>(null);
+  const [hasJsonReady, setHasJsonReady] = useState(false);
   
   const windowRef = useRef<HTMLDivElement>(null);
   const { size, isResizing } = useResizable(windowRef);
@@ -435,7 +438,8 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         setError(null);
         setHasGeneratedTask(false);
         setConversationEnded(false);
-        setLastGeneratedJson(null); // 🎯 NEW: Reset last generated JSON
+        setPendingJsonUpdate(null); // 🎯 NEW: Reset pending JSON
+        setHasJsonReady(false); // 🎯 NEW: Reset JSON ready state
         
         console.log('✅ Visualizer state reset for new conversation');
       }
@@ -497,13 +501,12 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         if (analysis.teamStructure) {
           setTeamStructure(analysis.teamStructure);
           
-          // 🎯 NEW: Trigger JSON generation callback when structure is complete
+          // 🎯 NEW: Store JSON for later use but don't trigger callback yet
           if (analysis.analysisStage === 'structure_complete' && 
-              onJsonGenerated && 
-              (!lastGeneratedJson || JSON.stringify(lastGeneratedJson) !== JSON.stringify(analysis.teamStructure))) {
-            console.log('🎯 NEW JSON GENERATED - Triggering callback to update editors');
-            setLastGeneratedJson(analysis.teamStructure);
-            onJsonGenerated(analysis.teamStructure);
+              (!pendingJsonUpdate || JSON.stringify(pendingJsonUpdate) !== JSON.stringify(analysis.teamStructure))) {
+            console.log('🎯 JSON GENERATED - Storing for later use when window closes');
+            setPendingJsonUpdate(analysis.teamStructure);
+            setHasJsonReady(true);
           }
         }
 
@@ -532,7 +535,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     }, 2000);
     
     return () => clearTimeout(timeoutId);
-  }, [messages, lastMessageCount, isAnalyzing, conversationId, analysisStage, teamStructure, hasGeneratedTask, onJsonGenerated, lastGeneratedJson]);
+  }, [messages, lastMessageCount, isAnalyzing, conversationId, analysisStage, teamStructure, hasGeneratedTask, pendingJsonUpdate]);
 
   // 🎯 CRITICAL FIX: Memoize generateProgressiveFlow to prevent infinite rerendering
   const generateProgressiveFlow = useCallback(() => {
@@ -856,6 +859,23 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     }
   };
 
+  // 🎯 NEW: Handle window close - trigger JSON update only when user closes
+  const handleClose = () => {
+    try {
+      // 🎯 CRITICAL: Only trigger JSON update when conversation is finished and JSON is ready
+      if (conversationEnded && hasJsonReady && pendingJsonUpdate && onJsonGenerated) {
+        console.log('🎯 CONVERSATION FINISHED - Updating editors with generated JSON on window close');
+        onJsonGenerated(pendingJsonUpdate);
+      }
+      
+      // Close the window
+      onClose();
+    } catch (error) {
+      console.error('Error handling window close:', error);
+      onClose(); // Still close the window even if there's an error
+    }
+  };
+
   if (!isVisible) return null;
 
   const getStageDisplay = () => {
@@ -932,11 +952,11 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             {isAnalyzing && (
               <SparklesIcon className="h-3 w-3 text-orange-500 animate-spin" />
             )}
-            {/* 🎯 NEW: JSON Generated Indicator */}
-            {lastGeneratedJson && (
+            {/* 🎯 NEW: JSON Ready Indicator */}
+            {hasJsonReady && conversationEnded && (
               <span className="text-xs text-green-400 flex items-center gap-1">
                 <CheckIcon className="h-3 w-3" />
-                JSON Updated
+                JSON Ready
               </span>
             )}
           </div>
@@ -957,7 +977,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
               {isMinimized ? <EyeIcon className="h-4 w-4" /> : <EyeSlashIcon className="h-4 w-4" />}
             </button>
             <button
-              onClick={onClose}
+              onClick={handleClose} // 🎯 NEW: Use custom close handler
               className="p-1 text-gray-400 hover:text-white transition-colors"
             >
               <XMarkIcon className="h-4 w-4" />
@@ -1029,15 +1049,10 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                       Agents: {progressiveElements.identifiedAgents.length}
                     </div>
                   )}
-                  {hasGeneratedTask && (
-                    <div className="text-xs text-green-500 mb-3">
-                      ✅ Final Task Generated
-                    </div>
-                  )}
                   {/* 🎯 NEW: JSON Status Indicator */}
-                  {lastGeneratedJson && (
+                  {hasJsonReady && conversationEnded && (
                     <div className="text-xs text-green-500 mb-3">
-                      📄 JSON Updated in Editors
+                      📄 JSON Ready - Close to Update Editors
                     </div>
                   )}
                   
@@ -1088,9 +1103,9 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                     Nodes: {nodes.length} | Edges: {edges.length}
                   </div>
                   {/* 🎯 NEW: JSON Status */}
-                  {lastGeneratedJson && (
+                  {hasJsonReady && conversationEnded && (
                     <div className="text-xs text-green-500 mt-1">
-                      JSON: Synced with Editors
+                      JSON: Ready for Export
                     </div>
                   )}
                 </Panel>
@@ -1111,8 +1126,8 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                 <span className="ml-2">• Stored</span>
               )}
               {/* 🎯 NEW: JSON Status in minimized view */}
-              {lastGeneratedJson && (
-                <span className="ml-2 text-green-400">• JSON ✓</span>
+              {hasJsonReady && conversationEnded && (
+                <span className="ml-2 text-green-400">• JSON Ready</span>
               )}
             </p>
           </div>
