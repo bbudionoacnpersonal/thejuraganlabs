@@ -1,20 +1,7 @@
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 import { ClockIcon, SparklesIcon } from '@heroicons/react/24/outline';
-import { 
-  Bot, 
-  Wrench, 
-  SquarePen, 
-  Users, 
-  GitBranch, 
-  Shuffle, 
-  Broadcast, 
-  ArrowRight,
-  Zap,
-  Network,
-  Target,
-  RotateCcw
-} from 'lucide-react';
+import { Bot, Wrench, SquarePen, Users, GitBranch, Shuffle, Podcast as Broadcast, ArrowRight, Zap, Network, Target, RotateCcw } from 'lucide-react';
 
 interface AutogenNodeProps {
   data: {
