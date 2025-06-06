@@ -139,8 +139,8 @@ export const industries = [
     }
   },
   { 
-    value: 'energy',
-    label: 'Energy & Utilities',
+    value: 'utilities',
+    label: 'Utilities',
     keyPrompts: {
       agentConsiderations: [
         'Grid management',
