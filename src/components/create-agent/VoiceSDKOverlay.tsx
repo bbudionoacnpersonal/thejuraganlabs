@@ -81,6 +81,10 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         dynamicVariables: {
           industry: userIndustry,
           function_focus: userFocusAreas.join(', ')
+            'Brand management',
+        'Consumer insights',
+        'Market trend analysis',
+        'Product lifecycle management'
         },
         clientTools: {
           task_generator: handleTaskGenerator
