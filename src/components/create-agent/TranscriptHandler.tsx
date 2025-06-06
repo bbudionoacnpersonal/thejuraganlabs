@@ -145,7 +145,7 @@ const TranscriptHandler: React.FC<TranscriptHandlerProps> = ({
                     size="md"
 
 
-                    className="w-[80%] flex justify-center items-center"
+                    className="w-[100%] flex justify-center items-center"
 
                     leftIcon={<FileJson className="h-3 w-3 inline-block"/>}
                   >
