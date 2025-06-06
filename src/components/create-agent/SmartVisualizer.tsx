@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Split from 'react-split';
 import { v4 as uuidv4 } from 'uuid';
@@ -415,6 +415,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   const [progressiveElements, setProgressiveElements] = useState<any>({});
   const [error, setError] = useState<string | null>(null);
   const [hasGeneratedTask, setHasGeneratedTask] = useState(false);
+  const [conversationEnded, setConversationEnded] = useState(false);
   
   const windowRef = useRef<HTMLDivElement>(null);
   const { size, isResizing } = useResizable(windowRef);
@@ -439,6 +440,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         setEdges([]);
         setError(null);
         setHasGeneratedTask(false);
+        setConversationEnded(false);
         
         console.log('✅ Visualizer state reset for new conversation');
       }
@@ -447,6 +449,21 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       setError('Failed to reset conversation state');
     }
   }, [conversationId, currentConversationId, setNodes, setEdges]);
+
+  // Detect conversation end
+  useEffect(() => {
+    try {
+      if (conversationState === 'idle' && 
+          analysisStage === 'structure_complete' && 
+          hasGeneratedTask && 
+          messages.length > 0) {
+        setConversationEnded(true);
+        console.log('🏁 Conversation ended - will replace user input with final task');
+      }
+    } catch (error) {
+      console.error('Error detecting conversation end:', error);
+    }
+  }, [conversationState, analysisStage, hasGeneratedTask, messages.length]);
 
   // Progressive conversation analysis with enhanced error handling
   useEffect(() => {
@@ -521,33 +538,55 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         hasTeamStructure: !!teamStructure,
         progressiveElements,
         conversationState,
-        hasGeneratedTask
+        hasGeneratedTask,
+        conversationEnded
       });
       
       const newNodes: Node[] = [];
       const newEdges: Edge[] = [];
       let yPosition = 50;
 
-      // Stage 1: User Input (show original user input)
-      if (analysisStage !== 'initial' && messages.length > 0) {
-        const userMessages = messages.filter(m => m.role === 'user');
-        if (userMessages.length > 0) {
-          const lastUserMessage = userMessages[userMessages.length - 1];
-          
-          newNodes.push({
-            id: 'user-input',
-            type: 'conversation',
-            position: { x: 400, y: yPosition },
-            data: {
-              type: 'user',
-              label: 'User Input',
-              description: lastUserMessage.content.substring(0, 100) + (lastUserMessage.content.length > 100 ? '...' : ''),
-              confidence: 1.0
-            },
-            sourcePosition: Position.Bottom,
-            targetPosition: Position.Top,
-          });
-          yPosition += 200;
+      // 🎯 CRITICAL FIX: Replace user input with final task when conversation ends
+      if (conversationEnded && hasGeneratedTask) {
+        // Stage 1: Final Task Node (replaces user input)
+        const finalTaskExample = generateFinalTaskExample(progressiveElements);
+        
+        newNodes.push({
+          id: 'final-task-input',
+          type: 'conversation',
+          position: { x: 400, y: yPosition },
+          data: {
+            type: 'final_task',
+            label: 'Final Task Generated',
+            description: finalTaskExample,
+            confidence: 1.0
+          },
+          sourcePosition: Position.Bottom,
+          targetPosition: Position.Top,
+        });
+        yPosition += 200;
+      } else {
+        // Stage 1: User Input (show original user input when conversation is active)
+        if (analysisStage !== 'initial' && messages.length > 0) {
+          const userMessages = messages.filter(m => m.role === 'user');
+          if (userMessages.length > 0) {
+            const lastUserMessage = userMessages[userMessages.length - 1];
+            
+            newNodes.push({
+              id: 'user-input',
+              type: 'conversation',
+              position: { x: 400, y: yPosition },
+              data: {
+                type: 'user',
+                label: 'User Input',
+                description: lastUserMessage.content.substring(0, 100) + (lastUserMessage.content.length > 100 ? '...' : ''),
+                confidence: 1.0
+              },
+              sourcePosition: Position.Bottom,
+              targetPosition: Position.Top,
+            });
+            yPosition += 200;
+          }
         }
       }
 
@@ -570,14 +609,15 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         };
         newNodes.push(teamNode);
 
-        // Connect user input to team with enhanced animated edge
-        if (newNodes.find(n => n.id === 'user-input')) {
+        // Connect input (user or final task) to team with enhanced animated edge
+        const sourceNodeId = conversationEnded ? 'final-task-input' : 'user-input';
+        if (newNodes.find(n => n.id === sourceNodeId)) {
           newEdges.push({
-            id: 'edge-user-team',
-            source: 'user-input',
+            id: `edge-${sourceNodeId}-team`,
+            source: sourceNodeId,
             target: 'team',
             type: 'smoothstep',
-            animated: true, // Always animated like FlowVisualizer
+            animated: true, // 🎯 ALWAYS animated like FlowVisualizer
             style: { 
               stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#4D9CFF',
               strokeWidth: 3 
@@ -649,7 +689,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
               source: 'team',
               target: `agent-${index}`,
               type: 'smoothstep',
-              animated: true, // Always animated like FlowVisualizer
+              animated: true, // 🎯 ALWAYS animated like FlowVisualizer
               style: { 
                 stroke: conversationState === 'responding' ? '#10b981' : '#4D9CFF',
                 strokeWidth: 2 
@@ -670,54 +710,11 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         yPosition += 280;
       }
 
-      // Stage 4: Final Task Node (when structure is complete and task is generated)
-      if (analysisStage === 'structure_complete' && hasGeneratedTask) {
-        const finalTaskExample = generateFinalTaskExample(progressiveElements);
-        
-        const finalTaskNode: Node = {
-          id: 'final-task',
-          type: 'conversation',
-          position: { x: 400, y: yPosition },
-          data: {
-            type: 'final_task',
-            label: 'Final Task',
-            description: finalTaskExample,
-            confidence: 1.0
-          },
-          sourcePosition: Position.Bottom,
-          targetPosition: Position.Top,
-        };
-        newNodes.push(finalTaskNode);
-
-        // Connect team to final task with enhanced animated edge
-        if (newNodes.find(n => n.id === 'team')) {
-          newEdges.push({
-            id: 'edge-team-final-task',
-            source: 'team',
-            target: 'final-task',
-            type: 'smoothstep',
-            animated: true, // Always animated like FlowVisualizer
-            style: { 
-              stroke: '#10b981',
-              strokeWidth: 3 
-            },
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              width: 12,
-              height: 12,
-              color: '#10b981',
-            },
-            label: 'Final Task Generation',
-            labelStyle: { fontSize: 12, fontWeight: 600, fill: '#ffffff' },
-            labelBgStyle: { fill: '#1e1e1e', fillOpacity: 0.8 },
-          });
-        }
-      }
-
       console.log('🎨 Generated progressive flow:', { 
         nodeCount: newNodes.length, 
         edgeCount: newEdges.length,
         stage: analysisStage,
+        conversationEnded,
         hasGeneratedTask
       });
       
@@ -727,7 +724,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       setError('Failed to generate flow visualization');
       return { nodes: [], edges: [] };
     }
-  }, [analysisStage, progressiveElements, teamStructure, conversationState, isAnalyzing, messages, hasGeneratedTask]);
+  }, [analysisStage, progressiveElements, teamStructure, conversationState, isAnalyzing, messages, hasGeneratedTask, conversationEnded]);
 
   // Generate final task example based on progressive elements
   const generateFinalTaskExample = (elements: any) => {
@@ -798,6 +795,9 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   if (!isVisible) return null;
 
   const getStageDisplay = () => {
+    if (conversationEnded) {
+      return '🎯 Task Generated';
+    }
     switch (analysisStage) {
       case 'initial':
         return '🎯 Listening...';
@@ -853,6 +853,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
               error ? 'bg-red-500' :
               isAnalyzing ? 'bg-orange-500 animate-pulse' :
+              conversationEnded ? 'bg-green-500' :
               analysisStage === 'structure_complete' ? 'bg-green-500' :
               analysisStage !== 'initial' ? 'bg-blue-500' :
               'bg-gray-500'
@@ -936,6 +937,12 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                       <>
                         <span>•</span>
                         <span>Type: {progressiveElements.teamType}</span>
+                      </>
+                    )}
+                    {conversationEnded && (
+                      <>
+                        <span>•</span>
+                        <span className="text-green-400">Completed</span>
                       </>
                     )}
                   </div>
