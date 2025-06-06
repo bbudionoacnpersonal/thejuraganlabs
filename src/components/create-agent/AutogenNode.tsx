@@ -1,12 +1,13 @@
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 import { ClockIcon, SparklesIcon } from '@heroicons/react/24/outline';
-import { Bot, Wrench, SquarePen } from 'lucide-react';
+import { Bot, Wrench, SquarePen, Users, GitBranch, Shuffle, Broadcast, ArrowRight } from 'lucide-react';
 
 interface AutogenNodeProps {
   data: {
     label: string;
     type: 'team' | 'agent';
+    teamType?: string; // New prop for team type
     model?: string;
     tools?: number;
     description?: string;
@@ -26,6 +27,67 @@ interface AutogenNodeProps {
     onEdit?: (nodeData: any) => void;
   };
 }
+
+// Helper function to get team type icon and color
+const getTeamTypeInfo = (teamType?: string) => {
+  if (!teamType) return { icon: Users, color: 'text-gray-500', bgColor: 'bg-gray-100' };
+  
+  const type = teamType.toLowerCase();
+  
+  if (type.includes('roundrobin')) {
+    return { 
+      icon: Shuffle, 
+      color: 'text-blue-600', 
+      bgColor: 'bg-blue-50',
+      label: 'Round Robin',
+      description: 'Agents take turns in sequence'
+    };
+  }
+  if (type.includes('hierarchical')) {
+    return { 
+      icon: GitBranch, 
+      color: 'text-purple-600', 
+      bgColor: 'bg-purple-50',
+      label: 'Hierarchical',
+      description: 'Manager delegates to subordinates'
+    };
+  }
+  if (type.includes('cascading')) {
+    return { 
+      icon: ArrowRight, 
+      color: 'text-orange-600', 
+      bgColor: 'bg-orange-50',
+      label: 'Cascading',
+      description: 'Try agents in sequence until success'
+    };
+  }
+  if (type.includes('broadcast')) {
+    return { 
+      icon: Broadcast, 
+      color: 'text-green-600', 
+      bgColor: 'bg-green-50',
+      label: 'Broadcast',
+      description: 'All agents receive same message'
+    };
+  }
+  if (type.includes('concurrent')) {
+    return { 
+      icon: Users, 
+      color: 'text-indigo-600', 
+      bgColor: 'bg-indigo-50',
+      label: 'Concurrent',
+      description: 'Agents work in parallel'
+    };
+  }
+  
+  return { 
+    icon: Users, 
+    color: 'text-gray-600', 
+    bgColor: 'bg-gray-50',
+    label: 'Custom',
+    description: 'Custom team configuration'
+  };
+};
 
 const AutogenNode: React.FC<AutogenNodeProps> = ({ data }) => {
   const handleNodeEdit = (e: React.MouseEvent) => {
@@ -105,11 +167,16 @@ const AutogenNode: React.FC<AutogenNodeProps> = ({ data }) => {
     );
   }
 
+  // Team node with enhanced team type information
+  const teamTypeInfo = getTeamTypeInfo(data.teamType);
+  const TeamTypeIcon = teamTypeInfo.icon;
+
   return (
     <>
-      <div className="bg-white rounded-md border border-gray-200 w-[200px]">
+      <div className="bg-white rounded-md border border-gray-200 w-[220px]">
+        {/* Header with team type */}
         <div className="p-1.5 border-b border-gray-100">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-1">
             <span className="text-[11px] font-medium text-gray-900">{data.label}</span>
             <div className="flex items-center gap-2"> 
               <span className="text-[9px] text-gray-500">{data.type}</span>
@@ -122,9 +189,22 @@ const AutogenNode: React.FC<AutogenNodeProps> = ({ data }) => {
             </div>
           </div>
           
+          {/* Team Type Badge */}
+          <div className={`flex items-center gap-1 px-2 py-1 rounded-md ${teamTypeInfo.bgColor} mb-2`}>
+            <TeamTypeIcon className={`w-2 h-2 ${teamTypeInfo.color}`} />
+            <span className={`text-[9px] font-medium ${teamTypeInfo.color}`}>
+              {teamTypeInfo.label}
+            </span>
+          </div>
+          
+          {/* Team Type Description */}
+          <p className="text-[8px] text-gray-500 italic mb-1">
+            {teamTypeInfo.description}
+          </p>
+          
           {data.type === 'team' && (
-            <div className="mt-0.5 flex items-center gap-1">
-              <span className="text-[10px] text-gray-700">Model:</span>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-gray-700">Coordination:</span>
               <span className="px-1 py-0.5 text-[9px] bg-green-50 text-green-700 rounded">
                 {data.agents?.length || 0} Agent{(data.agents?.length || 0) !== 1 ? 's' : ''}
               </span>
@@ -133,7 +213,7 @@ const AutogenNode: React.FC<AutogenNodeProps> = ({ data }) => {
         </div>
         
         {data.description && (
-          <div className="p-1.5 text-[9px] text-gray-600">
+          <div className="p-1.5 text-[9px] text-gray-600 border-b border-gray-100">
             {data.description}
           </div>
         )}
