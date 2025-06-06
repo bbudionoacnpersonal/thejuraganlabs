@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import { ReactFlowProvider } from 'reactflow';
 import Button from '@/components/ui/Button';
 import AgentTree from './AgentTree';
 import CodeEditor from './CodeEditor';
@@ -173,7 +174,9 @@ const TeamConfiguration: React.FC<TeamConfigurationProps> = ({
           </div>
         ) : (
           <div className="relative h-full">
-            <VisualEditor teamStructure={teamStructure} />
+            <ReactFlowProvider>
+              <VisualEditor teamStructure={teamStructure} />
+            </ReactFlowProvider>
           </div>
         )}
       </div>
