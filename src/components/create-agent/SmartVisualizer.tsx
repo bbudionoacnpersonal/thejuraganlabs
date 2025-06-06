@@ -459,6 +459,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         data: {
           label: autogenStructure.label,
           type: 'team',
+          teamType: autogenStructure.provider.split('.').pop(), // Pass team type for enhanced display
           description: autogenStructure.description,
           model: autogenStructure.config.model_client?.config.model || 'gpt-4o-mini',
           agents: autogenStructure.config.participants.map(p => ({
@@ -661,6 +662,55 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         }
         break;
       
+      case 'SelectorGroupChat':
+        // Star pattern with central selector
+        const selectorRadius = Math.max(120, agentCount * 20);
+        for (let i = 0; i < agentCount; i++) {
+          const angle = (i * 2 * Math.PI) / agentCount;
+          positions.push({
+            x: Math.cos(angle) * selectorRadius,
+            y: Math.sin(angle) * selectorRadius
+          });
+        }
+        break;
+      
+      case 'MagenticOneGroupChat':
+        // Magnetic field pattern
+        const magneticRadius = Math.max(100, agentCount * 30);
+        for (let i = 0; i < agentCount; i++) {
+          const angle = (i * Math.PI) / (agentCount - 1);
+          positions.push({
+            x: Math.cos(angle) * magneticRadius,
+            y: Math.sin(angle) * magneticRadius - magneticRadius / 2
+          });
+        }
+        break;
+      
+      case 'Swarm':
+        // Swarm clustering pattern
+        for (let i = 0; i < agentCount; i++) {
+          const cluster = Math.floor(i / 3);
+          const inCluster = i % 3;
+          positions.push({
+            x: cluster * 150 + (inCluster - 1) * 50,
+            y: inCluster * 40 - 40
+          });
+        }
+        break;
+      
+      case 'GraphFlow':
+        // Graph-like network pattern
+        const cols = Math.ceil(Math.sqrt(agentCount));
+        for (let i = 0; i < agentCount; i++) {
+          const row = Math.floor(i / cols);
+          const col = i % cols;
+          positions.push({
+            x: (col - (cols - 1) / 2) * spacing,
+            y: row * 100
+          });
+        }
+        break;
+      
       case 'HierarchicalGroupChat':
         // Tree structure
         positions.push({ x: 0, y: 0 }); // Main agent at center
@@ -735,6 +785,80 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             },
             label: `Round ${i + 1}`,
           });
+        }
+        break;
+      
+      case 'SelectorGroupChat':
+        // Central selector pattern - all agents connect to first agent (selector)
+        if (participants.length > 1) {
+          for (let i = 1; i < participants.length; i++) {
+            edges.push({
+              id: `edge-selector-${i}`,
+              source: 'agent-0',
+              target: `agent-${i}`,
+              type: 'smoothstep',
+              animated: isActive,
+              style: { 
+                stroke: '#8b5cf6',
+                strokeWidth: 2,
+                strokeDasharray: '6,3'
+              },
+              markerEnd: {
+                type: MarkerType.ArrowClosed,
+                color: '#8b5cf6',
+              },
+              label: 'Select',
+            });
+          }
+        }
+        break;
+      
+      case 'Swarm':
+        // Swarm handoff connections
+        for (let i = 0; i < participants.length - 1; i++) {
+          edges.push({
+            id: `edge-swarm-${i}`,
+            source: `agent-${i}`,
+            target: `agent-${i + 1}`,
+            type: 'smoothstep',
+            animated: isActive,
+            style: { 
+              stroke: '#10b981',
+              strokeWidth: 2,
+              strokeDasharray: '4,4'
+            },
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: '#10b981',
+            },
+            label: 'Handoff',
+          });
+        }
+        break;
+      
+      case 'GraphFlow':
+        // Complex graph connections
+        for (let i = 0; i < participants.length; i++) {
+          for (let j = i + 1; j < participants.length; j++) {
+            if (Math.random() > 0.6) { // Random connections for graph complexity
+              edges.push({
+                id: `edge-graph-${i}-${j}`,
+                source: `agent-${i}`,
+                target: `agent-${j}`,
+                type: 'smoothstep',
+                animated: isActive,
+                style: { 
+                  stroke: '#6366f1',
+                  strokeWidth: 1,
+                  strokeDasharray: '3,3'
+                },
+                markerEnd: {
+                  type: MarkerType.ArrowClosed,
+                  color: '#6366f1',
+                },
+              });
+            }
+          }
         }
         break;
       

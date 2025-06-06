@@ -128,16 +128,38 @@ export const analyzeConversationForAutogenStructure = async (
 };
 
 const determineTeamType = (conversationText: string): string => {
-  // Analyze conversation to determine appropriate team type
+  // Enhanced team type analysis with new types
+  
+  // Check for specific team type mentions
+  if (/selector|select.*speaker|dynamic.*selection|llm.*select/i.test(conversationText)) {
+    return "autogen_agentchat.teams.SelectorGroupChat";
+  }
+  
+  if (/magnetic.*one|magenticone|generalist|web.*task|file.*task/i.test(conversationText)) {
+    return "autogen_agentchat.teams.MagenticOneGroupChat";
+  }
+  
+  if (/swarm|handoff|transition|explicit.*control/i.test(conversationText)) {
+    return "autogen_agentchat.teams.Swarm";
+  }
+  
+  if (/graph.*flow|complex.*workflow|branch|loop|conditional/i.test(conversationText)) {
+    return "autogen_agentchat.teams.GraphFlow";
+  }
+  
+  // Legacy team types
   if (/round.?robin|rotate|turn/i.test(conversationText)) {
     return "autogen_agentchat.teams.RoundRobinGroupChat";
   }
+  
   if (/hierarch|manager|supervisor|lead/i.test(conversationText)) {
     return "autogen_agentchat.teams.HierarchicalGroupChat";
   }
+  
   if (/cascade|fallback|backup|sequence/i.test(conversationText)) {
     return "autogen_agentchat.teams.CascadingGroupChat";
   }
+  
   if (/broadcast|all.?at.?once|parallel/i.test(conversationText)) {
     return "autogen_agentchat.teams.BroadcastGroupChat";
   }

@@ -1,13 +1,26 @@
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 import { ClockIcon, SparklesIcon } from '@heroicons/react/24/outline';
-import { Bot, Wrench, SquarePen, Users, GitBranch, Shuffle, Broadcast, ArrowRight } from 'lucide-react';
+import { 
+  Bot, 
+  Wrench, 
+  SquarePen, 
+  Users, 
+  GitBranch, 
+  Shuffle, 
+  Broadcast, 
+  ArrowRight,
+  Zap,
+  Network,
+  Target,
+  RotateCcw
+} from 'lucide-react';
 
 interface AutogenNodeProps {
   data: {
     label: string;
     type: 'team' | 'agent';
-    teamType?: string; // New prop for team type
+    teamType?: string; // Enhanced team type support
     model?: string;
     tools?: number;
     description?: string;
@@ -28,21 +41,74 @@ interface AutogenNodeProps {
   };
 }
 
-// Helper function to get team type icon and color
+// Enhanced team type information with new types
 const getTeamTypeInfo = (teamType?: string) => {
-  if (!teamType) return { icon: Users, color: 'text-gray-500', bgColor: 'bg-gray-100' };
+  if (!teamType) return { 
+    icon: Users, 
+    color: 'text-gray-500', 
+    bgColor: 'bg-gray-100',
+    label: 'Team',
+    description: 'AI agents team'
+  };
   
   const type = teamType.toLowerCase();
   
+  // RoundRobinGroupChat (Default)
   if (type.includes('roundrobin')) {
     return { 
-      icon: Shuffle, 
+      icon: RotateCcw, 
       color: 'text-blue-600', 
       bgColor: 'bg-blue-50',
       label: 'Round Robin',
       description: 'Agents take turns in sequence'
     };
   }
+  
+  // SelectorGroupChat
+  if (type.includes('selector')) {
+    return { 
+      icon: Target, 
+      color: 'text-purple-600', 
+      bgColor: 'bg-purple-50',
+      label: 'Selector',
+      description: 'LLM selects next speaker dynamically'
+    };
+  }
+  
+  // MagenticOneGroupChat
+  if (type.includes('magneticone') || type.includes('magenticone')) {
+    return { 
+      icon: Zap, 
+      color: 'text-yellow-600', 
+      bgColor: 'bg-yellow-50',
+      label: 'Magnetic One',
+      description: 'Generalist multi-agent for web/file tasks'
+    };
+  }
+  
+  // Swarm
+  if (type.includes('swarm')) {
+    return { 
+      icon: Network, 
+      color: 'text-green-600', 
+      bgColor: 'bg-green-50',
+      label: 'Swarm',
+      description: 'HandoffMessage for explicit transitions'
+    };
+  }
+  
+  // GraphFlow
+  if (type.includes('graphflow') || type.includes('graph')) {
+    return { 
+      icon: GitBranch, 
+      color: 'text-indigo-600', 
+      bgColor: 'bg-indigo-50',
+      label: 'Graph Flow',
+      description: 'Complex workflows with branches & loops'
+    };
+  }
+  
+  // Legacy team types for backward compatibility
   if (type.includes('hierarchical')) {
     return { 
       icon: GitBranch, 
@@ -52,6 +118,7 @@ const getTeamTypeInfo = (teamType?: string) => {
       description: 'Manager delegates to subordinates'
     };
   }
+  
   if (type.includes('cascading')) {
     return { 
       icon: ArrowRight, 
@@ -61,6 +128,7 @@ const getTeamTypeInfo = (teamType?: string) => {
       description: 'Try agents in sequence until success'
     };
   }
+  
   if (type.includes('broadcast')) {
     return { 
       icon: Broadcast, 
@@ -70,6 +138,7 @@ const getTeamTypeInfo = (teamType?: string) => {
       description: 'All agents receive same message'
     };
   }
+  
   if (type.includes('concurrent')) {
     return { 
       icon: Users, 
@@ -80,6 +149,7 @@ const getTeamTypeInfo = (teamType?: string) => {
     };
   }
   
+  // Default fallback
   return { 
     icon: Users, 
     color: 'text-gray-600', 
@@ -173,11 +243,11 @@ const AutogenNode: React.FC<AutogenNodeProps> = ({ data }) => {
 
   return (
     <>
-      <div className="bg-white rounded-md border border-gray-200 w-[220px]">
+      <div className="bg-white rounded-md border border-gray-200 w-[240px]">
         {/* Header with team type */}
-        <div className="p-1.5 border-b border-gray-100">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] font-medium text-gray-900">{data.label}</span>
+        <div className="p-2 border-b border-gray-100">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[12px] font-semibold text-gray-900">{data.label}</span>
             <div className="flex items-center gap-2"> 
               <span className="text-[9px] text-gray-500">{data.type}</span>
               <button 
@@ -189,23 +259,23 @@ const AutogenNode: React.FC<AutogenNodeProps> = ({ data }) => {
             </div>
           </div>
           
-          {/* Team Type Badge */}
-          <div className={`flex items-center gap-1 px-2 py-1 rounded-md ${teamTypeInfo.bgColor} mb-2`}>
-            <TeamTypeIcon className={`w-2 h-2 ${teamTypeInfo.color}`} />
-            <span className={`text-[9px] font-medium ${teamTypeInfo.color}`}>
-              {teamTypeInfo.label}
-            </span>
+          {/* Enhanced Team Type Badge */}
+          <div className={`flex items-center gap-2 px-2 py-1.5 rounded-md ${teamTypeInfo.bgColor} mb-2`}>
+            <TeamTypeIcon className={`w-3 h-3 ${teamTypeInfo.color}`} />
+            <div className="flex-1">
+              <span className={`text-[10px] font-semibold ${teamTypeInfo.color} block`}>
+                {teamTypeInfo.label}
+              </span>
+              <span className="text-[8px] text-gray-600 leading-tight">
+                {teamTypeInfo.description}
+              </span>
+            </div>
           </div>
           
-          {/* Team Type Description */}
-          <p className="text-[8px] text-gray-500 italic mb-1">
-            {teamTypeInfo.description}
-          </p>
-          
           {data.type === 'team' && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 mb-1">
               <span className="text-[10px] text-gray-700">Coordination:</span>
-              <span className="px-1 py-0.5 text-[9px] bg-green-50 text-green-700 rounded">
+              <span className="px-1.5 py-0.5 text-[9px] bg-green-50 text-green-700 rounded">
                 {data.agents?.length || 0} Agent{(data.agents?.length || 0) !== 1 ? 's' : ''}
               </span>
             </div>
@@ -213,12 +283,12 @@ const AutogenNode: React.FC<AutogenNodeProps> = ({ data }) => {
         </div>
         
         {data.description && (
-          <div className="p-1.5 text-[9px] text-gray-600 border-b border-gray-100">
+          <div className="p-2 text-[9px] text-gray-600 border-b border-gray-100">
             {data.description}
           </div>
         )}
 
-        <div className="px-1.5 py-1">
+        <div className="px-2 py-1.5">
           <div className="flex items-center justify-between">
             <span className="text-[9px] font-medium text-gray-500 uppercase">MODEL</span>
             <span className="text-[9px] text-green-600">{data.model && data.model.length > 0 ? 1 : 0} Model</span>
@@ -232,7 +302,7 @@ const AutogenNode: React.FC<AutogenNodeProps> = ({ data }) => {
           </div>
         </div>
       
-        <div className="px-1.5 py-1">
+        <div className="px-2 py-1.5">
           <div className="text-[9px] font-medium text-gray-500 uppercase">
             AGENTS ({data.agents?.length || 0})
           </div>
@@ -264,7 +334,7 @@ const AutogenNode: React.FC<AutogenNodeProps> = ({ data }) => {
           </div>
         </div>
       
-        <div className="px-1.5 py-1 border-t border-gray-100">
+        <div className="px-2 py-1.5 border-t border-gray-100">
           <div className="text-[9px] font-medium text-gray-500 uppercase">
             TERMINATIONS
           </div>
