@@ -134,3 +134,5 @@ export const resetFlowState = () => {
 };
 
 export const getFlowState = () => conversationFlowState;
+
+export { conversationFlowState }
