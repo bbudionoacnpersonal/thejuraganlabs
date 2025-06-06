@@ -325,7 +325,7 @@ export const focusAreas = [
     value: 'social_commerce',
     label: 'Social Commerce',
     keyConsiderations: [
-      'Social media integration',
+      'Social media Tiktok and Instragram integration',
       'Influencer analytics',
       'Engagement optimization',
       'Conversion tracking'
