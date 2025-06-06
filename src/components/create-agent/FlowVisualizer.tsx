@@ -14,6 +14,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import PlayMsgNode from './PlayMsgNode';
 import { Message } from '@/types';
+import { teamStructure } from '@/mockdata/teamStructure';
 
 interface FlowVisualizerProps {
   messages: Message[];
@@ -60,8 +61,8 @@ const FlowVisualizerContent: React.FC<FlowVisualizerProps> = ({ messages }) => {
 
         // Add team node if we have steps (showing team coordination)
         if (message.steps && message.steps.length > 0) {
-          // Determine team type from the steps pattern
-          const teamType = determineTeamTypeFromSteps(message.steps);
+          // 🎯 ENHANCED: Extract team type from provider attribute
+          const teamType = extractTeamTypeFromProvider();
           const teamDescription = generateTeamDescription(message.steps, userMessage.content);
           
           const teamNode = {
@@ -70,7 +71,7 @@ const FlowVisualizerContent: React.FC<FlowVisualizerProps> = ({ messages }) => {
             data: {
               type: 'team',
               teamType: teamType,
-              label: `${teamType.replace(/([A-Z])/g, ' $1').trim()} Team`,
+              label: `${formatTeamTypeName(teamType)} Team`,
               description: teamDescription,
               content: `Coordinating ${message.steps.length} agents using ${teamType} pattern`,
               agents: message.steps.map(step => ({
@@ -195,48 +196,54 @@ const FlowVisualizerContent: React.FC<FlowVisualizerProps> = ({ messages }) => {
     setEdges(generatedEdges);
   }, [messages, fitView, setNodes, setEdges]);
 
-  // Helper function to determine team type from step patterns
-  const determineTeamTypeFromSteps = (steps: any[]) => {
-    if (steps.length <= 1) return 'SingleAgent';
-    
-    // Analyze agent patterns
-    const agentNames = steps.map(step => step.agent);
-    const uniqueAgents = [...new Set(agentNames)];
-    
-    // Check for round-robin pattern (agents taking turns)
-    if (uniqueAgents.length > 1) {
-      const isRoundRobin = agentNames.every((agent, index) => {
-        if (index === 0) return true;
-        const prevAgent = agentNames[index - 1];
-        return agent !== prevAgent;
-      });
-      
-      if (isRoundRobin) return 'RoundRobinGroupChat';
+  // 🎯 CRITICAL: Extract team type from provider attribute in team structure
+  const extractTeamTypeFromProvider = (): string => {
+    // First, try to get from the actual team structure provider
+    if (teamStructure?.provider) {
+      const teamType = extractTeamTypeFromProviderString(teamStructure.provider);
+      if (teamType) {
+        console.log('🎯 Extracted team type from provider:', teamType);
+        return teamType;
+      }
     }
     
-    // Check for hierarchical pattern (one main agent, others as specialists)
-    const agentCounts = agentNames.reduce((acc, agent) => {
-      acc[agent] = (acc[agent] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    // Fallback: Default team type
+    console.log('⚠️ No provider found, using default RoundRobinGroupChat');
+    return 'RoundRobinGroupChat';
+  };
+
+  // Extract team type from provider string (e.g., "autogen_agentchat.teams.RoundRobinGroupChat")
+  const extractTeamTypeFromProviderString = (provider: string): string | null => {
+    if (!provider || typeof provider !== 'string') return null;
     
-    const sortedAgents = Object.entries(agentCounts).sort(([,a], [,b]) => b - a);
-    if (sortedAgents.length > 1 && sortedAgents[0][1] > sortedAgents[1][1] * 2) {
-      return 'HierarchicalGroupChat';
+    // Match pattern: *.teams.<TeamType>
+    const teamTypeMatch = provider.match(/\.teams\.([A-Za-z]+(?:GroupChat|Chat|Flow|Swarm)?)/);
+    if (teamTypeMatch) {
+      console.log('✅ Found team type in provider:', teamTypeMatch[1]);
+      return teamTypeMatch[1];
     }
     
-    // Check for cascading pattern (sequential fallback)
-    if (uniqueAgents.length === agentNames.length) {
-      return 'CascadingGroupChat';
+    // Alternative patterns for different naming conventions
+    const alternativeMatch = provider.match(/([A-Za-z]+(?:GroupChat|Chat|Flow|Swarm))$/);
+    if (alternativeMatch) {
+      console.log('✅ Found team type (alternative pattern):', alternativeMatch[1]);
+      return alternativeMatch[1];
     }
     
-    // Check for selector pattern (dynamic selection)
-    if (steps.some(step => step.content.toLowerCase().includes('select') || step.content.toLowerCase().includes('choose'))) {
-      return 'SelectorGroupChat';
-    }
-    
-    // Default to RoundRobin for multi-agent scenarios
-    return uniqueAgents.length > 1 ? 'RoundRobinGroupChat' : 'SingleAgent';
+    console.log('❌ No team type found in provider:', provider);
+    return null;
+  };
+
+  // Format team type name for display
+  const formatTeamTypeName = (teamType: string): string => {
+    // Convert CamelCase to readable format
+    return teamType
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim()
+      .replace(/Group Chat$/, 'Group')
+      .replace(/Chat$/, '')
+      .trim();
   };
 
   // Helper function to generate team description
@@ -280,7 +287,7 @@ const FlowVisualizerContent: React.FC<FlowVisualizerProps> = ({ messages }) => {
       />
       <Panel position="top-left" className="bg-dark-surface/50 backdrop-blur-sm p-2 rounded-md border border-dark-border">
         <div className="flex items-center gap-2 text-xs text-gray-400">
-          <span>Flow visualization of current message</span>
+          <span>Flow visualization - Team Type: {extractTeamTypeFromProvider()}</span>
         </div>
       </Panel>
     </ReactFlow>

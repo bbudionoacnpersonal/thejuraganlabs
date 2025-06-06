@@ -452,6 +452,9 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
 
     // 2. Team Node (ONLY from current conversation analysis, not mockdata)
     if (autogenStructure && autogenStructure.config.participants.length > 0) {
+      // 🎯 CRITICAL: Extract team type from provider attribute
+      const teamType = extractTeamTypeFromProvider(autogenStructure.provider);
+      
       const teamNode: Node = {
         id: 'team',
         type: 'custom',
@@ -459,7 +462,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         data: {
           label: autogenStructure.label,
           type: 'team',
-          teamType: autogenStructure.provider.split('.').pop(), // Pass team type for enhanced display
+          teamType: teamType, // Pass extracted team type for enhanced display
           description: autogenStructure.description,
           model: autogenStructure.config.model_client?.config.model || 'gpt-4o-mini',
           agents: autogenStructure.config.participants.map(p => ({
@@ -509,7 +512,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       const participants = autogenStructure.config.participants;
       if (participants.length > 0) {
         const agentPositions = generateAgentPositions(
-          autogenStructure.provider.split('.').pop() || 'RoundRobinGroupChat',
+          teamType,
           participants.length
         );
 
@@ -554,7 +557,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
 
         // Add team-type specific inter-agent connections
         addTeamTypeConnections(
-          autogenStructure.provider.split('.').pop() || 'RoundRobinGroupChat',
+          teamType,
           participants,
           newEdges,
           conversationState
@@ -643,6 +646,31 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     });
     return { nodes: newNodes, edges: newEdges };
   }, [conversationState, isAnalyzing, taskGenerated, generatedTask, expectedOutput, hasInitialStructure]);
+
+  // 🎯 CRITICAL: Extract team type from provider attribute
+  const extractTeamTypeFromProvider = (provider: string): string => {
+    if (!provider || typeof provider !== 'string') {
+      console.log('⚠️ No provider found, using default RoundRobinGroupChat');
+      return 'RoundRobinGroupChat';
+    }
+    
+    // Match pattern: *.teams.<TeamType>
+    const teamTypeMatch = provider.match(/\.teams\.([A-Za-z]+(?:GroupChat|Chat|Flow|Swarm)?)/);
+    if (teamTypeMatch) {
+      console.log('✅ Extracted team type from provider:', teamTypeMatch[1]);
+      return teamTypeMatch[1];
+    }
+    
+    // Alternative patterns for different naming conventions
+    const alternativeMatch = provider.match(/([A-Za-z]+(?:GroupChat|Chat|Flow|Swarm))$/);
+    if (alternativeMatch) {
+      console.log('✅ Extracted team type (alternative pattern):', alternativeMatch[1]);
+      return alternativeMatch[1];
+    }
+    
+    console.log('❌ No team type found in provider, using default:', provider);
+    return 'RoundRobinGroupChat';
+  };
 
   // Generate agent positions based on team type
   const generateAgentPositions = (teamType: string, agentCount: number) => {
