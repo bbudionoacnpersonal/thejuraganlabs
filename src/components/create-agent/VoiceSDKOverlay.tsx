@@ -40,6 +40,10 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     }
   };
 
+  // Get user's industry and focus areas
+  const userIndustry = localStorage.getItem('user_industry') || '';
+  const userFocusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
+
   const conversation = useConversation({
     agentId: 'agent_01jvw7ms1jfbe8c3ptec0na5z9',
     onConnect: () => {
@@ -76,6 +80,10 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       const sessionId = await conversation.startSession({
         clientTools: {
           task_generator: handleTaskGenerator
+        },
+        context: {
+          industry: userIndustry,
+          focusAreas: userFocusAreas
         }
       });
       setConversationId(sessionId);
