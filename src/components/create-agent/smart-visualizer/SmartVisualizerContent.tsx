@@ -42,7 +42,6 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   isVisible,
   onClose,
   conversationState,
-  agentFlow = [],
   messages = [],
   conversationId = null,
   onJsonGenerated
