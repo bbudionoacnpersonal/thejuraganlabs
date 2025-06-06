@@ -171,8 +171,8 @@ export const industries = [
         - Upstream process
         - midstream process
         - downstream process 
-        - Progress tracking
-        - Educational analytics`,
+        - asset invesment management
+        - well and asset management,
       toolPriorities: ['content_adapter', 'progress_tracker', 'assessment_generator']
     }
   },
