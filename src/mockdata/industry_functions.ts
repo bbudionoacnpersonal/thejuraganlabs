@@ -162,7 +162,7 @@ export const industries = [
     label: 'Energy, Oil & Gas',
     keyPrompts: {
       agentConsiderations: [
-        'Learning path customization',
+        'Renewable energy',
         'Student progress tracking',
         'Content adaptation',
         'Assessment automation'
