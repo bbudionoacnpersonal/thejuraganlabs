@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { useConversation } from '@elevenlabs/react';
 import ConversationAnalysis from './ConversationAnalysis';
-import ConversationFlowVisualizer from './ConversationFlowVisualizer';
+import SmartVisualizer from './SmartVisualizer';
 import { Message } from '@/types';
 import { industries, focusAreas } from '@/mockdata/industry_functions';
+import { resetFlowState } from '@/mockdata/temp_conv_agentflow';
 
 interface VoiceSDKOverlayProps {
   isVisible: boolean;
@@ -40,10 +41,11 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
-  const [showFlowVisualizer, setShowFlowVisualizer] = useState(false);
+  const [showSmartVisualizer, setShowSmartVisualizer] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversationState, setConversationState] = useState<'idle' | 'listening' | 'processing' | 'responding'>('idle');
   const [agentFlow, setAgentFlow] = useState<AgentFlowStep[]>([]);
+  const [conversationMessages, setConversationMessages] = useState<Array<{ role: string; content: string; timestamp: number }>>([]);
 
   // Get user's industry and focus areas from localStorage
   const userIndustry = localStorage.getItem('user_industry') || '';
@@ -99,7 +101,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       console.log("disconnected");
       setConversationState('idle');
       setAgentFlow([]);
-      setShowFlowVisualizer(false);
+      setConversationMessages([]);
+      setShowSmartVisualizer(false);
+      resetFlowState(); // Reset the flow state when disconnecting
     },
     onError: error => {
       console.log(error);
@@ -108,6 +112,14 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     },
     onMessage: message => {
       console.log(message);
+      
+      // Store conversation messages for analysis
+      const newMessage = {
+        role: message.source === 'ai' ? 'assistant' : 'user',
+        content: message.message,
+        timestamp: Date.now()
+      };
+      setConversationMessages(prev => [...prev, newMessage]);
       
       // Update conversation state based on message source
       if (message.source === 'user') {
@@ -147,14 +159,14 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         }, 1000);
       }
       
-      const newMessage: Message = {
+      const messageForCallback: Message = {
         id: Math.random().toString(36).substr(2, 9),
         role: message.source === 'ai' ? 'assistant' : 'user',
         content: message.message,
         timestamp: Date.now()
       };
       
-      onMessage(newMessage);
+      onMessage(messageForCallback);
     }
   });
 
@@ -186,6 +198,10 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     }
     
     try {
+      // Reset flow state when starting new conversation
+      resetFlowState();
+      setConversationMessages([]);
+      
       const sessionId = await conversation.startSession({
         dynamicVariables: {
           industry: userIndustry,
@@ -198,7 +214,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         }
       });
       setConversationId(sessionId);
-      setShowFlowVisualizer(true);
+      setShowSmartVisualizer(true);
       console.log('ConversationID: ', sessionId);
     } catch (err) {
       setError("Failed to start conversation");
@@ -209,9 +225,11 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const stopConversation = async () => {
     try {
       await conversation.endSession();
-      setShowFlowVisualizer(false);
+      setShowSmartVisualizer(false);
       setAgentFlow([]);
+      setConversationMessages([]);
       setConversationState('idle');
+      resetFlowState();
     } catch (err) {
       console.error("Error ending conversation:", err);
     }
@@ -244,13 +262,13 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 
           {/* Centered container for both components */}
           <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-            <div className="flex items-center gap-6 pointer-events-auto">
-              {/* Voice SDK Component */}
+            <div className="flex items-center gap-8 pointer-events-auto">
+              {/* Voice SDK Component - 25% width (400px) */}
               <motion.div
                 initial={{ scale: 0.9, x: -50 }}
                 animate={{ scale: 1, x: 0 }}
                 exit={{ scale: 0.9, x: -50 }}
-                className="relative bg-dark-surface/90 backdrop-blur-md p-6 border border-dark-border rounded-xl shadow-xl w-[350px]"
+                className="relative bg-dark-surface/90 backdrop-blur-md p-6 border border-dark-border rounded-xl shadow-xl w-[400px]"
               >
                 <button
                   onClick={handleClose}
@@ -380,13 +398,14 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                 </div>
               </motion.div>
 
-              {/* Flow Visualizer Component */}
-              {showFlowVisualizer && (
-                <ConversationFlowVisualizer
-                  isVisible={showFlowVisualizer}
-                  onClose={() => setShowFlowVisualizer(false)}
+              {/* Smart Visualizer Component - 65% width (800px), bigger and better positioned */}
+              {showSmartVisualizer && (
+                <SmartVisualizer
+                  isVisible={showSmartVisualizer}
+                  onClose={() => setShowSmartVisualizer(false)}
                   conversationState={conversationState}
                   agentFlow={agentFlow}
+                  messages={conversationMessages}
                 />
               )}
             </div>

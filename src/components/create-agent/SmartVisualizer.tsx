@@ -33,7 +33,7 @@ import {
 import { analyzeConversationForAutogenStructure } from '@/services/anthropicService';
 import { transformTeamStructureToFlow } from '@/utils/visualEditorUtils';
 
-interface ConversationFlowVisualizerProps {
+interface SmartVisualizerProps {
   isVisible: boolean;
   onClose: () => void;
   conversationState: 'idle' | 'listening' | 'processing' | 'responding';
@@ -206,7 +206,7 @@ const nodeTypes = {
 // Custom hook for resizable functionality only
 const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
   const [isResizing, setIsResizing] = useState(false);
-  const [size, setSize] = useState({ width: 600, height: 500 });
+  const [size, setSize] = useState({ width: 800, height: 600 }); // Bigger default size
   const [resizeDirection, setResizeDirection] = useState<string>('');
 
   useEffect(() => {
@@ -232,16 +232,16 @@ const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
       let newHeight = size.height;
 
       if (resizeDirection.includes('right')) {
-        newWidth = Math.max(400, e.clientX - rect.left);
+        newWidth = Math.max(600, e.clientX - rect.left); // Increased minimum width
       }
       if (resizeDirection.includes('left')) {
-        newWidth = Math.max(400, rect.right - e.clientX);
+        newWidth = Math.max(600, rect.right - e.clientX);
       }
       if (resizeDirection.includes('bottom')) {
-        newHeight = Math.max(300, e.clientY - rect.top);
+        newHeight = Math.max(400, e.clientY - rect.top); // Increased minimum height
       }
       if (resizeDirection.includes('top')) {
-        newHeight = Math.max(300, rect.bottom - e.clientY);
+        newHeight = Math.max(400, rect.bottom - e.clientY);
       }
 
       setSize({ width: newWidth, height: newHeight });
@@ -273,7 +273,7 @@ const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
   return { size, isResizing };
 };
 
-const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProps> = ({
+const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   isVisible,
   onClose,
   conversationState,
@@ -831,7 +831,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
             conversationState === 'responding' ? 'bg-green-500 animate-pulse' :
             'bg-gray-500'
           }`} />
-          <h3 className="text-sm font-medium text-white">Agent Team Flow</h3>
+          <h3 className="text-sm font-medium text-white">Smart Visualizer</h3>
           <span className="text-xs text-gray-400 capitalize">
             ({isAnalyzing ? 'analyzing' : conversationState})
           </span>
@@ -913,12 +913,12 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
   );
 };
 
-const ConversationFlowVisualizer: React.FC<ConversationFlowVisualizerProps> = (props) => {
+const SmartVisualizer: React.FC<SmartVisualizerProps> = (props) => {
   return (
     <ReactFlowProvider>
-      <ConversationFlowVisualizerContent {...props} />
+      <SmartVisualizerContent {...props} />
     </ReactFlowProvider>
   );
 };
 
-export default ConversationFlowVisualizer;
+export default SmartVisualizer;
