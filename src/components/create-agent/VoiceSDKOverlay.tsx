@@ -279,7 +279,6 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                   }
                 >
                   End conversation
-                </button>
               </div>
 
               <motion.div
