@@ -28,10 +28,45 @@ const VisualEditor: React.FC<VisualEditorProps> = ({ teamStructure }) => {
     setSelectedNode(nodeData);
   };
   
-  const { nodes: initialNodes, edges: initialEdges } = React.useMemo(
-    () => transformTeamStructureToFlow(teamStructure, handleNodeEdit),
-    [teamStructure]
-  );
+  // 🎯 CRITICAL: Extract team type from provider attribute for enhanced display
+  const extractTeamTypeFromProvider = (provider: string): string => {
+    if (!provider || typeof provider !== 'string') {
+      console.log('⚠️ No provider found in VisualEditor, using default RoundRobinGroupChat');
+      return 'RoundRobinGroupChat';
+    }
+    
+    // Match pattern: *.teams.<TeamType>
+    const teamTypeMatch = provider.match(/\.teams\.([A-Za-z]+(?:GroupChat|Chat|Flow|Swarm)?)/);
+    if (teamTypeMatch) {
+      console.log('✅ VisualEditor extracted team type from provider:', teamTypeMatch[1]);
+      return teamTypeMatch[1];
+    }
+    
+    // Alternative patterns for different naming conventions
+    const alternativeMatch = provider.match(/([A-Za-z]+(?:GroupChat|Chat|Flow|Swarm))$/);
+    if (alternativeMatch) {
+      console.log('✅ VisualEditor extracted team type (alternative pattern):', alternativeMatch[1]);
+      return alternativeMatch[1];
+    }
+    
+    console.log('❌ VisualEditor: No team type found in provider, using default:', provider);
+    return 'RoundRobinGroupChat';
+  };
+
+  // Enhanced transformation with team type extraction
+  const { nodes: initialNodes, edges: initialEdges } = React.useMemo(() => {
+    // Extract team type from the team structure provider
+    const teamType = extractTeamTypeFromProvider(teamStructure.provider);
+    
+    console.log('🎨 VisualEditor: Transforming team structure with enhanced team type:', {
+      teamName: teamStructure.label,
+      provider: teamStructure.provider,
+      extractedTeamType: teamType,
+      participantCount: teamStructure.config.participants.length
+    });
+    
+    return transformTeamStructureToFlow(teamStructure, handleNodeEdit, teamType);
+  }, [teamStructure]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -55,6 +90,18 @@ const VisualEditor: React.FC<VisualEditorProps> = ({ teamStructure }) => {
       })
     );
     setSelectedNode(null);
+  };
+
+  // Extract team type for display in panel
+  const currentTeamType = extractTeamTypeFromProvider(teamStructure.provider);
+  const formatTeamTypeName = (teamType: string): string => {
+    return teamType
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim()
+      .replace(/Group Chat$/, 'Group')
+      .replace(/Chat$/, '')
+      .trim();
   };
 
   return (
@@ -84,7 +131,20 @@ const VisualEditor: React.FC<VisualEditorProps> = ({ teamStructure }) => {
         />
         <Panel position="top-left" className="bg-dark-surface/50 backdrop-blur-sm p-2 rounded-md border border-dark-border">
           <div className="flex items-center gap-2 text-xs text-gray-400">
-            <span>Use your mouse for zoom in and out</span>
+            <span>Team Type: {formatTeamTypeName(currentTeamType)}</span>
+            <span>•</span>
+            <span>{teamStructure.config.participants.length} Agents</span>
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            {teamStructure.description}
+          </div>
+        </Panel>
+        <Panel position="top-right" className="bg-dark-surface/50 backdrop-blur-sm p-2 rounded-md border border-dark-border">
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <span>Provider: {teamStructure.provider.split('.').pop()}</span>
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            Version: {teamStructure.component_version}
           </div>
         </Panel>
       </ReactFlow>
