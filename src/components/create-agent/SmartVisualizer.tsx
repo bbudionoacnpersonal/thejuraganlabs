@@ -107,6 +107,8 @@ const ConversationNode = ({ data }: { data: any }) => {
       switch (data.type) {
         case 'user':
           return 'bg-blue-500 border-blue-600 text-white';
+        case 'final_task':
+          return 'bg-green-600 border-green-700 text-white';
         case 'team':
           return 'bg-green-500 border-green-600 text-white';
         case 'agent':
@@ -120,6 +122,8 @@ const ConversationNode = ({ data }: { data: any }) => {
       switch (data.type) {
         case 'user':
           return '👤';
+        case 'final_task':
+          return '🎯';
         case 'team':
           return getTeamTypeIcon(data.teamType);
         case 'agent':
@@ -410,6 +414,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   const [teamStructure, setTeamStructure] = useState<TeamStructure | null>(null);
   const [progressiveElements, setProgressiveElements] = useState<any>({});
   const [error, setError] = useState<string | null>(null);
+  const [hasGeneratedTask, setHasGeneratedTask] = useState(false);
   
   const windowRef = useRef<HTMLDivElement>(null);
   const { size, isResizing } = useResizable(windowRef);
@@ -433,6 +438,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         setNodes([]);
         setEdges([]);
         setError(null);
+        setHasGeneratedTask(false);
         
         console.log('✅ Visualizer state reset for new conversation');
       }
@@ -479,6 +485,11 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         if (analysis.teamStructure) {
           setTeamStructure(analysis.teamStructure);
         }
+
+        // Check if we should generate the final task
+        if (analysis.analysisStage === 'structure_complete' && !hasGeneratedTask) {
+          setHasGeneratedTask(true);
+        }
         
         setLastMessageCount(messages.length);
         
@@ -500,7 +511,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     }, 2000);
     
     return () => clearTimeout(timeoutId);
-  }, [messages, lastMessageCount, isAnalyzing, conversationId, analysisStage, teamStructure]);
+  }, [messages, lastMessageCount, isAnalyzing, conversationId, analysisStage, teamStructure, hasGeneratedTask]);
 
   // Generate dynamic flow based on conversation progress with error handling
   const generateProgressiveFlow = useCallback(() => {
@@ -509,19 +520,19 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         stage: analysisStage,
         hasTeamStructure: !!teamStructure,
         progressiveElements,
-        conversationState
+        conversationState,
+        hasGeneratedTask
       });
       
       const newNodes: Node[] = [];
       const newEdges: Edge[] = [];
       let yPosition = 50;
 
-      // Stage 1: User Input (show final task example instead of actual input)
+      // Stage 1: User Input (show original user input)
       if (analysisStage !== 'initial' && messages.length > 0) {
         const userMessages = messages.filter(m => m.role === 'user');
         if (userMessages.length > 0) {
-          // Show example final task instead of actual user input
-          const finalTaskExample = generateFinalTaskExample(progressiveElements);
+          const lastUserMessage = userMessages[userMessages.length - 1];
           
           newNodes.push({
             id: 'user-input',
@@ -530,7 +541,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             data: {
               type: 'user',
               label: 'User Input',
-              description: finalTaskExample,
+              description: lastUserMessage.content.substring(0, 100) + (lastUserMessage.content.length > 100 ? '...' : ''),
               confidence: 1.0
             },
             sourcePosition: Position.Bottom,
@@ -559,21 +570,23 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         };
         newNodes.push(teamNode);
 
-        // Connect user input to team with enhanced edge
+        // Connect user input to team with enhanced animated edge
         if (newNodes.find(n => n.id === 'user-input')) {
           newEdges.push({
             id: 'edge-user-team',
             source: 'user-input',
             target: 'team',
             type: 'smoothstep',
-            animated: conversationState === 'processing' || isAnalyzing,
+            animated: true, // Always animated like FlowVisualizer
             style: { 
-              stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#10b981',
+              stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#4D9CFF',
               strokeWidth: 3 
             },
             markerEnd: {
               type: MarkerType.ArrowClosed,
-              color: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#10b981',
+              width: 12,
+              height: 12,
+              color: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#4D9CFF',
             },
             label: 'Team Coordination',
             labelStyle: { fontSize: 12, fontWeight: 600, fill: '#ffffff' },
@@ -629,21 +642,23 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           };
           newNodes.push(agentNode);
 
-          // Connect team to agent with enhanced edge
+          // Connect team to agent with enhanced animated edge
           if (newNodes.find(n => n.id === 'team')) {
             newEdges.push({
               id: `edge-team-agent-${index}`,
               source: 'team',
               target: `agent-${index}`,
               type: 'smoothstep',
-              animated: conversationState === 'responding',
+              animated: true, // Always animated like FlowVisualizer
               style: { 
-                stroke: conversationState === 'responding' ? '#10b981' : '#3b82f6',
+                stroke: conversationState === 'responding' ? '#10b981' : '#4D9CFF',
                 strokeWidth: 2 
               },
               markerEnd: {
                 type: MarkerType.ArrowClosed,
-                color: conversationState === 'responding' ? '#10b981' : '#3b82f6',
+                width: 12,
+                height: 12,
+                color: conversationState === 'responding' ? '#10b981' : '#4D9CFF',
               },
               label: `Agent ${index + 1}`,
               labelStyle: { fontSize: 10, fontWeight: 500, fill: '#ffffff' },
@@ -651,12 +666,59 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             });
           }
         });
+
+        yPosition += 280;
+      }
+
+      // Stage 4: Final Task Node (when structure is complete and task is generated)
+      if (analysisStage === 'structure_complete' && hasGeneratedTask) {
+        const finalTaskExample = generateFinalTaskExample(progressiveElements);
+        
+        const finalTaskNode: Node = {
+          id: 'final-task',
+          type: 'conversation',
+          position: { x: 400, y: yPosition },
+          data: {
+            type: 'final_task',
+            label: 'Final Task',
+            description: finalTaskExample,
+            confidence: 1.0
+          },
+          sourcePosition: Position.Bottom,
+          targetPosition: Position.Top,
+        };
+        newNodes.push(finalTaskNode);
+
+        // Connect team to final task with enhanced animated edge
+        if (newNodes.find(n => n.id === 'team')) {
+          newEdges.push({
+            id: 'edge-team-final-task',
+            source: 'team',
+            target: 'final-task',
+            type: 'smoothstep',
+            animated: true, // Always animated like FlowVisualizer
+            style: { 
+              stroke: '#10b981',
+              strokeWidth: 3 
+            },
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              width: 12,
+              height: 12,
+              color: '#10b981',
+            },
+            label: 'Final Task Generation',
+            labelStyle: { fontSize: 12, fontWeight: 600, fill: '#ffffff' },
+            labelBgStyle: { fill: '#1e1e1e', fillOpacity: 0.8 },
+          });
+        }
       }
 
       console.log('🎨 Generated progressive flow:', { 
         nodeCount: newNodes.length, 
         edgeCount: newEdges.length,
-        stage: analysisStage
+        stage: analysisStage,
+        hasGeneratedTask
       });
       
       return { nodes: newNodes, edges: newEdges };
@@ -665,22 +727,25 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       setError('Failed to generate flow visualization');
       return { nodes: [], edges: [] };
     }
-  }, [analysisStage, progressiveElements, teamStructure, conversationState, isAnalyzing, messages]);
+  }, [analysisStage, progressiveElements, teamStructure, conversationState, isAnalyzing, messages, hasGeneratedTask]);
 
   // Generate final task example based on progressive elements
   const generateFinalTaskExample = (elements: any) => {
     try {
       if (elements.teamName && elements.identifiedAgents && Array.isArray(elements.identifiedAgents)) {
         const agentNames = elements.identifiedAgents.map((a: any) => a.name || 'Agent').join(', ');
-        return `Create ${elements.teamName} with agents: ${agentNames} to handle the specified tasks efficiently.`;
+        const teamType = elements.teamType || 'RoundRobinGroupChat';
+        const teamTypeName = teamType.split('GroupChat')[0].replace(/([A-Z])/g, ' $1').trim();
+        
+        return `Deploy ${elements.teamName} using ${teamTypeName} coordination with specialized agents: ${agentNames}. The team will process user requests efficiently through coordinated agent collaboration.`;
       }
       if (elements.teamName) {
-        return `Set up ${elements.teamName} for coordinated task processing.`;
+        return `Deploy ${elements.teamName} for coordinated AI task processing with intelligent agent collaboration.`;
       }
-      return 'Create an AI agents team to handle user requests efficiently.';
+      return 'Deploy AI agents team to handle complex user requests through intelligent multi-agent coordination and task distribution.';
     } catch (error) {
       console.error('Error generating final task example:', error);
-      return 'Create an AI agents team to handle user requests efficiently.';
+      return 'Deploy AI agents team to handle complex user requests through intelligent multi-agent coordination.';
     }
   };
 
@@ -741,7 +806,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       case 'agents_emerging':
         return '🤖 Agents Emerging';
       case 'structure_complete':
-        return '✅ Structure Complete';
+        return hasGeneratedTask ? '✅ Task Generated' : '✅ Structure Complete';
       default:
         return '⚡ Analyzing...';
     }
@@ -877,6 +942,11 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                   {progressiveElements.identifiedAgents && Array.isArray(progressiveElements.identifiedAgents) && progressiveElements.identifiedAgents.length > 0 && (
                     <div className="text-xs text-gray-500 mt-1">
                       Agents: {progressiveElements.identifiedAgents.length}
+                    </div>
+                  )}
+                  {hasGeneratedTask && (
+                    <div className="text-xs text-green-500 mt-1">
+                      ✅ Final Task Generated
                     </div>
                   )}
                 </Panel>
