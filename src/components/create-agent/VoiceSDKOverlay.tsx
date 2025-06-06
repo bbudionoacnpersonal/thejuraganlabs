@@ -30,6 +30,36 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
 
+  // Get industry and focus area from localStorage
+  const industry = localStorage.getItem('user_industry') || '';
+  const focusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
+
+  const createSystemPrompt = (industry: string, focusAreas: string[]): string => {
+    let prompt = `You are an AI agent development expert for the ${industry} industry`;
+    
+    if (focusAreas.length > 0) {
+      prompt += `, specializing in ${focusAreas.join(', ')}`;
+    }
+    
+    prompt += `. Your goal is to help users create effective AI agent teams that solve specific business problems. 
+    Consider the following aspects when providing assistance:
+    - Industry-specific requirements and challenges
+    - Best practices for ${industry} sector
+    - Compliance and regulatory considerations
+    - Integration with existing systems
+    - Scalability and performance requirements`;
+
+    if (industry === 'finance') {
+      prompt += `\nPay special attention to security, compliance (SOX, Basel), and real-time processing capabilities.`;
+    } else if (industry === 'healthcare') {
+      prompt += `\nEnsure HIPAA compliance and patient data privacy in all agent configurations.`;
+    } else if (industry === 'retail') {
+      prompt += `\nFocus on customer experience, inventory management, and omnichannel capabilities.`;
+    }
+
+    return prompt;
+  };
+
   const handleTaskGenerator = async (input: any): Promise<void> => {
     try {
       console.log('Simulating task generation for input:', input);
@@ -73,13 +103,23 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     }
     
     try {
+      // Create system prompt based on industry and focus areas
+      const systemPrompt = createSystemPrompt(industry, focusAreas);
+
       const sessionId = await conversation.startSession({
+        context: {
+          industry: industry,
+          focus_areas: focusAreas,
+        },
+        prompt: {
+          preamble: systemPrompt,
+        },
         clientTools: {
           task_generator: handleTaskGenerator
         }
       });
       setConversationId(sessionId);
-      console.log('ConversationID: ', sessionId);
+      console.log('ConversationID with context:', sessionId);
     } catch (err) {
       setError("Failed to start conversation");
       console.error(err);
