@@ -30,6 +30,10 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
 
+  // Get user's industry and focus areas
+  const userIndustry = localStorage.getItem('user_industry') || '';
+  const userFocusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
+
   const handleTaskGenerator = async (input: any): Promise<void> => {
     try {
       console.log('Simulating task generation for input:', input);
@@ -39,10 +43,6 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       throw error;
     }
   };
-
-  // Get user's industry and focus areas
-  const userIndustry = localStorage.getItem('user_industry') || '';
-  const userFocusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
 
   const conversation = useConversation({
     agentId: 'agent_01jvw7ms1jfbe8c3ptec0na5z9',
@@ -83,7 +83,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
         },
         context: {
           industry: userIndustry,
-          focusAreas: userFocusAreas
+          function_focus: userFocusAreas
         }
       });
       setConversationId(sessionId);
