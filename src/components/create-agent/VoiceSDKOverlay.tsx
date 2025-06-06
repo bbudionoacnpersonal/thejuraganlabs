@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { useConversation } from '@elevenlabs/react';
 import ConversationAnalysis from './ConversationAnalysis';
 import { Message } from '@/types';
+import { industries, focusAreas } from '@/mockdata/industry_functions';
 
 interface VoiceSDKOverlayProps {
   isVisible: boolean;
@@ -29,6 +30,14 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+
+  // Get industry and focus areas from localStorage
+  const userIndustry = localStorage.getItem('user_industry');
+  const userFocusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
+
+  // Find full industry and focus area details
+  const industryDetails = industries.find(i => i.value === userIndustry);
+  const focusAreaDetails = focusAreas.filter(f => userFocusAreas.includes(f.value));
 
   const handleTaskGenerator = async (input: any): Promise<void> => {
     try {
@@ -62,7 +71,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       };
       
       onMessage(newMessage);
-    }
+    },
+    industry: userIndustry || '',
+    function_focus: userFocusAreas
   });
 
   async function startConversation() {
@@ -73,10 +84,18 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     }
     
     try {
+      // Include industry and focus area context in system message
+      const systemContext = `Industry: ${industryDetails?.label || 'Not specified'}
+${industryDetails?.keyPrompts.systemInstructions || ''}
+
+Focus Areas: ${focusAreaDetails.map(f => f.label).join(', ')}
+Key Considerations: ${focusAreaDetails.map(f => f.keyConsiderations.join(', ')).join(' | ')}`;
+
       const sessionId = await conversation.startSession({
         clientTools: {
           task_generator: handleTaskGenerator
-        }
+        },
+        systemMessage: systemContext
       });
       setConversationId(sessionId);
       console.log('ConversationID: ', sessionId);
