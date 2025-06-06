@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
-import { XMarkIcon, ChatBubbleLeftRightIcon, BeakerIcon, ClockIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Wrench } from 'lucide-react';
 import TranscriptHandler from './TranscriptHandler';
 
@@ -364,7 +364,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
             {/* Header */}
             <div className="p-4 border-b border-dark-border flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ChatBubbleLeftRightIcon className="h-4 w-4 text-secondary-600" />
                 <h2 className="text-lg font-semibold text-white">Conversation Analysis</h2>
                 {conversationId && (
                   <span className="text-xs text-gray-400">• {conversationId.slice(-8)}</span>
@@ -397,7 +396,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
               ) : error ? (
                 <div className="text-center text-error-500 p-4">
                   <div className="mb-4">
-                    <ChatBubbleLeftRightIcon className="h-12 w-12 text-error-500 mx-auto mb-2" />
                     <h3 className="text-lg font-medium text-white mb-2">Unable to Load Conversation</h3>
                     <p className="text-sm">{error}</p>
                   </div>
@@ -417,7 +415,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                   <div className="grid grid-cols-4 gap-2">
                     <div className="bg-dark-400 rounded-lg p-2">
                       <div className="flex items-center gap-2 text-gray-400 mb-2">
-                        <BeakerIcon className="h-2 w-2" />
                         <span className="text-sm">Status</span>
                       </div>
                       <p className="text-sm font-semibold text-white capitalize">
@@ -427,7 +424,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                     
                     <div className="bg-dark-400 rounded-lg p-2">
                       <div className="flex items-center gap-2 text-gray-400 mb-2">
-                        <ClockIcon className="h-2 w-2" />
                         <span className="text-sm">Duration</span>
                       </div>
                       <p className="text-sm font-semibold text-white">
@@ -437,7 +433,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                     
                     <div className="bg-dark-400 rounded-lg p-2">
                       <div className="flex items-center gap-2 text-gray-400 mb-2">
-                        <ChatBubbleLeftRightIcon className="h-2 w-2" />
                         <span className="text-sm">Messages</span>
                       </div>
                       <p className="text-sm font-semibold text-white">
@@ -447,7 +442,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
 
                     <div className="bg-dark-400 rounded-lg p-2">
                       <div className="flex items-center gap-2 text-gray-400 mb-2">
-                        <SparklesIcon className="h-2 w-2" />
                         <span className="text-sm">Language</span>
                       </div>
                       <p className="text-sm font-semibold text-white">
@@ -569,29 +563,6 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                                 </span>
                               </div>
                               <p className="text-sm">{entry.message}</p>
-
-                              {/* LLM Usage */}
-                              {entry.llm_usage?.model_usage && (
-                                <div className="mt-2 pt-2 border-t border-dark-border">
-                                  <div className="flex items-center gap-1 text-xs text-gray-400 mb-1">
-                                    <SparklesIcon className="h-2 w-2" />
-                                    <span>LLM Usage</span>
-                                  </div>
-                                  {Object.entries(entry.llm_usage.model_usage).map(([model, usage], idx) => (
-                                    <div key={idx} className="text-xs text-gray-300 mt-1">
-                                      <div className="text-primary-400">{model}</div>
-                                      <div className="grid grid-cols-2 gap-2 mt-0.5">
-                                        {usage.input && (
-                                          <div>Input: {usage.input.tokens} tokens (${usage.input.price.toFixed(4)})</div>
-                                        )}
-                                        {usage.output_total && (
-                                          <div>Output: {usage.output_total.tokens} tokens (${usage.output_total.price.toFixed(4)})</div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                           </div>
                         ))}

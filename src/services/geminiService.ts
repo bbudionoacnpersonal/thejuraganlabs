@@ -394,9 +394,7 @@ const extractValidJSON = (text: string): string | null => {
 // Legacy function for backward compatibility
 export const analyzeConversationForAutogenStructure = async (
   messages: string[],
-  currentStructure?: TeamStructure | null,
-  userIndustry?: string,
-  userFocusAreas?: string[]
+  currentStructure?: TeamStructure | null
 ): Promise<AnalysisResult> => {
   console.log('⚠️ Using legacy function - redirecting to progressive analysis');
   return analyzeConversationProgressive(messages, currentStructure);

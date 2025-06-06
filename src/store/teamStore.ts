@@ -43,6 +43,7 @@ const mockTeams: Team[] = [
     members: [mockUsers['1'], mockUsers['2']],
     ownerId: '1',
     createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    aiTeamType: 'RoundRobinGroupChat',
     agents: [],
   },
   {
@@ -52,6 +53,7 @@ const mockTeams: Team[] = [
     members: [mockUsers['1'], mockUsers['3']],
     ownerId: '1',
     createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+    aiTeamType: 'HierarchicalGroupChat',
     agents: [],
   },
 ];
@@ -101,6 +103,7 @@ const useTeamStore = create<TeamState>((set, get) => ({
         members: [owner],
         ownerId,
         createdAt: new Date().toISOString(),
+        aiTeamType: 'RoundRobinGroupChat',
         agents: [],
       };
       
