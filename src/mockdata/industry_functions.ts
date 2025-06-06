@@ -163,7 +163,7 @@ export const industries = [
     keyPrompts: {
       agentConsiderations: [
         'Renewable energy',
-        'Student progress tracking',
+        'Goethermalg',
         'Content adaptation',
         'Assessment automation'
       ],
