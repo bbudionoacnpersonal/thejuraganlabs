@@ -30,7 +30,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [isSessionActive, setIsSessionActive] = useState(false);
+  
 
   // Get industry and focus area from localStorage
   const userIndustry = localStorage.getItem('user_industry') || '';
