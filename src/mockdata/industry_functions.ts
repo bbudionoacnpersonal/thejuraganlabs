@@ -8,7 +8,7 @@ export const industries = [
         'Regulatory compliance (SOX, Basel III, GDPR)',
         'Real-time transaction processing',
         'Fraud detection and prevention',
-         'Fraud detection and prevention',
+        'Fraud detection and prevention',
         'Risk assessment and management'
       ],
       systemInstructions: `You are a financial services AI expert. Focus on:
