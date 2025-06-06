@@ -158,7 +158,7 @@ export const industries = [
     }
   },
   { 
-    value: 'resources',
+    value: 'resources energy',
     label: 'Energy, Oil & Gas',
     keyPrompts: {
       agentConsiderations: [
