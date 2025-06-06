@@ -10,7 +10,7 @@ interface AnalysisResult {
 
 export const analyzeConversationForAutogenStructure = async (
   messages: string[],
-  currentStructure?: TeamStructure,
+  currentStructure?: TeamStructure | null, // Explicitly allow null
   userIndustry?: string,
   userFocusAreas?: string[]
 ): Promise<AnalysisResult> => {
@@ -23,6 +23,14 @@ export const analyzeConversationForAutogenStructure = async (
     const hasAgentMention = /agent|assistant|bot|ai/i.test(conversationText);
     const hasToolMention = /tool|function|capability|integration/i.test(conversationText);
     const hasTaskMention = /task|goal|objective|purpose/i.test(conversationText);
+    
+    console.log('🔍 Anthropic Analysis Input:', {
+      messageCount: messages.length,
+      hasCurrentStructure: !!currentStructure,
+      userIndustry,
+      userFocusAreas,
+      conversationText: conversationText.substring(0, 200) + '...'
+    });
     
     // Determine conversation stage
     let conversationStage: 'initial' | 'team_discussion' | 'agent_configuration' | 'finalization' = 'initial';
@@ -39,9 +47,10 @@ export const analyzeConversationForAutogenStructure = async (
       confidence = 0.7;
     }
     
-    // Generate realistic Autogen structure based on conversation
+    // 🚨 CRITICAL: Generate FRESH Autogen structure based ONLY on current conversation
+    // Do NOT use currentStructure as a template - analyze from scratch
     const teamStructure: TeamStructure = {
-      provider: "autogen_agentchat.teams.RoundRobinGroupChat",
+      provider: determineTeamType(conversationText),
       component_type: "team",
       version: 1,
       component_version: 1,
@@ -97,17 +106,44 @@ export const analyzeConversationForAutogenStructure = async (
       }
     };
     
+    console.log('✅ Generated FRESH Autogen structure:', {
+      teamName: teamStructure.label,
+      teamType: teamStructure.provider.split('.').pop(),
+      participantCount: teamStructure.config.participants.length,
+      stage: conversationStage,
+      confidence
+    });
+    
     return {
       teamStructure,
       conversationStage,
       confidence,
-      reasoning: `Analyzed ${messages.length} messages and identified ${conversationStage} stage with ${confidence * 100}% confidence`
+      reasoning: `Analyzed ${messages.length} messages and generated fresh structure for ${conversationStage} stage with ${confidence * 100}% confidence`
     };
     
   } catch (error) {
     console.error('Error in Anthropic analysis:', error);
     throw new Error('Failed to analyze conversation');
   }
+};
+
+const determineTeamType = (conversationText: string): string => {
+  // Analyze conversation to determine appropriate team type
+  if (/round.?robin|rotate|turn/i.test(conversationText)) {
+    return "autogen_agentchat.teams.RoundRobinGroupChat";
+  }
+  if (/hierarch|manager|supervisor|lead/i.test(conversationText)) {
+    return "autogen_agentchat.teams.HierarchicalGroupChat";
+  }
+  if (/cascade|fallback|backup|sequence/i.test(conversationText)) {
+    return "autogen_agentchat.teams.CascadingGroupChat";
+  }
+  if (/broadcast|all.?at.?once|parallel/i.test(conversationText)) {
+    return "autogen_agentchat.teams.BroadcastGroupChat";
+  }
+  
+  // Default to RoundRobin for most use cases
+  return "autogen_agentchat.teams.RoundRobinGroupChat";
 };
 
 const extractTeamName = (conversationText: string, userIndustry?: string): string => {
@@ -118,13 +154,27 @@ const extractTeamName = (conversationText: string, userIndustry?: string): strin
     'retail': 'Customer Service Team',
     'manufacturing': 'Operations Team',
     'technology': 'Development Team',
-    'consulting': 'Advisory Team'
+    'consulting': 'Advisory Team',
+    'utilities': 'Utilities Management Team',
+    'resources energy': 'Energy Operations Team',
+    'petrochemical': 'Process Optimization Team'
   };
   
   // Look for explicit team names in conversation
   const teamNameMatch = conversationText.match(/(?:team|group)\s+(?:called|named|for)\s+([^.!?]+)/i);
   if (teamNameMatch) {
     return teamNameMatch[1].trim();
+  }
+  
+  // Look for specific task mentions
+  if (/customer.?support|help.?desk|service/i.test(conversationText)) {
+    return 'Customer Support Team';
+  }
+  if (/analyz|data|insight/i.test(conversationText)) {
+    return 'Analysis Team';
+  }
+  if (/market|sales|revenue/i.test(conversationText)) {
+    return 'Business Intelligence Team';
   }
   
   return industryMap[userIndustry || ''] || 'AI Agents Team';
@@ -137,13 +187,27 @@ const extractTeamDescription = (conversationText: string, userIndustry?: string)
     return purposeMatch[1].trim();
   }
   
+  // Look for specific task descriptions
+  if (/customer.?support|help.?desk/i.test(conversationText)) {
+    return 'Handle customer inquiries and provide support assistance';
+  }
+  if (/analyz.*data|data.*analyz/i.test(conversationText)) {
+    return 'Analyze data and provide actionable insights';
+  }
+  if (/ticket|categoriz|priorit/i.test(conversationText)) {
+    return 'Categorize and prioritize incoming requests';
+  }
+  
   const industryDescriptions: Record<string, string> = {
     'finance': 'Analyze financial data and provide insights for decision making',
     'healthcare': 'Assist with patient care and medical information processing',
     'retail': 'Handle customer inquiries and optimize shopping experience',
     'manufacturing': 'Optimize production processes and quality control',
     'technology': 'Support software development and technical operations',
-    'consulting': 'Provide strategic advice and analysis for business decisions'
+    'consulting': 'Provide strategic advice and analysis for business decisions',
+    'utilities': 'Manage utility operations and customer service',
+    'resources energy': 'Optimize energy operations and resource management',
+    'petrochemical': 'Optimize chemical processes and ensure safety compliance'
   };
   
   return industryDescriptions[userIndustry || ''] || 'Process user requests and provide intelligent assistance';
@@ -221,65 +285,160 @@ const generateParticipants = (conversationText: string, userIndustry?: string, u
     }
   });
   
+  // Generate agents based on conversation content and focus areas
+  const agentTypes = determineAgentTypes(conversationText, userIndustry, userFocusAreas);
+  
+  agentTypes.forEach((agentType, index) => {
+    participants.push({
+      provider: "autogen_agentchat.agents.AssistantAgent",
+      component_type: "agent",
+      version: 1,
+      component_version: 1,
+      description: agentType.description,
+      label: agentType.name,
+      config: {
+        name: agentType.name.toLowerCase().replace(/\s+/g, '_'),
+        model_client: {
+          provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
+          component_type: "model",
+          version: 1,
+          component_version: 1,
+          description: "Chat completion client for OpenAI hosted models.",
+          label: "OpenAIChatCompletionClient",
+          config: {
+            model: "gpt-4o-mini"
+          }
+        },
+        tools: agentType.tools,
+        model_context: {
+          provider: "autogen_core.model_context.UnboundedChatCompletionContext",
+          component_type: "chat_completion_context",
+          version: 1,
+          component_version: 1,
+          description: "An unbounded chat completion context that keeps a view of the all the messages.",
+          label: "UnboundedChatCompletionContext",
+          config: {}
+        },
+        description: agentType.description,
+        system_message: agentType.systemMessage,
+        model_client_stream: false,
+        reflect_on_tool_use: false,
+        tool_call_summary_format: "{result}"
+      }
+    });
+  });
+  
+  return participants;
+};
+
+const determineAgentTypes = (conversationText: string, userIndustry?: string, userFocusAreas?: string[]) => {
+  const agentTypes = [];
+  
+  // Analyze conversation for specific agent needs
+  if (/customer.?support|ticket|help.?desk/i.test(conversationText)) {
+    agentTypes.push({
+      name: "CustomerSupportAgent",
+      description: "Specialized agent for handling customer support requests",
+      systemMessage: "You are a customer support specialist. Help resolve customer issues efficiently.",
+      tools: [
+        {
+          provider: "autogen_core.tools.FunctionTool",
+          component_type: "tool",
+          version: 1,
+          component_version: 1,
+          description: "Ticket analysis and categorization tool",
+          label: "TicketAnalyzer",
+          config: {
+            source_code: "def analyze_ticket(content: str) -> dict",
+            name: "analyze_ticket",
+            description: "Analyze and categorize support tickets",
+            global_imports: [],
+            has_cancellation_support: false
+          }
+        }
+      ]
+    });
+  }
+  
+  if (/analyz|data|insight|report/i.test(conversationText)) {
+    agentTypes.push({
+      name: "DataAnalysisAgent",
+      description: "Specialized agent for data analysis and insights generation",
+      systemMessage: "You are a data analysis expert. Analyze data and provide actionable insights.",
+      tools: [
+        {
+          provider: "autogen_core.tools.FunctionTool",
+          component_type: "tool",
+          version: 1,
+          component_version: 1,
+          description: "Data processing and analysis tool",
+          label: "DataProcessor",
+          config: {
+            source_code: "def process_data(data: str) -> dict",
+            name: "process_data",
+            description: "Process and analyze data",
+            global_imports: [],
+            has_cancellation_support: false
+          }
+        }
+      ]
+    });
+  }
+  
   // Add industry-specific agents based on focus areas
   if (userFocusAreas && userFocusAreas.length > 0) {
-    userFocusAreas.slice(0, 2).forEach((focusArea, index) => {
-      const agentName = focusArea.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      participants.push({
-        provider: "autogen_agentchat.agents.AssistantAgent",
-        component_type: "agent",
-        version: 1,
-        component_version: 1,
-        description: `Specialized agent for ${agentName.toLowerCase()} tasks`,
-        label: `${agentName}Agent`,
-        config: {
-          name: `${focusArea}_agent`,
-          model_client: {
-            provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
-            component_type: "model",
+    userFocusAreas.slice(0, 1).forEach((focusArea) => {
+      const agentName = focusArea.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + 'Agent';
+      agentTypes.push({
+        name: agentName,
+        description: `Specialized agent for ${focusArea.replace(/_/g, ' ')} operations`,
+        systemMessage: `You are a ${focusArea.replace(/_/g, ' ')} specialist. Focus on ${focusArea.replace(/_/g, ' ')} related tasks.`,
+        tools: [
+          {
+            provider: "autogen_core.tools.FunctionTool",
+            component_type: "tool",
             version: 1,
             component_version: 1,
-            description: "Chat completion client for OpenAI hosted models.",
-            label: "OpenAIChatCompletionClient",
+            description: `Specialized tool for ${focusArea.replace(/_/g, ' ')}`,
+            label: "SpecializedTool",
             config: {
-              model: "gpt-4o-mini"
+              source_code: `def ${focusArea}_processor(input: str) -> str`,
+              name: `${focusArea}_processor`,
+              description: `Process ${focusArea.replace(/_/g, ' ')} related tasks`,
+              global_imports: [],
+              has_cancellation_support: false
             }
-          },
-          tools: [
-            {
-              provider: "autogen_core.tools.FunctionTool",
-              component_type: "tool",
-              version: 1,
-              component_version: 1,
-              description: `Specialized tool for ${agentName.toLowerCase()}`,
-              label: "FunctionTool",
-              config: {
-                source_code: `def ${focusArea}_processor(input: str) -> str`,
-                name: `${focusArea}_processor`,
-                description: `Process ${agentName.toLowerCase()} related tasks`,
-                global_imports: [],
-                has_cancellation_support: false
-              }
-            }
-          ],
-          model_context: {
-            provider: "autogen_core.model_context.UnboundedChatCompletionContext",
-            component_type: "chat_completion_context",
-            version: 1,
-            component_version: 1,
-            description: "An unbounded chat completion context that keeps a view of the all the messages.",
-            label: "UnboundedChatCompletionContext",
-            config: {}
-          },
-          description: `Specialized agent for ${agentName.toLowerCase()} operations`,
-          system_message: `You are a ${agentName.toLowerCase()} specialist. Focus on ${agentName.toLowerCase()} related tasks.`,
-          model_client_stream: false,
-          reflect_on_tool_use: false,
-          tool_call_summary_format: "{result}"
-        }
+          }
+        ]
       });
     });
   }
   
-  return participants;
+  // Ensure we have at least one specialized agent
+  if (agentTypes.length === 0) {
+    agentTypes.push({
+      name: "SpecialistAgent",
+      description: "General purpose specialist agent for task execution",
+      systemMessage: "You are a specialist agent. Execute tasks efficiently and provide detailed responses.",
+      tools: [
+        {
+          provider: "autogen_core.tools.FunctionTool",
+          component_type: "tool",
+          version: 1,
+          component_version: 1,
+          description: "General purpose task processor",
+          label: "TaskProcessor",
+          config: {
+            source_code: "def process_task(task: str) -> str",
+            name: "process_task",
+            description: "Process general tasks",
+            global_imports: [],
+            has_cancellation_support: false
+          }
+        }
+      ]
+    });
+  }
+  
+  return agentTypes;
 };

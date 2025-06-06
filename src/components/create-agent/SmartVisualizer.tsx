@@ -28,7 +28,8 @@ import {
   getTeamProgress,
   TempTeamData,
   TempAgentData,
-  getCurrentAutogenStructure
+  getCurrentAutogenStructure,
+  resetFlowState
 } from '@/mockdata/temp_conv_agentflow';
 import { analyzeConversationForAutogenStructure } from '@/services/anthropicService';
 import { 
@@ -52,7 +53,7 @@ interface SmartVisualizerProps {
     duration?: number;
   }>;
   messages?: Array<{ role: string; content: string; timestamp: number }>;
-  conversationId?: string | null; // Add conversation ID prop
+  conversationId?: string | null;
 }
 
 // Enhanced custom node components for conversation flow
@@ -191,44 +192,74 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   const [generatedTask, setGeneratedTask] = useState('');
   const [expectedOutput, setExpectedOutput] = useState('');
   const [hasInitialStructure, setHasInitialStructure] = useState(false);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   
   const windowRef = useRef<HTMLDivElement>(null);
   const { size, isResizing } = useResizable(windowRef);
 
-  // Load conversation data from localStorage when conversation ID changes
+  // 🔄 CRITICAL: Reset flow state when conversation ID changes (new conversation)
   useEffect(() => {
-    if (conversationId) {
+    if (conversationId && conversationId !== currentConversationId) {
+      console.log('🆕 NEW CONVERSATION DETECTED - Resetting flow state:', {
+        oldId: currentConversationId,
+        newId: conversationId
+      });
+      
+      // Reset all state for new conversation
+      resetFlowState();
+      setHasInitialStructure(false);
+      setTaskGenerated(false);
+      setGeneratedTask('');
+      setExpectedOutput('');
+      setLastMessageCount(0);
+      setIsAnalyzing(false);
+      setCurrentConversationId(conversationId);
+      
+      // Clear nodes and edges for fresh start
+      setNodes([]);
+      setEdges([]);
+      
+      console.log('✅ Flow state reset complete for new conversation');
+    }
+  }, [conversationId, currentConversationId, setNodes, setEdges]);
+
+  // 📂 Load conversation data from localStorage ONLY if it exists (for resuming)
+  useEffect(() => {
+    if (conversationId && conversationId === currentConversationId) {
       const storedData = getConversationData(conversationId);
-      if (storedData) {
-        console.log('📂 Loading stored conversation data for SmartVisualizer:', {
+      if (storedData && storedData.autogenStructure) {
+        console.log('📂 RESUMING existing conversation with stored data:', {
           conversationId,
           messageCount: storedData.messages.length,
           hasAutogen: !!storedData.autogenStructure,
           stage: storedData.metadata.stage
         });
         
-        // Restore state from stored data
-        if (storedData.autogenStructure) {
+        // Only restore if we have meaningful structure (not just empty state)
+        if (storedData.autogenStructure.config.participants.length > 0) {
           setHasInitialStructure(true);
-          // The flow state will be updated by the analysis effect
+          
+          // Check if task was already generated
+          if (storedData.metadata.stage === 'finalization') {
+            setTaskGenerated(true);
+            setGeneratedTask(storedData.autogenStructure?.description || 'AI agents team task');
+            setExpectedOutput(`The AI agents team will process user inputs through ${storedData.autogenStructure?.config.participants.length || 0} specialized agents.`);
+          }
+        } else {
+          console.log('📭 Stored data exists but has no meaningful structure - starting fresh');
         }
-        
-        // Check if task was already generated
-        if (storedData.metadata.stage === 'finalization') {
-          setTaskGenerated(true);
-          setGeneratedTask(storedData.autogenStructure?.description || 'AI agents team task');
-          setExpectedOutput(`The AI agents team will process user inputs through ${storedData.autogenStructure?.config.participants.length || 0} specialized agents.`);
-        }
+      } else {
+        console.log('🆕 No stored data found - starting with blank structure for conversation:', conversationId);
       }
     }
-  }, [conversationId]);
+  }, [conversationId, currentConversationId]);
 
   // Update conversation state in flow data
   useEffect(() => {
     updateConversationState(conversationState);
   }, [conversationState]);
 
-  // Enhanced AI analysis with Anthropic service and localStorage integration
+  // 🤖 Enhanced AI analysis with Anthropic service - ONLY from current conversation messages
   useEffect(() => {
     const performAnalysis = async () => {
       // Skip if no new messages or already analyzing
@@ -262,17 +293,18 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         const userIndustry = localStorage.getItem('user_industry') || undefined;
         const userFocusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
         
-        // Get current state for context (including any stored data)
+        // 🚨 CRITICAL: Do NOT use stored structure as context for new conversations
+        // Only use current conversation messages for analysis
         const analysisData = getAnalysisReadyData();
         
-        // If we have a conversation ID, try to get stored structure for context
-        let existingStructure = analysisData.autogenStructure;
-        if (conversationId && !existingStructure) {
-          const storedData = getConversationData(conversationId);
-          if (storedData?.autogenStructure) {
-            existingStructure = storedData.autogenStructure;
-            console.log('📂 Using stored Autogen structure for analysis context');
-          }
+        // For NEW conversations, explicitly pass null as existing structure
+        // Only use existing structure if we're resuming a conversation with meaningful data
+        let existingStructure = null;
+        if (hasInitialStructure && analysisData.autogenStructure) {
+          existingStructure = analysisData.autogenStructure;
+          console.log('📂 Using existing structure for analysis context (resuming conversation)');
+        } else {
+          console.log('🆕 Starting fresh analysis - no existing structure context');
         }
         
         // Prepare messages for analysis
@@ -283,20 +315,21 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           userIndustry,
           userFocusAreas,
           hasExistingStructure: !!existingStructure,
-          conversationId
+          conversationId,
+          isNewConversation: !hasInitialStructure
         });
         
-        // Perform contextual analysis to get Autogen structure
+        // 🎯 Perform contextual analysis to get Autogen structure FROM SCRATCH
         const analysis = await analyzeConversationForAutogenStructure(
           messageTexts,
-          existingStructure,
+          existingStructure, // null for new conversations
           userIndustry,
           userFocusAreas
         );
         
         console.log('✅ Anthropic AI Analysis completed:', analysis);
         
-        // Update flow state with Autogen structure
+        // Update flow state with NEW Autogen structure
         if (analysis.teamStructure) {
           updateFromAutogenStructure(analysis.teamStructure, analysis);
           setHasInitialStructure(true);
@@ -314,7 +347,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
               }
             });
             
-            console.log(`💾 Updated localStorage with new analysis for ${conversationId}`);
+            console.log(`💾 Updated localStorage with NEW analysis for ${conversationId}`);
           }
           
           // Check if conversation is in finalization stage
@@ -347,7 +380,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     // Debounce analysis
     const timeoutId = setTimeout(performAnalysis, 1500);
     return () => clearTimeout(timeoutId);
-  }, [messages, lastMessageCount, isAnalyzing, conversationId]);
+  }, [messages, lastMessageCount, isAnalyzing, conversationId, hasInitialStructure]);
 
   // Check for task generator trigger from agentFlow
   useEffect(() => {
@@ -380,7 +413,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     }
   }, [agentFlow, taskGenerated, conversationId, messages.length]);
 
-  // Generate ReactFlow visualization from Autogen structure
+  // Generate ReactFlow visualization from CURRENT Autogen structure (not mockdata)
   const generateAutogenFlow = useCallback(() => {
     const autogenStructure = getCurrentAutogenStructure();
     const flowState = getFlowState();
@@ -390,7 +423,8 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       hasUserInput: flowState.userInput.shown,
       conversationState,
       taskGenerated,
-      conversationId
+      conversationId,
+      participantCount: autogenStructure?.config.participants.length || 0
     });
     
     const newNodes: Node[] = [];
@@ -416,18 +450,18 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       yPosition += 150;
     }
 
-    // 2. Team Node (from Autogen structure or placeholder)
-    if (autogenStructure || hasInitialStructure) {
+    // 2. Team Node (ONLY from current conversation analysis, not mockdata)
+    if (autogenStructure && autogenStructure.config.participants.length > 0) {
       const teamNode: Node = {
         id: 'team',
         type: 'custom',
         position: { x: 300, y: yPosition },
         data: {
-          label: autogenStructure?.label || flowState.team?.name || 'AI Agents Team',
+          label: autogenStructure.label,
           type: 'team',
-          description: autogenStructure?.description || flowState.team?.description || 'Processing your request...',
-          model: autogenStructure?.config.model_client?.config.model || 'gpt-4o-mini',
-          agents: autogenStructure?.config.participants.map(p => ({
+          description: autogenStructure.description,
+          model: autogenStructure.config.model_client?.config.model || 'gpt-4o-mini',
+          agents: autogenStructure.config.participants.map(p => ({
             name: p.label,
             description: p.description,
             model: {
@@ -438,18 +472,10 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
               name: t.config.name,
               description: t.description
             })) || []
-          })) || flowState.agents.map(a => ({
-            name: a.name,
-            description: a.description,
-            model: {
-              name: a.modelName || 'gpt-4o-mini',
-              provider: a.modelProvider || 'OpenAI'
-            },
-            tools: a.tools
           })),
-          terminations: autogenStructure?.config.termination_condition.config.conditions.map(c => ({
+          terminations: autogenStructure.config.termination_condition.config.conditions.map(c => ({
             name: c.label
-          })) || [{ name: 'Auto Termination' }],
+          })),
           onEdit: (nodeData: any) => console.log('Edit team:', nodeData),
         },
         sourcePosition: Position.Bottom,
@@ -478,11 +504,11 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
 
       yPosition += 250;
 
-      // 3. Individual Agent Nodes (from Autogen participants)
-      const participants = autogenStructure?.config.participants || [];
+      // 3. Individual Agent Nodes (from current conversation analysis)
+      const participants = autogenStructure.config.participants;
       if (participants.length > 0) {
         const agentPositions = generateAgentPositions(
-          autogenStructure?.provider.split('.').pop() || 'RoundRobinGroupChat',
+          autogenStructure.provider.split('.').pop() || 'RoundRobinGroupChat',
           participants.length
         );
 
@@ -527,7 +553,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
 
         // Add team-type specific inter-agent connections
         addTeamTypeConnections(
-          autogenStructure?.provider.split('.').pop() || 'RoundRobinGroupChat',
+          autogenStructure.provider.split('.').pop() || 'RoundRobinGroupChat',
           participants,
           newEdges,
           conversationState
@@ -603,9 +629,17 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           });
         });
       }
+    } else if (flowState.userInput.shown) {
+      // Show placeholder when we have user input but no structure yet
+      console.log('📝 Showing placeholder - user input exists but no structure generated yet');
     }
 
-    console.log('🎨 Generated flow:', { nodeCount: newNodes.length, edgeCount: newEdges.length });
+    console.log('🎨 Generated flow:', { 
+      nodeCount: newNodes.length, 
+      edgeCount: newEdges.length,
+      hasStructure: !!autogenStructure,
+      participantCount: autogenStructure?.config.participants.length || 0
+    });
     return { nodes: newNodes, edges: newEdges };
   }, [conversationState, isAnalyzing, taskGenerated, generatedTask, expectedOutput, hasInitialStructure]);
 
