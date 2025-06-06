@@ -196,7 +196,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
               )}
 
               <motion.div
-                animate={isSessionActive ? {
+                animate={conversation.status === "connected" ? {
                   scale: [1, 1.2, 1],
                   opacity: [0.5, 1, 0.5]
                 } : {}}
