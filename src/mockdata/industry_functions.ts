@@ -407,7 +407,7 @@ export const focusAreas = [
   },
   { 
     value: 'supply_chain',
-    label: 'Chemical Supply Chain Management',
+    label: ' Supply Chain Management',
     keyConsiderations: [
       'Feedstock procurement optimization',
       'Chemical inventory management',
