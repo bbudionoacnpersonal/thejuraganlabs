@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { useConversation } from '@elevenlabs/react';
 import ConversationAnalysis from './ConversationAnalysis';
 import { Message } from '@/types';
+import { industries } from '@/mockdata/industry_functions';
 
 interface VoiceSDKOverlayProps {
   isVisible: boolean;
@@ -29,10 +30,15 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [isSessionActive, setIsSessionActive] = useState(false);
+
+  // Get user's industry context
+  const userIndustry = localStorage.getItem('user_industry');
+  const industryContext = industries.find(i => i.value === userIndustry);
 
   const handleTaskGenerator = async (input: any): Promise<void> => {
     try {
-      console.log('Simulating task generation for input:', input);
+      console.log('Task generation with industry context:', industryContext?.keyPrompts);
       await new Promise((resolve) => setTimeout(resolve, 500));
     } catch (error) {
       console.error('Task Generator error:', error);
@@ -43,17 +49,20 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const conversation = useConversation({
     agentId: 'agent_01jvw7ms1jfbe8c3ptec0na5z9',
     onConnect: () => {
-      console.log("connected");
+      console.log("Connected to Eleven Labs WebSocket");
+      setIsSessionActive(true);
     },
     onDisconnect: () => {
-      console.log("disconnected");
+      console.log("Disconnected from Eleven Labs WebSocket");
+      setIsSessionActive(false);
     },
     onError: error => {
-      console.log(error);
-      setError("An error occurred during the conversation");
+      console.error("WebSocket error:", error);
+      setError("Connection error occurred. Please try again.");
+      setIsSessionActive(false);
     },
     onMessage: message => {
-      console.log(message);
+      console.log("Received message:", message);
       const newMessage: Message = {
         id: Math.random().toString(36).substr(2, 9),
         role: message.source === 'ai' ? 'assistant' : 'user',
@@ -65,37 +74,58 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     }
   });
 
+  useEffect(() => {
+    // Cleanup function
+    return () => {
+      if (isSessionActive) {
+        stopConversation();
+      }
+    };
+  }, [isSessionActive]);
+
   async function startConversation() {
     const hasPermission = await requestMicrophonePermission();
     if (!hasPermission) {
-      setError("No microphone permission");
+      setError("Microphone permission required");
       return;
     }
     
     try {
+      // Include industry context in session initialization
       const sessionId = await conversation.startSession({
         clientTools: {
           task_generator: handleTaskGenerator
+        },
+        context: {
+          industry: industryContext?.keyPrompts || {},
+          systemInstructions: industryContext?.keyPrompts.systemInstructions || ''
         }
       });
+      
       setConversationId(sessionId);
-      console.log('ConversationID: ', sessionId);
+      setIsSessionActive(true);
+      console.log('Started conversation session:', sessionId);
     } catch (err) {
-      setError("Failed to start conversation");
-      console.error(err);
+      console.error("Failed to start conversation:", err);
+      setError("Failed to start conversation. Please try again.");
+      setIsSessionActive(false);
     }
   }
 
   const stopConversation = async () => {
     try {
       await conversation.endSession();
+      setIsSessionActive(false);
+      console.log("Conversation session ended");
     } catch (err) {
       console.error("Error ending conversation:", err);
     }
   };
 
   const handleClose = async () => {
-    await stopConversation();
+    if (isSessionActive) {
+      await stopConversation();
+    }
     onClose();
   };
 
@@ -131,7 +161,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 
             <div className="flex flex-col items-center justify-center p-2">
               <h3 className="text-lg font-medium text-white text-center mb-2">
-                {conversation.status === "connected"
+                {isSessionActive
                   ? conversation.isSpeaking
                     ? "Speaking..."
                     : "Listening..."
@@ -143,7 +173,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
               )}
 
               <motion.div
-                animate={conversation.status === "connected" ? {
+                animate={isSessionActive ? {
                   scale: [1, 1.2, 1],
                   opacity: [0.5, 1, 0.5]
                 } : {}}
@@ -154,7 +184,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                 }}
                 className="relative my-8"
               >
-                {conversation.status === "connected" && (
+                {isSessionActive && (
                   <>
                     <motion.div
                       animate={{
@@ -185,9 +215,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                 )}
                 <div 
                   className={`w-20 h-30 rounded-full flex items-center justify-center ${
-                    conversation.status === "connected" && conversation.isSpeaking
+                    isSessionActive && conversation.isSpeaking
                       ? "bg-secondary-600"
-                      : conversation.status === "connected"
+                      : isSessionActive
                       ? "bg-primary-400"
                       : "bg-dark-400"
                   }`}
@@ -206,9 +236,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
               <div className="flex flex-col gap-2 w-full">
                 <button
                   onClick={startConversation}
-                  disabled={conversation.status === "connected"}
+                  disabled={isSessionActive}
                   className={
-                    conversation.status === "connected"
+                    isSessionActive
                       ? "px-2 py-2 rounded-lg text-white text-sm bg-gray-600 cursor-not-allowed"
                       : "px-2 py-2 rounded-lg text-white text-sm bg-secondary-600 hover:bg-primary-400 transition-colors"
                   }
@@ -218,9 +248,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 
                 <button
                   onClick={stopConversation}
-                  disabled={conversation.status !== "connected"}
+                  disabled={!isSessionActive}
                   className={
-                    conversation.status !== "connected"
+                    !isSessionActive
                       ? "px-2 py-2 rounded-lg text-white text-sm bg-gray-600 cursor-not-allowed"
                       : "px-2 py-2 rounded-lg text-white text-sm bg-error-600 hover:bg-error-500 transition-colors"
                   }
