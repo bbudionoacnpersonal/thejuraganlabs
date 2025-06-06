@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { useConversation } from '@elevenlabs/react';
 import ConversationAnalysis from './ConversationAnalysis';
 import { Message } from '@/types';
-import { industries, focusAreas } from '@/mockdata/industry_functions';
 
 interface VoiceSDKOverlayProps {
   isVisible: boolean;
@@ -30,27 +29,10 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [isSessionActive, setIsSessionActive] = useState(false);
-  const [sessionStarted, setSessionStarted] = useState(false);
-
-  // Get user's industry and focus areas context
-  const userIndustry = localStorage.getItem('user_industry');
-  const userFocusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
-  
-  const industryContext = industries.find(i => i.value === userIndustry);
-  const focusAreasContext = focusAreas
-    .filter(area => userFocusAreas.includes(area.value))
-    .map(area => ({
-      label: area.label,
-      considerations: area.keyConsiderations
-    }));
 
   const handleTaskGenerator = async (input: any): Promise<void> => {
     try {
-      console.log('Task generation with context:', {
-        industry: industryContext?.keyPrompts,
-        focusAreas: focusAreasContext
-      });
+      console.log('Simulating task generation for input:', input);
       await new Promise((resolve) => setTimeout(resolve, 500));
     } catch (error) {
       console.error('Task Generator error:', error);
@@ -61,26 +43,17 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const conversation = useConversation({
     agentId: 'agent_01jvw7ms1jfbe8c3ptec0na5z9',
     onConnect: () => {
-      console.log("Connected to Eleven Labs WebSocket");
-      setIsSessionActive(true);
+      console.log("connected");
     },
     onDisconnect: () => {
-      console.log("Disconnected from Eleven Labs WebSocket");
-      if (sessionStarted) {
-        // Only set inactive if we had an active session
-        setIsSessionActive(false);
-        console.log("Attempting to reconnect...");
-        startConversation(); // Attempt to reconnect
-      }
+      console.log("disconnected");
     },
     onError: error => {
-      console.error("WebSocket error:", error);
-      setError("Connection error occurred. Please try again.");
-      setIsSessionActive(false);
-      setSessionStarted(false);
+      console.log(error);
+      setError("An error occurred during the conversation");
     },
     onMessage: message => {
-      console.log("Received message:", message);
+      console.log(message);
       const newMessage: Message = {
         id: Math.random().toString(36).substr(2, 9),
         role: message.source === 'ai' ? 'assistant' : 'user',
@@ -92,68 +65,37 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     }
   });
 
-  useEffect(() => {
-    if (!isVisible && sessionStarted) {
-      stopConversation();
-    }
-    return () => {
-      if (sessionStarted) {
-        stopConversation();
-      }
-    };
-  }, [isVisible, sessionStarted]);
-
   async function startConversation() {
     const hasPermission = await requestMicrophonePermission();
     if (!hasPermission) {
-      setError("Microphone permission required");
+      setError("No microphone permission");
       return;
     }
     
     try {
-      // Include industry and focus areas context in session initialization
       const sessionId = await conversation.startSession({
         clientTools: {
           task_generator: handleTaskGenerator
-        },
-        context: {
-          industry: industryContext?.keyPrompts || {},
-          focusAreas: focusAreasContext,
-          systemInstructions: industryContext?.keyPrompts.systemInstructions || '',
-          toolPriorities: [
-            ...(industryContext?.keyPrompts.toolPriorities || []),
-            ...focusAreasContext.flatMap(area => area.considerations)
-          ]
         }
       });
-      
       setConversationId(sessionId);
-      setIsSessionActive(true);
-      setSessionStarted(true);
-      console.log('Started conversation session:', sessionId);
+      console.log('ConversationID: ', sessionId);
     } catch (err) {
-      console.error("Failed to start conversation:", err);
-      setError("Failed to start conversation. Please try again.");
-      setIsSessionActive(false);
-      setSessionStarted(false);
+      setError("Failed to start conversation");
+      console.error(err);
     }
   }
 
   const stopConversation = async () => {
     try {
       await conversation.endSession();
-      setIsSessionActive(false);
-      setSessionStarted(false);
-      console.log("Conversation session ended");
     } catch (err) {
       console.error("Error ending conversation:", err);
     }
   };
 
   const handleClose = async () => {
-    if (sessionStarted) {
-      await stopConversation();
-    }
+    await stopConversation();
     onClose();
   };
 
@@ -189,7 +131,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 
             <div className="flex flex-col items-center justify-center p-2">
               <h3 className="text-lg font-medium text-white text-center mb-2">
-                {isSessionActive
+                {conversation.status === "connected"
                   ? conversation.isSpeaking
                     ? "Speaking..."
                     : "Listening..."
@@ -201,7 +143,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
               )}
 
               <motion.div
-                animate={isSessionActive ? {
+                animate={conversation.status === "connected" ? {
                   scale: [1, 1.2, 1],
                   opacity: [0.5, 1, 0.5]
                 } : {}}
@@ -212,7 +154,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                 }}
                 className="relative my-8"
               >
-                {isSessionActive && (
+                {conversation.status === "connected" && (
                   <>
                     <motion.div
                       animate={{
@@ -243,9 +185,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                 )}
                 <div 
                   className={`w-20 h-30 rounded-full flex items-center justify-center ${
-                    isSessionActive && conversation.isSpeaking
+                    conversation.status === "connected" && conversation.isSpeaking
                       ? "bg-secondary-600"
-                      : isSessionActive
+                      : conversation.status === "connected"
                       ? "bg-primary-400"
                       : "bg-dark-400"
                   }`}
@@ -264,9 +206,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
               <div className="flex flex-col gap-2 w-full">
                 <button
                   onClick={startConversation}
-                  disabled={isSessionActive}
+                  disabled={conversation.status === "connected"}
                   className={
-                    isSessionActive
+                    conversation.status === "connected"
                       ? "px-2 py-2 rounded-lg text-white text-sm bg-gray-600 cursor-not-allowed"
                       : "px-2 py-2 rounded-lg text-white text-sm bg-secondary-600 hover:bg-primary-400 transition-colors"
                   }
@@ -276,9 +218,9 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 
                 <button
                   onClick={stopConversation}
-                  disabled={!isSessionActive}
+                  disabled={conversation.status !== "connected"}
                   className={
-                    !isSessionActive
+                    conversation.status !== "connected"
                       ? "px-2 py-2 rounded-lg text-white text-sm bg-gray-600 cursor-not-allowed"
                       : "px-2 py-2 rounded-lg text-white text-sm bg-error-600 hover:bg-error-500 transition-colors"
                   }
