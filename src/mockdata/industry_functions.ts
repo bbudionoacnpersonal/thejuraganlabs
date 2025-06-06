@@ -164,7 +164,7 @@ export const industries = [
       agentConsiderations: [
         'Renewable energy',
         'Goethermal',
-        'Content adaptation',
+        'Well Management',
         'Assessment automation'
       ],
       systemInstructions: `You are an education AI expert. Focus on:
