@@ -207,7 +207,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                 }}
                 className="relative my-8"
               >
-                {isSessionActive && (
+                {conversation.status === "connected"  && (
                   <>
                     <motion.div
                       animate={{
