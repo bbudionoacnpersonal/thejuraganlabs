@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
   secure: true,
   auth: {
     user: 'welcome@juraganlabs.io',
-    pass: 'yheh gipa vmnv gwxr'
+    pass: 'yhehgipavmnvgwxr'
   }
 });
 
