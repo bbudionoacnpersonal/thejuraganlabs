@@ -13,6 +13,7 @@ import AgentsPage from '@/pages/AgentsPage';
 import CreateAgentPage from '@/pages/CreateAgentPage';
 import AgentDetailPage from '@/pages/AgentDetailPage';
 import UserManagementPage from '@/pages/UserManagementPage';
+import IndustryOnboardingPage from '@/pages/IndustryOnboardingPage';
 
 // Protected route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -36,6 +37,21 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return <Navigate to="/dashboard" />;
   }
   
+  return <>{children}</>;
+};
+
+const OnboardingRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuthStore();
+  const hasCompletedOnboarding = localStorage.getItem('user_industry');
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  if (!hasCompletedOnboarding) {
+    return <Navigate to="/onboarding" />;
+  }
+
   return <>{children}</>;
 };
 
@@ -71,41 +87,48 @@ const App: React.FC = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         
+        {/* Onboarding route */}
+        <Route path="/onboarding" element={
+          <ProtectedRoute>
+            <IndustryOnboardingPage />
+          </ProtectedRoute>
+        } />
+        
         {/* Protected routes */}
         <Route path="/dashboard" element={
-          <ProtectedRoute>
+          <OnboardingRoute>
             <DashboardPage />
-          </ProtectedRoute>
+          </OnboardingRoute>
         } />
         
         <Route path="/teams" element={
-          <ProtectedRoute>
+          <OnboardingRoute>
             <TeamsPage />
-          </ProtectedRoute>
+          </OnboardingRoute>
         } />
         
         <Route path="/teams/create" element={
-          <ProtectedRoute>
+          <OnboardingRoute>
             <CreateTeamPage />
-          </ProtectedRoute>
+          </OnboardingRoute>
         } />
         
         <Route path="/agents" element={
-          <ProtectedRoute>
+          <OnboardingRoute>
             <AgentsPage />
-          </ProtectedRoute>
+          </OnboardingRoute>
         } />
         
         <Route path="/agents/create" element={
-          <ProtectedRoute>
+          <OnboardingRoute>
             <CreateAgentPage />
-          </ProtectedRoute>
+          </OnboardingRoute>
         } />
         
         <Route path="/agents/:id" element={
-          <ProtectedRoute>
+          <OnboardingRoute>
             <AgentDetailPage />
-          </ProtectedRoute>
+          </OnboardingRoute>
         } />
 
         {/* Admin routes */}
