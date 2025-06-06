@@ -119,7 +119,8 @@ export const getTeamTypeLayout = (
       };
       break;
       
-    case 'magenticone' || 'magneticonegroupchat':
+    case 'magneticone':
+    case 'magneticonegroupchat':
       // Magnetic field pattern
       layoutOptions = {
         direction: 'TB',
@@ -146,7 +147,8 @@ export const getTeamTypeLayout = (
       };
       break;
       
-    case 'hierarchical' || 'hierarchicalgroupchat':
+    case 'hierarchical':
+    case 'hierarchicalgroupchat':
       // Hierarchical tree layout
       layoutOptions = {
         direction: 'TB',
@@ -155,7 +157,8 @@ export const getTeamTypeLayout = (
       };
       break;
       
-    case 'cascading' || 'cascadinggroupchat':
+    case 'cascading':
+    case 'cascadinggroupchat':
       // Sequential cascade layout
       layoutOptions = {
         direction: 'LR',
@@ -164,7 +167,8 @@ export const getTeamTypeLayout = (
       };
       break;
       
-    case 'broadcast' || 'broadcastgroupchat':
+    case 'broadcast':
+    case 'broadcastgroupchat':
       // Broadcast pattern
       layoutOptions = {
         direction: 'TB',

@@ -1,4 +1,4 @@
-import { Node, Edge } from 'reactflow';
+import { Node, Edge, MarkerType } from 'reactflow';
 import { TeamStructure } from '@/types';
 import { getAutoLayout } from './dagreLayout';
 
@@ -51,7 +51,7 @@ export const transformTeamStructureToFlow = (
   });
 
   // Add participant nodes
-  teamStructure.config.participants.forEach((participant: any, index: number) => {
+  teamStructure.config.participants.forEach((participant: any) => {
     nodes.push({
       id: participant.label,
       type: 'custom',
@@ -75,7 +75,7 @@ export const transformTeamStructureToFlow = (
       animated: true,
       style: { stroke: '#4D9CFF', strokeWidth: 2 },
       markerEnd: {
-        type: 'arrowclosed',
+        type: MarkerType.ArrowClosed,
         width: 12,
         height: 12,
         color: '#4D9CFF',

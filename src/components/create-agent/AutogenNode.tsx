@@ -1,7 +1,7 @@
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 import { ClockIcon, SparklesIcon } from '@heroicons/react/24/outline';
-import { Bot, Wrench, SquarePen, Users, GitBranch, Shuffle, Podcast as Broadcast, ArrowRight, Zap, Network, Target, RotateCcw } from 'lucide-react';
+import { Bot, Wrench, SquarePen, Users, GitBranch, ArrowRight, Zap, Network, Target, RotateCcw } from 'lucide-react';
 
 interface AutogenNodeProps {
   data: {
@@ -113,26 +113,6 @@ const getTeamTypeInfo = (teamType?: string) => {
       bgColor: 'bg-orange-50',
       label: 'Cascading',
       description: 'Try agents in sequence until success'
-    };
-  }
-  
-  if (type.includes('broadcast')) {
-    return { 
-      icon: Broadcast, 
-      color: 'text-green-600', 
-      bgColor: 'bg-green-50',
-      label: 'Broadcast',
-      description: 'All agents receive same message'
-    };
-  }
-  
-  if (type.includes('concurrent')) {
-    return { 
-      icon: Users, 
-      color: 'text-indigo-600', 
-      bgColor: 'bg-indigo-50',
-      label: 'Concurrent',
-      description: 'Agents work in parallel'
     };
   }
   
