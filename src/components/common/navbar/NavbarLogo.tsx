@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
-import { industries, focusAreas } from '@/mockdata/agents';
+import { industries, focusAreas } from '@/mockdata/industry_functions';
 
 const NavbarLogo: React.FC = () => {
   const { user } = useAuthStore();
