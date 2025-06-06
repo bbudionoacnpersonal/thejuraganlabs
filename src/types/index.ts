@@ -32,6 +32,7 @@ export interface Team {
   members: User[];
   ownerId: string;
   createdAt: string;
+  aiTeamType: strig;
   agents: string[];
 }
 
