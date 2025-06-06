@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ReactFlow, {
   Node,
   Edge,
@@ -431,8 +431,8 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     const newEdges: Edge[] = [];
     let yPosition = 50;
 
-    // 1. User Input Node (always show if conversation started)
-    if (flowState.userInput.shown || conversationState !== 'idle') {
+    // 🎯 CRITICAL: Only show user input node when team structure exists
+    if (autogenStructure && autogenStructure.config.participants.length > 0 && flowState.userInput.shown) {
       newNodes.push({
         id: 'user-input',
         type: 'userInput',
@@ -487,7 +487,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       };
       newNodes.push(teamNode);
 
-      // Edge from user input to team
+      // Edge from user input to team (only if user input node exists)
       if (newNodes.find(n => n.id === 'user-input')) {
         newEdges.push({
           id: 'edge-user-team',
@@ -554,14 +554,6 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             },
           });
         });
-
-        // Add team-type specific inter-agent connections
-        addTeamTypeConnections(
-          teamType,
-          participants,
-          newEdges,
-          conversationState
-        );
       }
 
       // 4. Task Generator Output Nodes (if task is generated)
@@ -633,9 +625,6 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           });
         });
       }
-    } else if (flowState.userInput.shown) {
-      // Show placeholder when we have user input but no structure yet
-      console.log('📝 Showing placeholder - user input exists but no structure generated yet');
     }
 
     console.log('🎨 Generated flow:', { 
@@ -785,159 +774,6 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     }
 
     return positions;
-  };
-
-  // Add team-type specific connections
-  const addTeamTypeConnections = (teamType: string, participants: any[], edges: Edge[], state: string) => {
-    const isActive = state === 'responding';
-    
-    switch (teamType) {
-      case 'RoundRobinGroupChat':
-        // Connect agents in a circle
-        for (let i = 0; i < participants.length; i++) {
-          const nextIndex = (i + 1) % participants.length;
-          edges.push({
-            id: `edge-round-${i}`,
-            source: `agent-${i}`,
-            target: `agent-${nextIndex}`,
-            type: 'smoothstep',
-            animated: isActive,
-            style: { 
-              stroke: '#f59e0b',
-              strokeWidth: 2,
-              strokeDasharray: '8,4'
-            },
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              color: '#f59e0b',
-            },
-            label: `Round ${i + 1}`,
-          });
-        }
-        break;
-      
-      case 'SelectorGroupChat':
-        // Central selector pattern - all agents connect to first agent (selector)
-        if (participants.length > 1) {
-          for (let i = 1; i < participants.length; i++) {
-            edges.push({
-              id: `edge-selector-${i}`,
-              source: 'agent-0',
-              target: `agent-${i}`,
-              type: 'smoothstep',
-              animated: isActive,
-              style: { 
-                stroke: '#8b5cf6',
-                strokeWidth: 2,
-                strokeDasharray: '6,3'
-              },
-              markerEnd: {
-                type: MarkerType.ArrowClosed,
-                color: '#8b5cf6',
-              },
-              label: 'Select',
-            });
-          }
-        }
-        break;
-      
-      case 'Swarm':
-        // Swarm handoff connections
-        for (let i = 0; i < participants.length - 1; i++) {
-          edges.push({
-            id: `edge-swarm-${i}`,
-            source: `agent-${i}`,
-            target: `agent-${i + 1}`,
-            type: 'smoothstep',
-            animated: isActive,
-            style: { 
-              stroke: '#10b981',
-              strokeWidth: 2,
-              strokeDasharray: '4,4'
-            },
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              color: '#10b981',
-            },
-            label: 'Handoff',
-          });
-        }
-        break;
-      
-      case 'GraphFlow':
-        // Complex graph connections
-        for (let i = 0; i < participants.length; i++) {
-          for (let j = i + 1; j < participants.length; j++) {
-            if (Math.random() > 0.6) { // Random connections for graph complexity
-              edges.push({
-                id: `edge-graph-${i}-${j}`,
-                source: `agent-${i}`,
-                target: `agent-${j}`,
-                type: 'smoothstep',
-                animated: isActive,
-                style: { 
-                  stroke: '#6366f1',
-                  strokeWidth: 1,
-                  strokeDasharray: '3,3'
-                },
-                markerEnd: {
-                  type: MarkerType.ArrowClosed,
-                  color: '#6366f1',
-                },
-              });
-            }
-          }
-        }
-        break;
-      
-      case 'HierarchicalGroupChat':
-        // Connect main agent to subordinates
-        if (participants.length > 1) {
-          for (let i = 1; i < participants.length; i++) {
-            edges.push({
-              id: `edge-hierarchy-${i}`,
-              source: 'agent-0',
-              target: `agent-${i}`,
-              type: 'smoothstep',
-              animated: isActive,
-              style: { 
-                stroke: '#8b5cf6',
-                strokeWidth: 2,
-                strokeDasharray: '6,3'
-              },
-              markerEnd: {
-                type: MarkerType.ArrowClosed,
-                color: '#8b5cf6',
-              },
-              label: 'Delegate',
-            });
-          }
-        }
-        break;
-      
-      case 'CascadingGroupChat':
-        // Connect agents in sequence
-        for (let i = 0; i < participants.length - 1; i++) {
-          edges.push({
-            id: `edge-cascade-${i}`,
-            source: `agent-${i}`,
-            target: `agent-${i + 1}`,
-            type: 'smoothstep',
-            animated: isActive,
-            style: { 
-              stroke: '#ef4444',
-              strokeWidth: 2,
-              strokeDasharray: '5,5'
-            },
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              color: '#ef4444',
-            },
-            label: 'Fallback',
-          });
-        }
-        break;
-    }
   };
 
   // Update flow when structure changes
