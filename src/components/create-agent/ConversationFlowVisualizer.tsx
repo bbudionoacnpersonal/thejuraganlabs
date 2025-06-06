@@ -15,7 +15,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import { Bot, User, Users, Zap, Clock, Wrench, Database } from 'lucide-react';
+import { Bot, User, Users, Zap, Clock, Wrench } from 'lucide-react';
 import { ConversationState, AgentFlowStep, Team, Agent, Model, Tool } from '@/types';
 
 interface ConversationFlowVisualizerProps {
@@ -29,9 +29,16 @@ interface ConversationFlowVisualizerProps {
   usedTools?: Tool[];
 }
 
+interface FlowState {
+  userInputShown: boolean;
+  teamIdentified: boolean;
+  agentsIdentified: Agent[];
+  teamData?: Team;
+}
+
 // Custom node components
 const UserNode = ({ data }: { data: any }) => (
-  <div className={`p-4 rounded-lg shadow-lg border-2 min-w-[140px] transition-all duration-300 ${
+  <div className={`p-4 rounded-lg shadow-lg border-2 min-w-[160px] transition-all duration-300 ${
     data.status === 'active' 
       ? 'bg-blue-500 border-blue-600 text-white animate-pulse' 
       : data.status === 'completed'
@@ -54,31 +61,33 @@ const UserNode = ({ data }: { data: any }) => (
 );
 
 const TeamNode = ({ data }: { data: any }) => (
-  <div className={`p-4 rounded-lg shadow-lg border-2 min-w-[200px] transition-all duration-300 ${
+  <div className={`p-4 rounded-lg shadow-lg border-2 min-w-[220px] transition-all duration-300 ${
     data.status === 'active' 
       ? 'bg-purple-500 border-purple-600 text-white animate-pulse' 
       : data.status === 'completed'
       ? 'bg-purple-400 border-purple-500 text-white'
       : 'bg-gray-400 border-gray-500 text-white'
   }`}>
-    <div className="flex items-center gap-2 justify-center">
+    <div className="flex items-center gap-2 justify-center mb-2">
       <Users className="h-5 w-5" />
       <span className="text-sm font-medium">{data.label}</span>
     </div>
     {data.aiTeamType && (
-      <p className="text-xs mt-1 opacity-90 text-center font-mono">{data.aiTeamType}</p>
+      <div className="text-center mb-2">
+        <span className="text-xs bg-white/20 px-2 py-1 rounded font-mono">{data.aiTeamType}</span>
+      </div>
     )}
     {data.description && (
-      <p className="text-xs mt-1 opacity-80 text-center">{data.description}</p>
+      <p className="text-xs opacity-80 text-center mb-2">{data.description}</p>
     )}
     {data.agentCount && (
-      <p className="text-xs mt-1 opacity-70 text-center">{data.agentCount} agents</p>
+      <p className="text-xs opacity-70 text-center">{data.agentCount} agents configured</p>
     )}
   </div>
 );
 
 const AgentNode = ({ data }: { data: any }) => (
-  <div className={`p-3 rounded-lg shadow-lg border-2 min-w-[140px] transition-all duration-300 ${
+  <div className={`p-3 rounded-lg shadow-lg border-2 min-w-[180px] transition-all duration-300 ${
     data.status === 'active' 
       ? 'bg-green-500 border-green-600 text-white animate-pulse' 
       : data.status === 'completed'
@@ -87,63 +96,52 @@ const AgentNode = ({ data }: { data: any }) => (
       ? 'bg-yellow-400 border-yellow-500 text-white'
       : 'bg-gray-400 border-gray-500 text-white'
   }`}>
-    <div className="flex items-center gap-2 justify-center">
+    <div className="flex items-center gap-2 justify-center mb-2">
       <Bot className="h-4 w-4" />
-      <span className="text-xs font-medium">{data.label}</span>
+      <span className="text-sm font-medium">{data.label}</span>
     </div>
+    
     {data.agentType && (
-      <p className="text-xs mt-1 opacity-90 text-center">{data.agentType}</p>
+      <p className="text-xs opacity-90 text-center mb-1">{data.agentType}</p>
     )}
+    
+    {/* Embedded Model Info */}
     {data.modelName && (
-      <p className="text-xs mt-1 opacity-80 text-center">{data.modelName}</p>
-    )}
-    {data.toolCount && (
-      <div className="flex items-center gap-1 mt-1 justify-center">
-        <Wrench className="h-3 w-3" />
-        <span className="text-xs">{data.toolCount} tools</span>
+      <div className="bg-white/10 rounded p-2 mb-2">
+        <div className="flex items-center gap-1 justify-center mb-1">
+          <Zap className="h-3 w-3" />
+          <span className="text-xs font-medium">Model</span>
+        </div>
+        <p className="text-xs text-center">{data.modelName}</p>
+        {data.modelProvider && (
+          <p className="text-xs opacity-80 text-center">{data.modelProvider}</p>
+        )}
       </div>
     )}
+    
+    {/* Embedded Tools Info */}
+    {data.tools && data.tools.length > 0 && (
+      <div className="bg-white/10 rounded p-2">
+        <div className="flex items-center gap-1 justify-center mb-1">
+          <Wrench className="h-3 w-3" />
+          <span className="text-xs font-medium">Tools ({data.tools.length})</span>
+        </div>
+        <div className="space-y-1">
+          {data.tools.slice(0, 3).map((tool: any, idx: number) => (
+            <p key={idx} className="text-xs text-center opacity-90">{tool.name}</p>
+          ))}
+          {data.tools.length > 3 && (
+            <p className="text-xs text-center opacity-70">+{data.tools.length - 3} more</p>
+          )}
+        </div>
+      </div>
+    )}
+    
     {data.duration && (
-      <div className="flex items-center gap-1 mt-1 justify-center">
+      <div className="flex items-center gap-1 mt-2 justify-center">
         <Clock className="h-3 w-3" />
         <span className="text-xs">{data.duration}ms</span>
       </div>
-    )}
-  </div>
-);
-
-const ModelNode = ({ data }: { data: any }) => (
-  <div className={`p-2 rounded-lg shadow-lg border-2 min-w-[100px] transition-all duration-300 ${
-    data.status === 'active' 
-      ? 'bg-orange-500 border-orange-600 text-white animate-pulse' 
-      : data.status === 'completed'
-      ? 'bg-orange-400 border-orange-500 text-white'
-      : 'bg-gray-400 border-gray-500 text-white'
-  }`}>
-    <div className="flex items-center gap-2 justify-center">
-      <Zap className="h-4 w-4" />
-      <span className="text-xs font-medium">{data.label}</span>
-    </div>
-    {data.provider && (
-      <p className="text-xs mt-1 opacity-90 text-center">{data.provider}</p>
-    )}
-  </div>
-);
-
-const ToolNode = ({ data }: { data: any }) => (
-  <div className={`p-2 rounded-lg shadow-lg border-2 min-w-[100px] transition-all duration-300 ${
-    data.status === 'active' 
-      ? 'bg-cyan-500 border-cyan-600 text-white animate-pulse' 
-      : data.status === 'completed'
-      ? 'bg-cyan-400 border-cyan-500 text-white'
-      : 'bg-gray-400 border-gray-500 text-white'
-  }`}>
-    <div className="flex items-center gap-2 justify-center">
-      <Wrench className="h-4 w-4" />
-      <span className="text-xs font-medium">{data.label}</span>
-    </div>
-    {data.category && (
-      <p className="text-xs mt-1 opacity-90 text-center">{data.category}</p>
     )}
   </div>
 );
@@ -152,8 +150,6 @@ const nodeTypes = {
   userNode: UserNode,
   teamNode: TeamNode,
   agentNode: AgentNode,
-  modelNode: ModelNode,
-  toolNode: ToolNode,
 };
 
 const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProps> = ({
@@ -169,12 +165,18 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
   const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [flowState, setFlowState] = useState<FlowState>({
+    userInputShown: false,
+    teamIdentified: false,
+    agentsIdentified: [],
+    teamData: undefined
+  });
 
-  // Mock data for demonstration - in real implementation, this would come from conversation analysis
+  // Mock data for demonstration - this would be populated progressively from conversation
   const mockTeam: Team = currentTeam || {
     id: 'team-1',
-    name: 'Customer Service Team',
-    description: 'AI agents team for customer support',
+    name: 'Customer Service AI Team',
+    description: 'Intelligent customer support automation',
     aiTeamType: 'RoundRobinGroupChat',
     members: [],
     ownerId: '1',
@@ -186,7 +188,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
     {
       id: 'agent-1',
       name: 'Assistant Agent',
-      description: 'Main assistant for customer queries',
+      description: 'Primary customer service assistant',
       status: 'deployed',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -199,7 +201,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
     {
       id: 'agent-2',
       name: 'User Proxy Agent',
-      description: 'Human-in-the-loop agent',
+      description: 'Human escalation handler',
       status: 'deployed',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -247,174 +249,130 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
     }
   ];
 
-  // Generate flow based on team type and conversation progress
-  const generateFlow = useCallback(() => {
+  // Progressive flow generation based on conversation state
+  const generateProgressiveFlow = useCallback(() => {
     const newNodes: Node[] = [];
     const newEdges: Edge[] = [];
     let yOffset = 50;
 
-    // 1. User Input Node
+    // Step 1: Always show user input first
     const userStep = agentFlow.find(step => step.type === 'user');
-    newNodes.push({
-      id: 'user-input',
-      type: 'userNode',
-      position: { x: 300, y: yOffset },
-      data: {
-        label: 'User Input',
-        description: conversationState === 'listening' ? 'Speaking...' : 
-                    conversationState === 'processing' ? 'Processing voice...' : 
-                    userStep ? 'Voice input received' : 'Ready to listen',
-        status: conversationState === 'listening' ? 'active' : 
-                userStep ? 'completed' : 'pending',
-        timestamp: userStep?.timestamp
-      },
-      sourcePosition: Position.Bottom,
-      targetPosition: Position.Top,
-    });
-
-    yOffset += 150;
-
-    // 2. AI Team Node
-    const teamStep = agentFlow.find(step => step.type === 'agent' || step.type === 'decision');
-    newNodes.push({
-      id: 'agent-team',
-      type: 'teamNode',
-      position: { x: 250, y: yOffset },
-      data: {
-        label: mockTeam.name,
-        aiTeamType: mockTeam.aiTeamType,
-        description: mockTeam.description,
-        agentCount: mockAgents.length,
-        status: conversationState === 'processing' || conversationState === 'responding' ? 'active' : 
-                teamStep ? 'completed' : 'pending'
-      },
-      sourcePosition: Position.Bottom,
-      targetPosition: Position.Top,
-    });
-
-    // Edge from user to team
-    newEdges.push({
-      id: 'edge-user-team',
-      source: 'user-input',
-      target: 'agent-team',
-      type: 'smoothstep',
-      animated: conversationState === 'processing',
-      style: { 
-        stroke: conversationState === 'processing' || conversationState === 'responding' ? '#3b82f6' : '#6b7280',
-        strokeWidth: 2 
-      },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: conversationState === 'processing' || conversationState === 'responding' ? '#3b82f6' : '#6b7280',
-      },
-    });
-
-    yOffset += 150;
-
-    // 3. Individual Agent Nodes with team-type specific layout
-    const agentPositions = generateAgentPositions(mockTeam.aiTeamType, mockAgents.length);
-    
-    mockAgents.forEach((agent, index) => {
-      const agentStep = agentFlow.find(step => step.type === 'agent' && step.label.includes(agent.name));
-      const model = mockModels.find(m => m.id === agent.modelId);
-      const agentTools = mockTools.filter(t => agent.toolIds.includes(t.id));
-
+    if (conversationState !== 'idle' || userStep) {
       newNodes.push({
-        id: agent.id,
-        type: 'agentNode',
-        position: { x: agentPositions[index].x, y: yOffset },
+        id: 'user-input',
+        type: 'userNode',
+        position: { x: 300, y: yOffset },
         data: {
-          label: agent.name,
-          agentType: getAgentTypeFromName(agent.name),
-          modelName: model?.name,
-          toolCount: agentTools.length,
-          status: conversationState === 'responding' && agentStep ? 'active' : 
-                  agentStep ? 'completed' : 'pending',
-          duration: agentStep?.duration
+          label: 'User Input',
+          description: conversationState === 'listening' ? 'Speaking...' : 
+                      conversationState === 'processing' ? 'Processing voice...' : 
+                      userStep ? 'Voice input received' : 'Ready to listen',
+          status: conversationState === 'listening' ? 'active' : 
+                  userStep ? 'completed' : 'pending',
+          timestamp: userStep?.timestamp
         },
         sourcePosition: Position.Bottom,
         targetPosition: Position.Top,
       });
 
-      // Edge from team to agent
-      newEdges.push({
-        id: `edge-team-${agent.id}`,
-        source: 'agent-team',
-        target: agent.id,
-        type: 'smoothstep',
-        animated: conversationState === 'responding',
-        style: { 
-          stroke: conversationState === 'responding' ? '#10b981' : '#6b7280',
-          strokeWidth: 2 
+      yOffset += 180;
+    }
+
+    // Step 2: Show AI Team once identified (when processing starts or team is mentioned)
+    const teamStep = agentFlow.find(step => step.type === 'agent' || step.type === 'decision');
+    const shouldShowTeam = conversationState === 'processing' || conversationState === 'responding' || teamStep;
+    
+    if (shouldShowTeam) {
+      newNodes.push({
+        id: 'agent-team',
+        type: 'teamNode',
+        position: { x: 250, y: yOffset },
+        data: {
+          label: mockTeam.name,
+          aiTeamType: mockTeam.aiTeamType,
+          description: mockTeam.description,
+          agentCount: mockAgents.length,
+          status: conversationState === 'processing' || conversationState === 'responding' ? 'active' : 
+                  teamStep ? 'completed' : 'pending'
         },
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: conversationState === 'responding' ? '#10b981' : '#6b7280',
-        },
+        sourcePosition: Position.Bottom,
+        targetPosition: Position.Top,
       });
 
-      // Add model nodes
-      if (model) {
-        newNodes.push({
-          id: `model-${agent.id}`,
-          type: 'modelNode',
-          position: { x: agentPositions[index].x - 80, y: yOffset + 100 },
-          data: {
-            label: model.name,
-            provider: model.provider,
-            status: agentStep ? 'completed' : 'pending'
-          },
-          sourcePosition: Position.Top,
-          targetPosition: Position.Bottom,
-        });
-
+      // Edge from user to team
+      if (newNodes.find(n => n.id === 'user-input')) {
         newEdges.push({
-          id: `edge-agent-model-${agent.id}`,
-          source: agent.id,
-          target: `model-${agent.id}`,
-          type: 'straight',
-          style: { stroke: '#f59e0b', strokeWidth: 1 },
+          id: 'edge-user-team',
+          source: 'user-input',
+          target: 'agent-team',
+          type: 'smoothstep',
+          animated: conversationState === 'processing',
+          style: { 
+            stroke: conversationState === 'processing' || conversationState === 'responding' ? '#3b82f6' : '#6b7280',
+            strokeWidth: 3 
+          },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: '#f59e0b',
+            color: conversationState === 'processing' || conversationState === 'responding' ? '#3b82f6' : '#6b7280',
           },
         });
       }
 
-      // Add tool nodes
-      agentTools.forEach((tool, toolIndex) => {
-        const toolStep = agentFlow.find(step => step.type === 'tool' && step.label.includes(tool.name));
-        
+      yOffset += 200;
+    }
+
+    // Step 3: Show individual agents as they get identified/activated
+    const shouldShowAgents = conversationState === 'responding' || teamStep;
+    
+    if (shouldShowAgents) {
+      const agentPositions = generateAgentPositions(mockTeam.aiTeamType, mockAgents.length);
+      
+      mockAgents.forEach((agent, index) => {
+        const agentStep = agentFlow.find(step => step.type === 'agent' && step.label.includes(agent.name));
+        const model = mockModels.find(m => m.id === agent.modelId);
+        const agentTools = mockTools.filter(t => agent.toolIds.includes(t.id));
+
         newNodes.push({
-          id: `tool-${agent.id}-${tool.id}`,
-          type: 'toolNode',
-          position: { x: agentPositions[index].x + 80 + (toolIndex * 60), y: yOffset + 100 },
+          id: agent.id,
+          type: 'agentNode',
+          position: { x: agentPositions[index].x, y: yOffset },
           data: {
-            label: tool.name,
-            category: tool.category,
-            status: toolStep ? 'completed' : 'pending'
+            label: agent.name,
+            agentType: getAgentTypeFromName(agent.name),
+            modelName: model?.name,
+            modelProvider: model?.provider,
+            tools: agentTools,
+            status: conversationState === 'responding' && agentStep ? 'active' : 
+                    agentStep ? 'completed' : 'pending',
+            duration: agentStep?.duration
           },
-          sourcePosition: Position.Top,
-          targetPosition: Position.Bottom,
+          sourcePosition: Position.Bottom,
+          targetPosition: Position.Top,
         });
 
-        newEdges.push({
-          id: `edge-agent-tool-${agent.id}-${tool.id}`,
-          source: agent.id,
-          target: `tool-${agent.id}-${tool.id}`,
-          type: 'straight',
-          animated: toolStep?.status === 'active',
-          style: { stroke: '#06b6d4', strokeWidth: 1 },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: '#06b6d4',
-          },
-        });
+        // Edge from team to agent
+        if (newNodes.find(n => n.id === 'agent-team')) {
+          newEdges.push({
+            id: `edge-team-${agent.id}`,
+            source: 'agent-team',
+            target: agent.id,
+            type: 'smoothstep',
+            animated: conversationState === 'responding',
+            style: { 
+              stroke: conversationState === 'responding' ? '#10b981' : '#6b7280',
+              strokeWidth: 2 
+            },
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: conversationState === 'responding' ? '#10b981' : '#6b7280',
+            },
+          });
+        }
       });
-    });
 
-    // Add team-type specific inter-agent connections
-    addTeamTypeConnections(mockTeam.aiTeamType, mockAgents, newEdges, conversationState);
+      // Add team-type specific inter-agent connections
+      addTeamTypeConnections(mockTeam.aiTeamType, mockAgents, newEdges, conversationState);
+    }
 
     setNodes(newNodes);
     setEdges(newEdges);
@@ -424,7 +382,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
   const generateAgentPositions = (teamType: string, agentCount: number) => {
     const positions = [];
     const baseX = 300;
-    const spacing = 200;
+    const spacing = 250;
 
     switch (teamType) {
       case 'RoundRobinGroupChat':
@@ -432,7 +390,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
         for (let i = 0; i < agentCount; i++) {
           const angle = (i * 2 * Math.PI) / agentCount;
           positions.push({
-            x: baseX + Math.cos(angle) * 100,
+            x: baseX + Math.cos(angle) * 120,
             y: 0 // Will be offset by yOffset
           });
         }
@@ -440,11 +398,11 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
       
       case 'HierarchicalGroupChat':
         // Hierarchical tree structure
-        positions.push({ x: baseX, y: 0 }); // Main agent
+        positions.push({ x: baseX, y: 0 }); // Main agent at center
         for (let i = 1; i < agentCount; i++) {
           positions.push({
             x: baseX + (i - 1) * spacing - ((agentCount - 2) * spacing) / 2,
-            y: 80
+            y: 100 // Subordinates below
           });
         }
         break;
@@ -454,7 +412,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
         for (let i = 0; i < agentCount; i++) {
           positions.push({
             x: baseX + i * spacing - ((agentCount - 1) * spacing) / 2,
-            y: i * 40
+            y: i * 50 // Staggered vertically
           });
         }
         break;
@@ -476,7 +434,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
   const addTeamTypeConnections = (teamType: string, agents: Agent[], edges: Edge[], state: string) => {
     switch (teamType) {
       case 'RoundRobinGroupChat':
-        // Connect agents in a circle
+        // Connect agents in a circle for round-robin communication
         for (let i = 0; i < agents.length; i++) {
           const nextIndex = (i + 1) % agents.length;
           edges.push({
@@ -487,8 +445,8 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
             animated: state === 'responding',
             style: { 
               stroke: '#f59e0b',
-              strokeWidth: 1,
-              strokeDasharray: '5,5'
+              strokeWidth: 2,
+              strokeDasharray: '8,4'
             },
             markerEnd: {
               type: MarkerType.ArrowClosed,
@@ -499,7 +457,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
         break;
       
       case 'HierarchicalGroupChat':
-        // Connect main agent to all others
+        // Connect main agent to all subordinates
         if (agents.length > 1) {
           for (let i = 1; i < agents.length; i++) {
             edges.push({
@@ -510,8 +468,8 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
               animated: state === 'responding',
               style: { 
                 stroke: '#8b5cf6',
-                strokeWidth: 1,
-                strokeDasharray: '3,3'
+                strokeWidth: 2,
+                strokeDasharray: '6,3'
               },
               markerEnd: {
                 type: MarkerType.ArrowClosed,
@@ -523,7 +481,7 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
         break;
       
       case 'CascadingGroupChat':
-        // Connect agents in sequence
+        // Connect agents in sequence for cascading flow
         for (let i = 0; i < agents.length - 1; i++) {
           edges.push({
             id: `edge-cascade-${i}`,
@@ -533,8 +491,8 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
             animated: state === 'responding',
             style: { 
               stroke: '#ef4444',
-              strokeWidth: 1,
-              strokeDasharray: '4,4'
+              strokeWidth: 2,
+              strokeDasharray: '5,5'
             },
             markerEnd: {
               type: MarkerType.ArrowClosed,
@@ -555,8 +513,8 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
   };
 
   useEffect(() => {
-    generateFlow();
-  }, [generateFlow]);
+    generateProgressiveFlow();
+  }, [generateProgressiveFlow]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -585,7 +543,9 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
           }`} />
           <h3 className="text-sm font-medium text-white">Agent Team Flow</h3>
           <span className="text-xs text-gray-400 capitalize">({conversationState})</span>
-          <span className="text-xs text-gray-500">• {mockTeam.aiTeamType}</span>
+          {mockTeam.aiTeamType && (
+            <span className="text-xs text-gray-500">• {mockTeam.aiTeamType}</span>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -614,13 +574,13 @@ const ConversationFlowVisualizerContent: React.FC<ConversationFlowVisualizerProp
             onConnect={onConnect}
             nodeTypes={nodeTypes}
             fitView
-            fitViewOptions={{ padding: 0.1 }}
-            minZoom={0.3}
-            maxZoom={1.2}
-            defaultViewport={{ x: 0, y: 0, zoom: 0.6 }}
+            fitViewOptions={{ padding: 0.15 }}
+            minZoom={0.4}
+            maxZoom={1.5}
+            defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
             proOptions={{ hideAttribution: true }}
           >
-            <Background color="#374151" gap={16} />
+            <Background color="#374151" gap={20} />
             <Controls 
               className="bg-dark-surface border border-dark-border rounded"
               showInteractive={false}
