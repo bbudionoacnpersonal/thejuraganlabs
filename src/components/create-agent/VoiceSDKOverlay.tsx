@@ -271,7 +271,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 
                 <button
                   onClick={stopConversation}
-                  disabled={!isSessionActive}
+                  disabled={!conversation.status === "connected" }
                   className={
                     !isSessionActive
                       ? "px-2 py-2 rounded-lg text-white text-sm bg-gray-600 cursor-not-allowed"
