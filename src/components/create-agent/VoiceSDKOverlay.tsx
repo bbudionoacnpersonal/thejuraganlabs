@@ -76,16 +76,16 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     agentId: 'agent_01jvw7ms1jfbe8c3ptec0na5z9',
     onConnect: () => {
       console.log("connected");
-      setIsSessionActive(true);
+    
     },
     onDisconnect: () => {
       console.log("disconnected");
-      setIsSessionActive(false);
+   
     },
     onError: error => {
       console.log(error);
       setError("An error occurred during the conversation");
-      setIsSessionActive(false);
+ 
     },
     onMessage: message => {
       console.log(message);
