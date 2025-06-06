@@ -173,7 +173,7 @@ export const industries = [
         - downstream process 
         - asset invesment management
         - well and asset management,
-      toolPriorities: ['content_adapter', 'progress_tracker', 'assessment_generator']
+      toolPriorities: ['well_reader', 'asset_tracker', 'GIS_reader']
     }
   },
   { 
