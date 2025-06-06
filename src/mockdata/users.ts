@@ -20,7 +20,7 @@ export const mockUsers: StoredUser[] = [
     username: 'business',
     password: 'business@123!',
     role: 'business',
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
+    avatar: 'https://randomuser.me/api/portraits/men/44.jpg',
     isVerified: true
   },
   {
