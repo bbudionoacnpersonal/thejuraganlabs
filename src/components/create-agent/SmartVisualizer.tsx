@@ -19,7 +19,7 @@ import {
   EyeSlashIcon,
   DocumentArrowDownIcon
 } from '@heroicons/react/24/outline';
-import { Coins, Bot, Users, Wrench, Zap, Network, Target, RotateCcw, GitBranch, ArrowRight, Broadcast } from 'lucide-react';
+import { Coins, Bot, Users, Wrench, Zap, Network, Target, RotateCcw, GitBranch, ArrowRight, Podcast as Broadcast } from 'lucide-react';
 import ReactFlow, { 
   Background, 
   Controls,
