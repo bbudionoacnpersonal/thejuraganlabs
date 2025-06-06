@@ -43,11 +43,12 @@ export const registerUser = async (name: string, email: string, username: string
     verificationExpires
   };
 
-  addUser(newUser);
-
-  // Send verification email
+  // Send verification email before adding user to ensure email works
   const verificationUrl = generateVerificationUrl(verificationToken);
   await sendVerificationEmail(email, verificationUrl);
+
+  // Only add user after email is sent successfully
+  addUser(newUser);
 
   return newUser;
 };
