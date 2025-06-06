@@ -61,9 +61,9 @@ const ConversationNode = ({ data }: { data: any }) => {
       case 'user':
         return 'bg-blue-500 border-blue-600 text-white';
       case 'team':
-        return 'bg-purple-500 border-purple-600 text-white';
-      case 'agent':
         return 'bg-green-500 border-green-600 text-white';
+      case 'agent':
+        return 'bg-blue-400 border-blue-500 text-white';
       default:
         return 'bg-gray-500 border-gray-600 text-white';
     }
@@ -86,13 +86,13 @@ const ConversationNode = ({ data }: { data: any }) => {
     if (!teamType) return '🏢';
     
     const type = teamType.toLowerCase();
-    if (type.includes('roundrobin')) return <RotateCcw className="w-4 h-4" />;
-    if (type.includes('selector')) return <Target className="w-4 h-4" />;
-    if (type.includes('magneticone') || type.includes('magenticone')) return <Zap className="w-4 h-4" />;
-    if (type.includes('swarm')) return <Network className="w-4 h-4" />;
-    if (type.includes('graphflow') || type.includes('graph')) return <GitBranch className="w-4 h-4" />;
-    if (type.includes('broadcast')) return <Broadcast className="w-4 h-4" />;
-    return <Users className="w-4 h-4" />;
+    if (type.includes('roundrobin')) return <RotateCcw className="w-4 h-4 text-white" />;
+    if (type.includes('selector')) return <Target className="w-4 h-4 text-white" />;
+    if (type.includes('magneticone') || type.includes('magenticone')) return <Zap className="w-4 h-4 text-white" />;
+    if (type.includes('swarm')) return <Network className="w-4 h-4 text-white" />;
+    if (type.includes('graphflow') || type.includes('graph')) return <GitBranch className="w-4 h-4 text-white" />;
+    if (type.includes('broadcast')) return <Broadcast className="w-4 h-4 text-white" />;
+    return <Users className="w-4 h-4 text-white" />;
   };
 
   const getTeamTypeName = (teamType?: string) => {
@@ -108,10 +108,18 @@ const ConversationNode = ({ data }: { data: any }) => {
     return 'Custom';
   };
 
+  const renderIcon = () => {
+    const icon = getIcon();
+    if (typeof icon === 'string') {
+      return <span className="text-lg">{icon}</span>;
+    }
+    return icon;
+  };
+
   return (
     <div className={`p-4 rounded-lg shadow-lg border-2 min-w-[250px] transition-all duration-300 ${getNodeStyle()}`}>
       <div className="flex items-center gap-2 justify-center mb-3">
-        <span className="text-lg">{typeof getIcon() === 'string' ? getIcon() : getIcon()}</span>
+        {renderIcon()}
         <span className="text-sm font-medium">{data.label}</span>
       </div>
       
@@ -120,18 +128,19 @@ const ConversationNode = ({ data }: { data: any }) => {
         <div className="bg-white/20 rounded p-2 mb-3">
           <div className="flex items-center justify-center gap-2 mb-1">
             {getTeamTypeIcon(data.teamType)}
-            <span className="text-xs font-semibold">{getTeamTypeName(data.teamType)}</span>
+            <span className="text-xs font-semibold text-white">{getTeamTypeName(data.teamType)}</span>
           </div>
-          <p className="text-xs text-center opacity-90">
+          <p className="text-xs text-center opacity-90 text-white">
             {data.teamType.includes('roundrobin') && 'Agents take turns in sequence'}
             {data.teamType.includes('selector') && 'LLM selects next speaker dynamically'}
-            {data.teamType.includes('magneticone') && 'Generalist multi-agent for web/file tasks'}
+            {(data.teamType.includes('magneticone') || data.teamType.includes('magenticone')) && 'Generalist multi-agent for web/file tasks'}
             {data.teamType.includes('swarm') && 'HandoffMessage for explicit transitions'}
-            {data.teamType.includes('graphflow') && 'Complex workflows with branches & loops'}
+            {(data.teamType.includes('graphflow') || data.teamType.includes('graph')) && 'Complex workflows with branches & loops'}
             {data.teamType.includes('broadcast') && 'All agents receive same message'}
             {!data.teamType.includes('roundrobin') && !data.teamType.includes('selector') && 
-             !data.teamType.includes('magneticone') && !data.teamType.includes('swarm') && 
-             !data.teamType.includes('graphflow') && !data.teamType.includes('broadcast') && 'Custom team configuration'}
+             !data.teamType.includes('magneticone') && !data.teamType.includes('magenticone') &&
+             !data.teamType.includes('swarm') && !data.teamType.includes('graphflow') && 
+             !data.teamType.includes('graph') && !data.teamType.includes('broadcast') && 'Custom team configuration'}
           </p>
         </div>
       )}
@@ -143,12 +152,12 @@ const ConversationNode = ({ data }: { data: any }) => {
           {data.llmModel && (
             <div className="bg-white/20 rounded p-2">
               <div className="flex items-center gap-2 mb-1">
-                <SparklesIcon className="w-3 h-3" />
-                <span className="text-xs font-semibold">LLM Model</span>
+                <SparklesIcon className="w-3 h-3 text-white" />
+                <span className="text-xs font-semibold text-white">LLM Model</span>
               </div>
-              <p className="text-xs">{data.llmModel}</p>
+              <p className="text-xs text-white">{data.llmModel}</p>
               {data.llmProvider && (
-                <p className="text-xs opacity-75">Provider: {data.llmProvider}</p>
+                <p className="text-xs opacity-75 text-white">Provider: {data.llmProvider}</p>
               )}
             </div>
           )}
@@ -157,20 +166,20 @@ const ConversationNode = ({ data }: { data: any }) => {
           {data.tools && data.tools.length > 0 && (
             <div className="bg-white/20 rounded p-2">
               <div className="flex items-center gap-2 mb-1">
-                <Wrench className="w-3 h-3" />
-                <span className="text-xs font-semibold">Tools ({data.tools.length})</span>
+                <Wrench className="w-3 h-3 text-white" />
+                <span className="text-xs font-semibold text-white">Tools ({data.tools.length})</span>
               </div>
               <div className="space-y-1">
                 {data.tools.slice(0, 3).map((tool: any, idx: number) => (
                   <div key={idx} className="text-xs">
-                    <span className="font-medium">{tool.name}</span>
+                    <span className="font-medium text-white">{tool.name}</span>
                     {tool.description && (
-                      <p className="opacity-75 truncate">{tool.description}</p>
+                      <p className="opacity-75 truncate text-white">{tool.description}</p>
                     )}
                   </div>
                 ))}
                 {data.tools.length > 3 && (
-                  <p className="text-xs opacity-75">+{data.tools.length - 3} more tools</p>
+                  <p className="text-xs opacity-75 text-white">+{data.tools.length - 3} more tools</p>
                 )}
               </div>
             </div>
@@ -180,28 +189,28 @@ const ConversationNode = ({ data }: { data: any }) => {
       
       {data.description && (
         <div className="bg-white/10 rounded p-2 mb-2">
-          <p className="text-xs text-center">{data.description}</p>
+          <p className="text-xs text-center text-white">{data.description}</p>
         </div>
       )}
       
       {data.confidence && (
         <div className="flex items-center justify-center mt-2">
           <div className={`w-2 h-2 rounded-full ${data.confidence > 0.7 ? 'bg-green-300' : data.confidence > 0.4 ? 'bg-yellow-300' : 'bg-red-300'}`} />
-          <span className="text-xs ml-1">{Math.round(data.confidence * 100)}% confidence</span>
+          <span className="text-xs ml-1 text-white">{Math.round(data.confidence * 100)}% confidence</span>
         </div>
       )}
       
       {data.agents && data.agents.length > 0 && (
         <div className="mt-2 text-xs">
-          <div className="text-center opacity-75">Agents: {data.agents.length}</div>
+          <div className="text-center opacity-75 text-white">Agents: {data.agents.length}</div>
           <div className="flex flex-wrap gap-1 mt-1 justify-center">
             {data.agents.slice(0, 3).map((agent: any, idx: number) => (
-              <span key={idx} className="bg-white/20 px-1 rounded text-xs">
+              <span key={idx} className="bg-white/20 px-1 rounded text-xs text-white">
                 {agent.name}
               </span>
             ))}
             {data.agents.length > 3 && (
-              <span className="bg-white/20 px-1 rounded text-xs">
+              <span className="bg-white/20 px-1 rounded text-xs text-white">
                 +{data.agents.length - 3}
               </span>
             )}
@@ -444,15 +453,15 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           type: 'smoothstep',
           animated: conversationState === 'processing' || isAnalyzing,
           style: { 
-            stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#8b5cf6',
+            stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#10b981',
             strokeWidth: 3 
           },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#8b5cf6',
+            color: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#10b981',
           },
           label: 'Team Coordination',
-          labelStyle: { fontSize: 12, fontWeight: 600 },
+          labelStyle: { fontSize: 12, fontWeight: 600, fill: '#ffffff' },
           labelBgStyle: { fill: '#1e1e1e', fillOpacity: 0.8 },
         });
       }
@@ -470,12 +479,12 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         let llmProvider = 'OpenAI';
         let tools: any[] = [];
 
-        if (teamStructure && teamStructure.config.participants[index]) {
+        if (teamStructure && teamStructure.config.participants && teamStructure.config.participants[index]) {
           const participant = teamStructure.config.participants[index];
           llmModel = participant.config.model_client?.config.model || 'gpt-4o-mini';
           llmProvider = participant.config.model_client?.provider.split('.').pop() || 'OpenAI';
           tools = participant.config.tools?.map(tool => ({
-            name: tool.config.name || tool.label,
+            name: tool.config?.name || tool.label,
             description: tool.description
           })) || [];
         }
@@ -511,15 +520,15 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             type: 'smoothstep',
             animated: conversationState === 'responding',
             style: { 
-              stroke: conversationState === 'responding' ? '#10b981' : '#6b7280',
+              stroke: conversationState === 'responding' ? '#10b981' : '#3b82f6',
               strokeWidth: 2 
             },
             markerEnd: {
               type: MarkerType.ArrowClosed,
-              color: conversationState === 'responding' ? '#10b981' : '#6b7280',
+              color: conversationState === 'responding' ? '#10b981' : '#3b82f6',
             },
             label: `Agent ${index + 1}`,
-            labelStyle: { fontSize: 10, fontWeight: 500 },
+            labelStyle: { fontSize: 10, fontWeight: 500, fill: '#ffffff' },
             labelBgStyle: { fill: '#1e1e1e', fillOpacity: 0.7 },
           });
         }
