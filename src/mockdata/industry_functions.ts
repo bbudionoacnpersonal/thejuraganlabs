@@ -158,8 +158,8 @@ export const industries = [
     }
   },
   { 
-    value: 'Energy',
-    label: 'Education & Training',
+    value: 'resources',
+    label: 'Energy, Oil & Gas',
     keyPrompts: {
       agentConsiderations: [
         'Learning path customization',
