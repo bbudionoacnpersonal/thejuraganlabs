@@ -146,24 +146,7 @@ const determineTeamType = (conversationText: string): string => {
   if (/graph.*flow|complex.*workflow|branch|loop|conditional/i.test(conversationText)) {
     return "autogen_agentchat.teams.GraphFlow";
   }
-  
-  // Legacy team types
-  if (/round.?robin|rotate|turn/i.test(conversationText)) {
-    return "autogen_agentchat.teams.RoundRobinGroupChat";
-  }
-  
-  if (/hierarch|manager|supervisor|lead/i.test(conversationText)) {
-    return "autogen_agentchat.teams.HierarchicalGroupChat";
-  }
-  
-  if (/cascade|fallback|backup|sequence/i.test(conversationText)) {
-    return "autogen_agentchat.teams.CascadingGroupChat";
-  }
-  
-  if (/broadcast|all.?at.?once|parallel/i.test(conversationText)) {
-    return "autogen_agentchat.teams.BroadcastGroupChat";
-  }
-  
+
   // Default to RoundRobin for most use cases
   return "autogen_agentchat.teams.RoundRobinGroupChat";
 };
