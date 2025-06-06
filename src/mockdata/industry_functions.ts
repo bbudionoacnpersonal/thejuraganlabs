@@ -165,7 +165,7 @@ export const industries = [
         'Renewable energy',
         'Upstream management',
         'Well and Site Management',
-        'Assessment automation'
+        'Downstream management'
       ],
       systemInstructions: `You are an education AI expert. Focus on:
         - Personalized learning
