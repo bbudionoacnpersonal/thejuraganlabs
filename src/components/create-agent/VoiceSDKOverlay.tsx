@@ -4,7 +4,7 @@ import { XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { useConversation } from '@elevenlabs/react';
 import ConversationAnalysis from './ConversationAnalysis';
 import { Message } from '@/types';
-import { industries } from '@/mockdata/industry_functions';
+import { industries, focusAreas } from '@/mockdata/industry_functions';
 
 interface VoiceSDKOverlayProps {
   isVisible: boolean;
@@ -32,13 +32,24 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isSessionActive, setIsSessionActive] = useState(false);
 
-  // Get user's industry context
+  // Get user's industry and focus areas context
   const userIndustry = localStorage.getItem('user_industry');
+  const userFocusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
+  
   const industryContext = industries.find(i => i.value === userIndustry);
+  const focusAreasContext = focusAreas
+    .filter(area => userFocusAreas.includes(area.value))
+    .map(area => ({
+      label: area.label,
+      considerations: area.keyConsiderations
+    }));
 
   const handleTaskGenerator = async (input: any): Promise<void> => {
     try {
-      console.log('Task generation with industry context:', industryContext?.keyPrompts);
+      console.log('Task generation with context:', {
+        industry: industryContext?.keyPrompts,
+        focusAreas: focusAreasContext
+      });
       await new Promise((resolve) => setTimeout(resolve, 500));
     } catch (error) {
       console.error('Task Generator error:', error);
@@ -91,14 +102,19 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     }
     
     try {
-      // Include industry context in session initialization
+      // Include industry and focus areas context in session initialization
       const sessionId = await conversation.startSession({
         clientTools: {
           task_generator: handleTaskGenerator
         },
         context: {
           industry: industryContext?.keyPrompts || {},
-          systemInstructions: industryContext?.keyPrompts.systemInstructions || ''
+          focusAreas: focusAreasContext,
+          systemInstructions: industryContext?.keyPrompts.systemInstructions || '',
+          toolPriorities: [
+            ...(industryContext?.keyPrompts.toolPriorities || []),
+            ...focusAreasContext.flatMap(area => area.considerations)
+          ]
         }
       });
       
