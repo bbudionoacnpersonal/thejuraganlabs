@@ -31,9 +31,9 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
   const [selectedUseCase, setSelectedUseCase] = useState<UseCaseTemplate | null>(null);
   const [activeTab, setActiveTab] = useState<'recommended' | 'popular' | 'all'>('recommended');
 
-  // Get industry and focus area details
+  // Get industry area details
   const industryDetails = industries.find(i => i.value === userIndustry);
-  const focusAreaDetails = focusAreas.filter(f => userFocusAreas.includes(f.value));
+  //const focusAreaDetails = focusAreas.filter(f => userFocusAreas.includes(f.value));
 
   // Get use cases based on user's industry and focus areas
   const recommendedUseCases = getUseCasesByIndustryAndFunction(userIndustry, userFocusAreas);
