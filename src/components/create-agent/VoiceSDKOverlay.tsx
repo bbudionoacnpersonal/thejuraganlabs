@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { useConversation } from '@elevenlabs/react';
 import ConversationAnalysis from './ConversationAnalysis';
+import ConversationList from './ConversationList';
 import SmartVisualizer from './SmartVisualizer';
 import { Message, TeamStructure } from '@/types';
 import { industries, focusAreas } from '@/mockdata/industry_functions';
@@ -48,8 +49,10 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [showConversationList, setShowConversationList] = useState(false);
   const [showSmartVisualizer, setShowSmartVisualizer] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [conversationState, setConversationState] = useState<'idle' | 'listening' | 'processing' | 'responding'>('idle');
   const [agentFlow, setAgentFlow] = useState<AgentFlowStep[]>([]);
   const [conversationMessages, setConversationMessages] = useState<Array<{ role: string; content: string; timestamp: number }>>([]);
@@ -351,20 +354,14 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
   };
 
   const handleAnalysisClick = () => {
-    // 🎯 FIXED: Allow analysis button to work even without active conversation
-    // if (!conversationId) {
-    //   setError("No conversation data available yet");
-    //   return;
-    // }
-    
-    // Use the current conversationId or the last one if available
-    const targetConversationId = conversationId || localStorage.getItem('last_conversation_id');
-    
-    if (!targetConversationId) {
-      setError("No conversation data available yet");
-      return;
-    }
-    
+    // Show conversation list first
+    setShowConversationList(true);
+  };
+
+  const handleConversationSelect = (conversationId: string) => {
+    console.log('🔍 Selected conversation for analysis:', conversationId);
+    setSelectedConversationId(conversationId);
+    setShowConversationList(false);
     setShowAnalysis(true);
   };
 
@@ -526,12 +523,7 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
                   >
                     <button
                       onClick={handleAnalysisClick}
-                      className={`flex items-center gap-2 text-sm border rounded-lg px-3 py-2 border-dark-border transition-colors ${
-                        conversationId || localStorage.getItem('last_conversation_id')
-                          ? 'text-gray-100 hover:text-secondary-600 hover:border-secondary-600 cursor-pointer'
-                          : 'text-gray-500 cursor-not-allowed'
-                      }`}
-                      disabled={!conversationId && !localStorage.getItem('last_conversation_id')}
+                      className="flex items-center gap-2 text-sm border rounded-lg px-3 py-2 border-dark-border transition-colors text-gray-100 hover:text-secondary-600 hover:border-secondary-600 cursor-pointer"
                     >
                       <ChartBarIcon className="h-4 w-4" />
                       Conversation Analysis
@@ -555,12 +547,24 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
             </div>
           </div>
 
+          {/* Conversation List Modal */}
+          {showConversationList && (
+            <ConversationList
+              isVisible={showConversationList}
+              onClose={() => setShowConversationList(false)}
+              onSelectConversation={handleConversationSelect}
+            />
+          )}
+
           {/* Analysis Modal */}
-          {showAnalysis && (
+          {showAnalysis && selectedConversationId && (
             <ConversationAnalysis
               isVisible={showAnalysis}
-              onClose={() => setShowAnalysis(false)}
-              conversationId={conversationId || localStorage.getItem('last_conversation_id') || ''}
+              onClose={() => {
+                setShowAnalysis(false);
+                setSelectedConversationId(null);
+              }}
+              conversationId={selectedConversationId}
             />
           )}
         </>
