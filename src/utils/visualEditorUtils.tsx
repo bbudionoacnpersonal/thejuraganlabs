@@ -10,13 +10,19 @@ export const transformTeamStructureToFlow = (
   const nodes: Node[] = [];
   const edges: Edge[] = [];
   
+  // 🎯 DEFENSIVE: Check if teamStructure and config exist
+  if (!teamStructure || !teamStructure.config) {
+    console.warn('⚠️ TeamStructure or config is undefined, returning empty flow');
+    return { nodes: [], edges: [] };
+  }
+  
   // 🎯 ENHANCED: Use provided team type or extract from provider
   const extractedTeamType = teamType || extractTeamTypeFromProvider(teamStructure.provider);
   
   console.log('🎨 Transforming team structure with team type:', {
     teamName: teamStructure.label,
     teamType: extractedTeamType,
-    participantCount: teamStructure.config.participants.length
+    participantCount: teamStructure.config.participants?.length || 0
   });
   
   // Add enhanced team node with team type information
@@ -24,26 +30,26 @@ export const transformTeamStructureToFlow = (
     id: 'team',
     type: 'custom',
     data: {
-      label: teamStructure.label,
+      label: teamStructure.label || 'Unnamed Team',
       type: 'team',
       teamType: extractedTeamType, // 🎯 CRITICAL: Pass extracted team type
-      description: teamStructure.description,
-      model: teamStructure.config.model_client?.config.model || '',
-      agents: teamStructure.config.participants.map((p: any) => ({
-        name: p.label,
-        description: p.description,
+      description: teamStructure.description || '',
+      model: teamStructure.config.model_client?.config?.model || '',
+      agents: (teamStructure.config.participants || []).map((p: any) => ({
+        name: p?.label || 'Unnamed Agent',
+        description: p?.description || '',
         model: {
-          name: p.config.model_client?.config.model || 'gpt-4o-mini',
-          provider: p.config.model_client?.provider.split('.').pop() || 'OpenAI'
+          name: p?.config?.model_client?.config?.model || 'gpt-4o-mini',
+          provider: p?.config?.model_client?.provider?.split('.').pop() || 'OpenAI'
         },
-        tools: p.config.tools?.map((t: any) => ({
-          name: t.config.name || t.label,
-          description: t.description
-        })) || []
+        tools: (p?.config?.tools || []).map((t: any) => ({
+          name: t?.config?.name || t?.label || 'Unnamed Tool',
+          description: t?.description || ''
+        }))
       })),
-      terminations: teamStructure.config.termination_condition.config.conditions?.map((c: any) => ({
-        name: c.label
-      })) || [{ name: teamStructure.config.termination_condition.label }],
+      terminations: teamStructure.config.termination_condition?.config?.conditions?.map((c: any) => ({
+        name: c?.label || 'Unnamed Condition'
+      })) || [{ name: teamStructure.config.termination_condition?.label || 'Default Termination' }],
       onEdit,
     },
     // Initial position - will be overridden by Dagre
@@ -51,20 +57,27 @@ export const transformTeamStructureToFlow = (
   });
 
   // Add participant nodes with proper tool extraction
-  teamStructure.config.participants.forEach((participant: any) => {
+  const participants = teamStructure.config.participants || [];
+  participants.forEach((participant: any) => {
+    // 🎯 DEFENSIVE: Check if participant exists
+    if (!participant) {
+      console.warn('⚠️ Participant is undefined, skipping');
+      return;
+    }
+    
     // 🎯 FIXED: Properly extract tool names from the participant configuration
     const extractedTools = extractToolsFromParticipant(participant);
     
     console.log('🔧 Extracted tools for', participant.label, ':', extractedTools);
     
     nodes.push({
-      id: participant.label,
+      id: participant.label || `agent-${nodes.length}`,
       type: 'custom',
       data: {
-        label: participant.label,
+        label: participant.label || 'Unnamed Agent',
         type: 'agent',
-        description: participant.description,
-        model: participant.config.model_client?.config.model || '',
+        description: participant.description || '',
+        model: participant.config?.model_client?.config?.model || '',
         tools: extractedTools.length, // Number of tools
         toolNames: extractedTools, // 🎯 NEW: Pass actual tool names for display
         onEdit,
@@ -75,9 +88,9 @@ export const transformTeamStructureToFlow = (
 
     // Add edge from team to participant
     edges.push({
-      id: `e-team-${participant.label}`,
+      id: `e-team-${participant.label || `agent-${nodes.length - 1}`}`,
       source: 'team',
-      target: participant.label,
+      target: participant.label || `agent-${nodes.length - 1}`,
       animated: true,
       style: { stroke: '#4D9CFF', strokeWidth: 2 },
       markerEnd: {
@@ -111,11 +124,17 @@ export const transformTeamStructureToFlow = (
 const extractToolsFromParticipant = (participant: any): string[] => {
   const tools: string[] = [];
   
-  if (!participant.config.tools || !Array.isArray(participant.config.tools)) {
+  // 🎯 DEFENSIVE: Check if participant and tools exist
+  if (!participant || !participant.config || !participant.config.tools || !Array.isArray(participant.config.tools)) {
     return tools;
   }
   
   participant.config.tools.forEach((tool: any) => {
+    // 🎯 DEFENSIVE: Check if tool exists
+    if (!tool) {
+      return;
+    }
+    
     let toolName = '';
     
     // Try different ways to extract the tool name
@@ -140,9 +159,9 @@ const extractToolsFromParticipant = (participant: any): string[] => {
   });
   
   console.log('🔧 Extracted tools from participant:', {
-    participantLabel: participant.label,
+    participantLabel: participant.label || 'Unnamed',
     toolsFound: tools,
-    rawTools: participant.config.tools
+    rawTools: participant.config?.tools || []
   });
   
   return tools;
