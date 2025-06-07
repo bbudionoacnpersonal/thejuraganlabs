@@ -400,12 +400,6 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
               </button>
             )}
             <button
-              onClick={() => setState(prev => ({ ...prev, isMinimized: !prev.isMinimized }))}
-              className="p-1 text-gray-400 hover:text-white transition-colors"
-            >
-              {state.isMinimized ? <EyeIcon className="h-4 w-4" /> : <EyeSlashIcon className="h-4 w-4" />}
-            </button>
-            <button
               onClick={handleClose}
               className="p-1 text-gray-400 hover:text-white transition-colors"
             >
