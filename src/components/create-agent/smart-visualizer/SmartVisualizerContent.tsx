@@ -65,6 +65,79 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   const { size, isResizing } = useResizable(windowRef);
   const { fitView, zoomIn, zoomOut } = useReactFlow();
 
+  // 🎯 CRITICAL FIX: Load stored conversation data when opening
+  useEffect(() => {
+    const loadStoredConversationData = async () => {
+      if (!conversationId || !isVisible) return;
+
+      try {
+        console.log('🔍 Smart Visualizer loading stored data for:', conversationId);
+        
+        // Import the conversation storage service
+        const { getConversationData } = await import('@/services/conversationStorageService');
+        const storedData = getConversationData(conversationId);
+        
+        if (storedData) {
+          console.log('✅ Found stored conversation data:', storedData);
+          
+          // Set up the visualizer state with stored data
+          setState(prev => ({
+            ...prev,
+            currentConversationId: conversationId,
+            analysisStage: storedData.metadata?.stage === 'structure_complete' ? 'structure_complete' : 'agents_emerging',
+            teamStructure: storedData.autogenStructure || null,
+            progressiveElements: {
+              teamName: storedData.flowState?.team?.name || 'AI Team',
+              teamDescription: storedData.flowState?.team?.description || 'AI agents team',
+              teamType: storedData.flowState?.team?.type || 'RoundRobinGroupChat',
+              identifiedAgents: storedData.flowState?.agents || []
+            },
+            hasGeneratedTask: true,
+            conversationEnded: storedData.status === 'completed',
+            hasJsonReady: !!storedData.autogenStructure,
+            pendingJsonUpdate: storedData.autogenStructure
+          }));
+          
+          console.log('🎨 Smart Visualizer state updated with stored data');
+        } else {
+          console.log('⚠️ No stored data found, creating mock data for visualization');
+          
+          // Create mock data for demonstration
+          setState(prev => ({
+            ...prev,
+            currentConversationId: conversationId,
+            analysisStage: 'structure_complete',
+            progressiveElements: {
+              teamName: 'Customer Service Team',
+              teamDescription: 'AI agents team for customer service',
+              teamType: 'RoundRobinGroupChat',
+              identifiedAgents: [
+                {
+                  name: 'Ticket Analyzer',
+                  description: 'Analyzes customer support tickets',
+                  role: 'assistant',
+                  confidence: 0.9
+                }
+              ]
+            },
+            hasGeneratedTask: true,
+            conversationEnded: true,
+            hasJsonReady: false
+          }));
+        }
+      } catch (error) {
+        console.error('❌ Error loading stored conversation data:', error);
+        setState(prev => ({ 
+          ...prev, 
+          error: 'Failed to load conversation data',
+          currentConversationId: conversationId
+        }));
+      }
+    };
+
+    loadStoredConversationData();
+  }, [conversationId, isVisible]);
+
   // Reset state when conversation ID changes
   useEffect(() => {
     try {
@@ -193,6 +266,13 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   // Generate and update flow visualization - FIXED: Set nodes and edges together
   const updateFlowVisualization = useCallback(() => {
     try {
+      console.log('🎨 Updating flow visualization with state:', {
+        analysisStage: state.analysisStage,
+        hasTeamStructure: !!state.teamStructure,
+        progressiveElements: state.progressiveElements,
+        messageCount: messages.length
+      });
+
       const { nodes: newNodes, edges: newEdges } = generateProgressiveFlow({
         analysisStage: state.analysisStage,
         progressiveElements: state.progressiveElements,
@@ -204,7 +284,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         conversationEnded: state.conversationEnded,
       });
       
-      console.log('🔄 Updating ReactFlow with progressive nodes/edges:', { 
+      console.log('🔄 Generated flow elements:', { 
         nodeCount: newNodes.length, 
         edgeCount: newEdges.length 
       });
@@ -213,10 +293,16 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         const teamType = state.progressiveElements.teamType || 'RoundRobinGroupChat';
         const layoutedElements = applyLayoutToFlow(newNodes, newEdges, teamType);
         
+        console.log('📐 Applied layout to flow:', {
+          layoutedNodeCount: layoutedElements.nodes.length,
+          layoutedEdgeCount: layoutedElements.edges.length
+        });
+        
         // 🎯 FIXED: Set nodes and edges at the same time to prevent race condition
         setNodes(layoutedElements.nodes);
         setEdges(layoutedElements.edges);
       } else {
+        console.log('⚠️ No nodes generated, setting empty arrays');
         setNodes(newNodes);
         setEdges(newEdges);
       }
