@@ -9,7 +9,7 @@ import ReactFlow, {
   Panel,
   Node,
   Edge
-} from 'reactflow';
+} from 'reactflow';Edge
 import 'reactflow/dist/style.css';
 
 import Button from '@/components/ui/Button';
