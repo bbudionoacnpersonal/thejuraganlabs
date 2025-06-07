@@ -100,9 +100,6 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
 
             <div className="w-full bg-dark-background rounded-lg p-6">
                 
-                <div className="bg-dark-surface rounded-lg p-4 border border-dark-border">
-                  <p className="text-gray-400 text-sm">Most used across all industries</p>
-                </div>
               
               <Button
                 size="lg"
