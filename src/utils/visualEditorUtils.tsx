@@ -50,8 +50,13 @@ export const transformTeamStructureToFlow = (
     position: { x: 0, y: 0 }
   });
 
-  // Add participant nodes
+  // Add participant nodes with proper tool extraction
   teamStructure.config.participants.forEach((participant: any) => {
+    // 🎯 FIXED: Properly extract tool names from the participant configuration
+    const extractedTools = extractToolsFromParticipant(participant);
+    
+    console.log('🔧 Extracted tools for', participant.label, ':', extractedTools);
+    
     nodes.push({
       id: participant.label,
       type: 'custom',
@@ -60,7 +65,8 @@ export const transformTeamStructureToFlow = (
         type: 'agent',
         description: participant.description,
         model: participant.config.model_client?.config.model || '',
-        tools: participant.config.tools?.length || 0,
+        tools: extractedTools.length, // Number of tools
+        toolNames: extractedTools, // 🎯 NEW: Pass actual tool names for display
         onEdit,
       },
       // Initial position - will be overridden by Dagre
@@ -99,6 +105,47 @@ export const transformTeamStructureToFlow = (
   });
 
   return layoutedElements;
+};
+
+// 🎯 NEW: Function to properly extract tool names from participant configuration
+const extractToolsFromParticipant = (participant: any): string[] => {
+  const tools: string[] = [];
+  
+  if (!participant.config.tools || !Array.isArray(participant.config.tools)) {
+    return tools;
+  }
+  
+  participant.config.tools.forEach((tool: any) => {
+    let toolName = '';
+    
+    // Try different ways to extract the tool name
+    if (tool.config?.name) {
+      toolName = tool.config.name;
+    } else if (tool.label) {
+      toolName = tool.label;
+    } else if (tool.config?.source_code) {
+      // Extract function name from source code
+      const functionMatch = tool.config.source_code.match(/def\s+(\w+)\s*\(/);
+      if (functionMatch) {
+        toolName = functionMatch[1];
+      }
+    } else if (tool.description) {
+      // Use first word of description as fallback
+      toolName = tool.description.split(' ')[0];
+    }
+    
+    if (toolName) {
+      tools.push(toolName);
+    }
+  });
+  
+  console.log('🔧 Extracted tools from participant:', {
+    participantLabel: participant.label,
+    toolsFound: tools,
+    rawTools: participant.config.tools
+  });
+  
+  return tools;
 };
 
 // 🎯 CRITICAL: Extract team type from provider attribute
