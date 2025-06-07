@@ -693,8 +693,7 @@ const getUseCasesByFunction = (functionArea: string): UseCaseTemplate[] => {
 
 export const getUseCasesByIndustryAndFunction = (industry: string, functionAreas: string[]): UseCaseTemplate[] => {
   return industryFunctionGallery.filter(useCase => 
-    useCase.industry === industry && 
-    functionAreas.some(area => useCase.functionAreas.includes(area))
+    useCase.industry === industry)
   );
 };
 
