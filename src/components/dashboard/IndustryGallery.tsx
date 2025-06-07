@@ -98,7 +98,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
               )}
             </p>
 
-            <div className="w-full bg-dark-background rounded-lg p-6">
+            <div className="w-full bg-dark-background rounded-lg p-4">
                 
               <Button
                 size="lg"
