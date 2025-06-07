@@ -9,6 +9,7 @@ import Button from '@/components/ui/Button';
 import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
 import Tooltip from '@/components/ui/Tooltip';
+import {Library} from 'lucide-react';
 import {
   ChatBubbleLeftRightIcon,
   MagnifyingGlassIcon,
