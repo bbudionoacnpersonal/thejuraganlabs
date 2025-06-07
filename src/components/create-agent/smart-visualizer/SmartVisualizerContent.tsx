@@ -15,8 +15,6 @@ import 'reactflow/dist/style.css';
 import Button from '@/components/ui/Button';
 import { 
   XMarkIcon, 
-  EyeIcon, 
-  EyeSlashIcon, 
   DocumentArrowDownIcon,
   ExclamationTriangleIcon,
   ArrowPathIcon,
