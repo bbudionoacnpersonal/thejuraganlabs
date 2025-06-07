@@ -377,7 +377,13 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                 totalMessages: 4
               },
               userIndustry: "retail",
-              userFocusAreas: ["customer_service"]
+              userFocusAreas: ["customer_service"],
+              messages: [
+                { role: 'user', content: 'Buatin AI agents team yang bisa analisa tiket dari pelanggan dan mengkategorikannya berdasarkan prioritas dan departemennya.', timestamp: Date.now() - 300000 },
+                { role: 'assistant', content: 'Siap Gan! Gw bantuin bikin AI agents team untuk customer service. Tim ini akan punya beberapa agent khusus untuk analisa tiket, kategorisasi prioritas, dan routing ke departemen yang tepat.', timestamp: Date.now() - 250000 },
+                { role: 'user', content: 'Wah mantap! Gw juga mau ini terintegrasi dengan akun Zendesk perusahaan ya.', timestamp: Date.now() - 200000 },
+                { role: 'assistant', content: 'Noted Gan! Gw dah tambahin Zendesk integration ke AI agents teamnya. Sekarang tim AI Agan bisa langsung akses dan proses tiket dari Zendesk secara otomatis.', timestamp: Date.now() - 150000 }
+              ]
             });
           }
         }
@@ -458,69 +464,42 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
     setShowSmartVisualizer(true);
   };
 
-  // 🎯 ENHANCED: Check if Smart Visualizer should be available - SIMPLIFIED LOGIC
+  // 🎯 CRITICAL FIX: Simplified logic to always show Smart Visualizer when we have data
   const shouldShowSmartVisualizer = () => {
-    // 🎯 CRITICAL FIX: Always show if we have ANY stored conversation data
-    if (!storedConversationData) {
-      console.log('❌ Smart Visualizer not available: No stored conversation data');
-      return false;
-    }
-
-    // Check for complete autogen structure (highest priority)
-    if (storedConversationData.autogenStructure) {
-      console.log('✅ Smart Visualizer available: Has complete autogen structure');
-      return true;
-    }
+    // Always show if we have stored conversation data OR if we have transcript data
+    const hasStoredData = !!storedConversationData;
+    const hasTranscriptData = !!data && data.transcript && data.transcript.length > 0;
     
-    // Check for team structure in flow state
-    if (storedConversationData.flowState?.team) {
-      console.log('✅ Smart Visualizer available: Has team structure');
-      return true;
-    }
+    console.log('🔍 Smart Visualizer availability check:', {
+      hasStoredData,
+      hasTranscriptData,
+      conversationId,
+      storedDataKeys: storedConversationData ? Object.keys(storedConversationData) : [],
+      transcriptLength: data?.transcript?.length || 0
+    });
     
-    // Check for completion stages
-    if (storedConversationData.metadata?.stage === 'structure_complete' || 
-        storedConversationData.metadata?.stage === 'finalization') {
-      console.log('✅ Smart Visualizer available: Structure completion stage');
-      return true;
-    }
-    
-    // Check for identified agents
-    if (storedConversationData.flowState?.agents && 
-        Array.isArray(storedConversationData.flowState.agents) &&
-        storedConversationData.flowState.agents.length > 0) {
-      console.log('✅ Smart Visualizer available: Has identified agents');
-      return true;
-    }
-
-    // 🎯 NEW: Check if we have any meaningful conversation data
-    if (storedConversationData.messages && 
-        Array.isArray(storedConversationData.messages) &&
-        storedConversationData.messages.length > 2) {
-      console.log('✅ Smart Visualizer available: Has meaningful conversation data');
-      return true;
-    }
-    
-    console.log('❌ Smart Visualizer not available: No sufficient data');
-    return false;
+    return hasStoredData || hasTranscriptData;
   };
 
   const getSmartVisualizerStatus = () => {
-    if (!storedConversationData) return 'No Data Available';
+    if (!storedConversationData && !data) return 'No Data Available';
     
-    if (storedConversationData.autogenStructure) {
+    if (storedConversationData?.autogenStructure) {
       return 'Complete JSON Available';
     }
-    if (storedConversationData.flowState?.team) {
+    if (storedConversationData?.flowState?.team) {
       return 'Team Structure Available';
     }
-    if (storedConversationData.flowState?.agents && storedConversationData.flowState.agents.length > 0) {
+    if (storedConversationData?.flowState?.agents && storedConversationData.flowState.agents.length > 0) {
       return 'Agents Identified';
     }
-    if (storedConversationData.messages && storedConversationData.messages.length > 2) {
+    if (storedConversationData?.messages && storedConversationData.messages.length > 2) {
       return 'Conversation Data Available';
     }
-    return 'No Structure Data';
+    if (data?.transcript && data.transcript.length > 0) {
+      return 'Transcript Data Available';
+    }
+    return 'Basic Data Available';
   };
 
   return (
@@ -548,17 +527,16 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {/* Smart Visualizer Button - ALWAYS CHECK ON RENDER */}
-                {shouldShowSmartVisualizer() && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleSmartVisualizerClick}
-                    leftIcon={<Eye className="h-2 w-2" />}
-                  >
-                    Show AI Flow
-                  </Button>
-                )}
+                {/* Smart Visualizer Button - ALWAYS SHOW IF WE HAVE ANY DATA */}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleSmartVisualizerClick}
+                  leftIcon={<Eye className="h-2 w-2" />}
+                  disabled={!shouldShowSmartVisualizer()}
+                >
+                  Show AI Flow
+                </Button>
                 
                 <Button
                   variant="secondary"
@@ -659,69 +637,61 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                     </div>
                   </div>
 
-                  {/* Smart Visualizer Info - ALWAYS SHOW IF DATA EXISTS */}
-                  {storedConversationData && (
-                    <div className="bg-dark-400 rounded-lg p-2">
-                      <h3 className="text-sm font-medium text-white mb-2">AI Team Data</h3>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-400 text-sm">Structure Status:</span>
-                          <span className={`text-sm ${
-                            storedConversationData.autogenStructure 
-                              ? 'text-secondary-600' 
-                              : shouldShowSmartVisualizer()
-                              ? 'text-blue-500'
-                              : 'text-gray-500'
-                          }`}>
-                            {getSmartVisualizerStatus()}
+                  {/* Smart Visualizer Info - ALWAYS SHOW STATUS */}
+                  <div className="bg-dark-400 rounded-lg p-2">
+                    <h3 className="text-sm font-medium text-white mb-2">AI Team Data</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-sm">Structure Status:</span>
+                        <span className={`text-sm ${
+                          shouldShowSmartVisualizer() ? 'text-secondary-600' : 'text-gray-500'
+                        }`}>
+                          {getSmartVisualizerStatus()}
+                        </span>
+                      </div>
+                      
+                      {/* Industry and Focus Areas Display */}
+                      {(storedConversationData?.userIndustry || storedConversationData?.userFocusAreas) && (
+                        <div className="bg-dark-surface/50 p-2 rounded">
+                          <h4 className="text-sm font-medium text-white mb-1">Context Information</h4>
+                          {storedConversationData.userIndustry && (
+                            <p className="text-xs text-gray-400">Industry: {storedConversationData.userIndustry}</p>
+                          )}
+                          {storedConversationData.userFocusAreas && Array.isArray(storedConversationData.userFocusAreas) && (
+                            <p className="text-xs text-gray-400">Focus: {storedConversationData.userFocusAreas.join(', ')}</p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {storedConversationData?.flowState?.team && (
+                        <div className="bg-dark-surface/50 p-2 rounded">
+                          <h4 className="text-sm font-medium text-white mb-1">Team Information</h4>
+                          <p className="text-sm text-gray-300">{storedConversationData.flowState.team.name}</p>
+                          <p className="text-xs text-gray-400">{storedConversationData.flowState.team.description}</p>
+                          {storedConversationData.flowState.agents && storedConversationData.flowState.agents.length > 0 && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              {storedConversationData.flowState.agents.length} agents identified
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* ALWAYS SHOW AVAILABILITY STATUS */}
+                      <div className={`${shouldShowSmartVisualizer() ? 'bg-secondary-600/10 border-secondary-600/20' : 'bg-gray-600/10 border-gray-600/20'} border p-2 rounded`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Eye className={`h-3 w-3 ${shouldShowSmartVisualizer() ? 'text-secondary-600' : 'text-gray-500'}`} />
+                          <span className={`text-xs font-medium ${shouldShowSmartVisualizer() ? 'text-secondary-600' : 'text-gray-500'}`}>
+                            {shouldShowSmartVisualizer() ? 'AI Team Flow Available' : 'AI Team Flow Not Available'}
                           </span>
                         </div>
-                        
-                        {/* Industry and Focus Areas Display */}
-                        {(storedConversationData.userIndustry || storedConversationData.userFocusAreas) && (
-                          <div className="bg-dark-surface/50 p-2 rounded">
-                            <h4 className="text-sm font-medium text-white mb-1">Context Information</h4>
-                            {storedConversationData.userIndustry && (
-                              <p className="text-xs text-gray-400">Industry: {storedConversationData.userIndustry}</p>
-                            )}
-                            {storedConversationData.userFocusAreas && Array.isArray(storedConversationData.userFocusAreas) && (
-                              <p className="text-xs text-gray-400">Focus: {storedConversationData.userFocusAreas.join(', ')}</p>
-                            )}
-                          </div>
-                        )}
-                        
-                        {storedConversationData.flowState?.team && (
-                          <div className="bg-dark-surface/50 p-2 rounded">
-                            <h4 className="text-sm font-medium text-white mb-1">Team Information</h4>
-                            <p className="text-sm text-gray-300">{storedConversationData.flowState.team.name}</p>
-                            <p className="text-xs text-gray-400">{storedConversationData.flowState.team.description}</p>
-                            {storedConversationData.flowState.agents && storedConversationData.flowState.agents.length > 0 && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                {storedConversationData.flowState.agents.length} agents identified
-                              </p>
-                            )}
-                          </div>
-                        )}
-
-                        {/* ALWAYS SHOW AVAILABILITY STATUS */}
-                        <div className={`${shouldShowSmartVisualizer() ? 'bg-secondary-600/10 border-secondary-600/20' : 'bg-gray-600/10 border-gray-600/20'} border p-2 rounded`}>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Eye className={`h-3 w-3 ${shouldShowSmartVisualizer() ? 'text-secondary-600' : 'text-gray-500'}`} />
-                            <span className={`text-xs font-medium ${shouldShowSmartVisualizer() ? 'text-secondary-600' : 'text-gray-500'}`}>
-                              {shouldShowSmartVisualizer() ? 'AI Team Flow Available' : 'AI Team Flow Not Available'}
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-400">
-                            {shouldShowSmartVisualizer() 
-                              ? (storedConversationData.autogenStructure 
-                                  ? 'Complete team structure can be visualized with full details.'
-                                  : 'Team structure can be visualized based on identified components.')
-                              : 'No sufficient AI team data found for visualization.'}
-                          </p>
-                        </div>
+                        <p className="text-xs text-gray-400">
+                          {shouldShowSmartVisualizer() 
+                            ? 'Team structure can be visualized based on conversation data.'
+                            : 'No sufficient AI team data found for visualization.'}
+                        </p>
                       </div>
                     </div>
-                  )}
+                  </div>
 
                   {/* Analysis Summary */}
                   {data.analysis && (
@@ -838,14 +808,18 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         conversationId={conversationId}
       />
 
-      {/* Smart Visualizer Modal */}
-      {showSmartVisualizer && storedConversationData && (
+      {/* Smart Visualizer Modal - CRITICAL FIX: Always render when showSmartVisualizer is true */}
+      {showSmartVisualizer && (
         <SmartVisualizer
           isVisible={showSmartVisualizer}
           onClose={() => setShowSmartVisualizer(false)}
           conversationState="idle"
           agentFlow={[]}
-          messages={storedConversationData.messages || []}
+          messages={storedConversationData?.messages || data?.transcript?.map((t: any) => ({
+            role: t.role,
+            content: t.message,
+            timestamp: Date.now() - (t.time_in_call_secs * 1000)
+          })) || []}
           conversationId={conversationId}
           onJsonGenerated={() => {}} // No-op since this is read-only view
         />
