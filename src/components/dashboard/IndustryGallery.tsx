@@ -120,7 +120,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
         title="Industry and Functional Use Case Gallery"
         size="xl"
       >
-        <div className="space-y-4">
+        <div className="space-y-2">
           {/* Tabs */}
           <div className="flex space-x-1 bg-dark-background rounded-lg p-1">
             {[
