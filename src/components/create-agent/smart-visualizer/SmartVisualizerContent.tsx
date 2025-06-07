@@ -570,7 +570,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                       variant="ghost"
                       onClick={handleAutoLayout}
                       className="text-xs px-2 py-1 border border-dark-border hover:bg-dark-400"
-                      leftIcon={<ArrowPathIcon className="h-3 w-3" />}
+                      leftIcon={<ArrowPathIcon className="h-2 w-2" />}
                     >
                       Auto Layout
                     </Button>
