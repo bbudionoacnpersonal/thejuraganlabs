@@ -37,7 +37,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
 
   // Get use cases based on user's industry and focus areas
   //const recommendedUseCases = getUseCasesByIndustryAndFunction(userIndustry, userFocusAreas);
-  const recommendedUseCases = getUseCasesByIndustryAndFunction(userIndustry);
+  const recommendedUseCases = const recommendedUseCases = getUseCasesByIndustryAndFunction(userIndustry);
   const popularUseCases = getPopularUseCases();
 
   const getDifficultyColor = (difficulty: string) => {
