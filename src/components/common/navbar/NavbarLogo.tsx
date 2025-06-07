@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { industries, focusAreas } from '@/mockdata/industry_functions';
 
 const NavbarLogo: React.FC = () => {
@@ -65,13 +66,16 @@ const NavbarLogo: React.FC = () => {
             {user && userIndustry && (
               <>
                 <span className="text-[10px] text-gray-400">|</span>
-                <Link to="/onboarding" className="group">
-                  <span className="text-[10px] text-gray-400 hover:text-gray-300">{industryLabel}</span>
-                  {focusAreaLabels.length > 0 && (
-                    <span className="text-[10px] text-gray-500 group-hover:text-gray-400">
-                      {' '}• {focusAreaLabels.join(', ')}
-                    </span>
-                  )}
+                <Link to="/onboarding" className="group flex items-center gap-1">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-400 hover:text-gray-300">{industryLabel}</span>
+                    {focusAreaLabels.length > 0 && (
+                      <span className="text-[10px] text-gray-500 group-hover:text-gray-400">
+                        {focusAreaLabels.join(', ')}
+                      </span>
+                    )}
+                  </div>
+                  <ChevronDownIcon className="h-2 w-2 text-gray-500 group-hover:text-gray-400 transition-colors" />
                 </Link>
               </>
             )}
