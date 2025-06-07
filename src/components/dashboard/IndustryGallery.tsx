@@ -100,7 +100,6 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
 
             <div className="w-full bg-dark-background rounded-lg p-6">
                 
-              
               <Button
                 size="lg"
                 leftIcon={<UserGroupIcon className="h-6 w-6" />}
