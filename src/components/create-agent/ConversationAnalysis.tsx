@@ -554,7 +554,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                     variant="secondary"
                     size="sm"
                     onClick={handleSmartVisualizerClick}
-                    leftIcon={<Eye className="h-4 w-4" />}
+                    leftIcon={<Eye className="h-2 w-2" />}
                   >
                     Show AI Flow
                   </Button>
