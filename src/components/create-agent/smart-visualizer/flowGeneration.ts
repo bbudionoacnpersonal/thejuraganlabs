@@ -12,7 +12,7 @@ interface FlowGenerationOptions {
   conversationEnded: boolean;
 }
 
- export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
+export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
   try {
     console.log('🎨 Generating progressive flow visualization:', options);
     
@@ -29,7 +29,7 @@ interface FlowGenerationOptions {
 
     const newNodes: Node[] = [];
     const newEdges: Edge[] = [];
-    let yPosition = 50; //originally 50
+    let yPosition = 50;
 
     // 🎯 CRITICAL FIX: Always generate nodes even with minimal data
     console.log('🔍 Flow generation input:', {
@@ -40,29 +40,14 @@ interface FlowGenerationOptions {
       progressiveElementsKeys: Object.keys(progressiveElements || {})
     });
 
-    // Always show user input (never replace with final task)
-    if (analysisStage !== 'initial' && messages.length > 0) {
+    // --- STAGE 1: NODE CREATION (Create all nodes first) ---
+
+    // 1. User Input Node - Create if we have any analysis stage beyond initial OR if we have messages
+    const shouldCreateUserInput = analysisStage !== 'initial' || messages.length > 0;
+    if (shouldCreateUserInput) {
       const userMessages = messages.filter((m: any) => m.role === 'user');
-      if (userMessages.length > 0) {
-        const lastUserMessage = userMessages[userMessages.length - 1];
-        
-        newNodes.push({
-          id: 'user-input',
-          type: 'conversation',
-          position: { x: 400, y: yPosition },
-          data: {
-            type: 'user',
-            label: 'User Input',
-            description: lastUserMessage.content.substring(0, 100) + (lastUserMessage.content.length > 100 ? '...' : ''),
-            confidence: 1.0
-          },
-          sourcePosition: Position.Bottom,
-          targetPosition: Position.Top,
-        });
-        yPosition += 200; //originally 200
-      }
-    } else if (analysisStage !== 'initial') {
-      // 🎯 NEW: Create a default user input node even without messages
+      const lastUserMessage = userMessages.length > 0 ? userMessages[userMessages.length - 1] : null;
+      
       newNodes.push({
         id: 'user-input',
         type: 'conversation',
@@ -70,20 +55,24 @@ interface FlowGenerationOptions {
         data: {
           type: 'user',
           label: 'User Input',
-          description: 'User requested AI agents team creation',
+          description: lastUserMessage 
+            ? (lastUserMessage.content.substring(0, 100) + (lastUserMessage.content.length > 100 ? '...' : ''))
+            : 'User requested AI agents team creation',
           confidence: 1.0
         },
         sourcePosition: Position.Bottom,
         targetPosition: Position.Top,
       });
-      yPosition += 300;//originally 200
+      yPosition += 200;
+      console.log('✅ Created user-input node');
     }
 
-    // Team Node (when team is identified or we have stored data)
-    if ((analysisStage !== 'initial' && progressiveElements.teamName) || teamStructure) {
-      const teamName = progressiveElements.teamName || teamStructure?.label || 'AI Agents Team';
-      const teamDescription = progressiveElements.teamDescription || teamStructure?.description || 'AI agents team for task processing';
-      const teamType = progressiveElements.teamType || extractTeamTypeFromProvider(teamStructure?.provider) || 'RoundRobinGroupChat';
+    // 2. Team Node - Create if we have team info OR team structure
+    const shouldCreateTeam = (analysisStage !== 'initial' && progressiveElements?.teamName) || teamStructure;
+    if (shouldCreateTeam) {
+      const teamName = progressiveElements?.teamName || teamStructure?.label || 'AI Agents Team';
+      const teamDescription = progressiveElements?.teamDescription || teamStructure?.description || 'AI agents team for task processing';
+      const teamType = progressiveElements?.teamType || extractTeamTypeFromProvider(teamStructure?.provider) || 'RoundRobinGroupChat';
       
       const teamNode: Node = {
         id: 'team',
@@ -95,47 +84,21 @@ interface FlowGenerationOptions {
           description: teamDescription,
           confidence: analysisStage === 'structure_complete' ? 0.9 : 0.7,
           teamType: teamType,
-          agents: progressiveElements.identifiedAgents || extractAgentsFromTeamStructure(teamStructure) || []
+          agents: progressiveElements?.identifiedAgents || extractAgentsFromTeamStructure(teamStructure) || []
         },
         sourcePosition: Position.Bottom,
         targetPosition: Position.Top,
       };
       newNodes.push(teamNode);
-
-      // Create edge from input to team
-      const sourceNode = newNodes.find(n => n.id === 'user-input');
-      
-      if (sourceNode) {
-        console.log('🔗 Creating edge from user-input to team');
-        newEdges.push({
-          id: `edge-user-input-team`,
-          source: 'user-input',
-          target: 'team',
-          type: 'smoothstep',
-          animated: true,
-          style: { 
-            stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#4D9CFF',
-            strokeWidth: 2
-          },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            width: 12,
-            height: 12,
-            color: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#4D9CFF',
-          },
-          label: 'Team Coordination',
-          labelStyle: { fontSize: 12, fontWeight: 600, fill: '#ffffff' },
-          labelBgStyle: { fill: '#1e1e1e', fillOpacity: 0.8 },
-        });
-      }
-
-      yPosition += 280; //originally 280
+      yPosition += 280;
+      console.log('✅ Created team node:', teamName);
     }
 
-    // Agent Nodes (when agents are emerging or from stored data)
-    const agents = progressiveElements.identifiedAgents || extractAgentsFromTeamStructure(teamStructure) || [];
+    // 3. Agent Nodes - Create if we have agents in the right stage
+    const agents = progressiveElements?.identifiedAgents || extractAgentsFromTeamStructure(teamStructure) || [];
+    const shouldCreateAgents = (analysisStage === 'agents_emerging' || analysisStage === 'structure_complete') && agents.length > 0;
     
-    if ((analysisStage === 'agents_emerging' || analysisStage === 'structure_complete') && agents.length > 0) {
+    if (shouldCreateAgents) {
       agents.forEach((agent: any, index: number) => {
         // Extract LLM and tools info from team structure if available
         let llmModel = 'gpt-4o-mini';
@@ -176,10 +139,72 @@ interface FlowGenerationOptions {
           targetPosition: Position.Top,
         };
         newNodes.push(agentNode);
+        console.log('✅ Created agent node:', agent.name || `Agent ${index + 1}`);
+      });
 
-        // Create edge from team to agent
-        const teamNode = newNodes.find(n => n.id === 'team');
-        if (teamNode) {
+      yPosition += 280;
+    }
+
+    // 4. Completion Node - Create if conversation is truly complete
+    const shouldCreateCompletion = conversationEnded && hasGeneratedTask && analysisStage === 'structure_complete';
+    if (shouldCreateCompletion) {
+      const completionNode: Node = {
+        id: 'completion-indicator',
+        type: 'conversation',
+        position: { x: 400, y: yPosition },
+        data: {
+          type: 'completion',
+          label: 'Task Complete',
+          description: 'AI agents team configuration completed and ready for deployment',
+          confidence: 1.0
+        },
+        sourcePosition: Position.Bottom,
+        targetPosition: Position.Top,
+      };
+      newNodes.push(completionNode);
+      console.log('✅ Created completion node');
+    }
+
+    // --- STAGE 2: EDGE CREATION (After all nodes are created, validate and create edges) ---
+
+    // Edge 1: User Input → Team
+    const userInputNode = newNodes.find(n => n.id === 'user-input');
+    const teamNode = newNodes.find(n => n.id === 'team');
+
+    if (userInputNode && teamNode) {
+      console.log('🔗 Creating edge from user-input to team');
+      newEdges.push({
+        id: `edge-user-input-team`,
+        source: 'user-input',
+        target: 'team',
+        type: 'smoothstep',
+        animated: true,
+        style: { 
+          stroke: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#4D9CFF',
+          strokeWidth: 2
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 12,
+          height: 12,
+          color: isAnalyzing ? '#f59e0b' : conversationState === 'processing' ? '#3b82f6' : '#4D9CFF',
+        },
+        label: 'Team Coordination',
+        labelStyle: { fontSize: 12, fontWeight: 600, fill: '#ffffff' },
+        labelBgStyle: { fill: '#1e1e1e', fillOpacity: 0.8 },
+      });
+    } else {
+      console.log('⚠️ Cannot create user-input → team edge:', {
+        hasUserInput: !!userInputNode,
+        hasTeam: !!teamNode
+      });
+    }
+
+    // Edge 2: Team → Agents
+    if (teamNode && agents.length > 0) {
+      agents.forEach((agent: any, index: number) => {
+        const agentNode = newNodes.find(n => n.id === `agent-${index}`);
+        if (agentNode) {
           console.log('🔗 Creating edge from team to agent', index);
           newEdges.push({
             id: `edge-team-agent-${index}`,
@@ -201,34 +226,26 @@ interface FlowGenerationOptions {
             labelStyle: { fontSize: 10, fontWeight: 500, fill: '#ffffff' },
             labelBgStyle: { fill: '#1e1e1e', fillOpacity: 0.7 },
           });
+        } else {
+          console.log('⚠️ Cannot create team → agent edge for index', index, ': agent node not found');
         }
       });
-
-      yPosition += 280; //originally 280
+    } else {
+      console.log('⚠️ Cannot create team → agent edges:', {
+        hasTeam: !!teamNode,
+        agentCount: agents.length
+      });
     }
 
-    // Add completion indicator node (optional, only when conversation is truly complete)
-    if (conversationEnded && hasGeneratedTask && analysisStage === 'structure_complete') {
-      const completionNode: Node = {
-        id: 'completion-indicator',
-        type: 'conversation',
-        position: { x: 400, y: yPosition },
-        data: {
-          type: 'completion',
-          label: 'Task Complete',
-          description: 'AI agents team configuration completed and ready for deployment',
-          confidence: 1.0
-        },
-        sourcePosition: Position.Bottom,
-        targetPosition: Position.Top,
-      };
-      newNodes.push(completionNode);
-
-      // Connect from the last agent or team to completion
+    // Edge 3: Last Agent/Team → Completion
+    const completionNode = newNodes.find(n => n.id === 'completion-indicator');
+    if (completionNode) {
       const lastAgentIndex = agents.length - 1;
       const sourceId = lastAgentIndex >= 0 ? `agent-${lastAgentIndex}` : 'team';
+      const sourceNode = newNodes.find(n => n.id === sourceId);
       
-      if (newNodes.find(n => n.id === sourceId)) {
+      if (sourceNode) {
+        console.log('🔗 Creating edge from', sourceId, 'to completion');
         newEdges.push({
           id: `edge-${sourceId}-completion`,
           source: sourceId,
@@ -249,6 +266,8 @@ interface FlowGenerationOptions {
           labelStyle: { fontSize: 10, fontWeight: 500, fill: '#ffffff' },
           labelBgStyle: { fill: '#1e1e1e', fillOpacity: 0.7 },
         });
+      } else {
+        console.log('⚠️ Cannot create completion edge: source node not found for', sourceId);
       }
     }
 
@@ -257,7 +276,9 @@ interface FlowGenerationOptions {
       edgeCount: newEdges.length,
       stage: analysisStage,
       conversationEnded,
-      hasGeneratedTask
+      hasGeneratedTask,
+      nodeIds: newNodes.map(n => n.id),
+      edgeConnections: newEdges.map(e => `${e.source} → ${e.target}`)
     });
     
     return { nodes: newNodes, edges: newEdges };
@@ -266,8 +287,6 @@ interface FlowGenerationOptions {
     return { nodes: [], edges: [] };
   }
 };
-
-
 
 // 🎯 NEW: Helper function to extract team type from provider
 const extractTeamTypeFromProvider = (provider?: string): string => {
