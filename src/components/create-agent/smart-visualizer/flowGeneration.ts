@@ -174,7 +174,7 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
         console.log('✅ Created agent node:', agent.name || `Agent ${index + 1}`, 'with tools:', tools.map(t => t.name));
       });
 
-      yPosition += 280;
+      yPosition += 400;
     }
 
     // 4. Completion Node - Create if conversation is truly complete
