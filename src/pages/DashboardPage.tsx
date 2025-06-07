@@ -180,7 +180,7 @@ const DashboardPage: React.FC = () => {
                       <Button
                         variant="secondary"
                         className="!py-2"
-                        size="sm"
+                        size="lg"
                         
                       >
                         Search
