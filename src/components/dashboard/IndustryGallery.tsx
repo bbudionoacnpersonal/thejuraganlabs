@@ -9,6 +9,7 @@ import {
   SparklesIcon, 
   ClockIcon, 
   StarIcon,
+  UserGroupIcon,
   TagIcon,
   DocumentArrowDownIcon,
   PlayIcon
