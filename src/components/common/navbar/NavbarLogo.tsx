@@ -67,14 +67,14 @@ const NavbarLogo: React.FC = () => {
               <>
                 <span className="text-[10px] text-gray-400">|</span>
                 <Link to="/onboarding" className="group flex items-center gap-1">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-400 hover:text-gray-300">{industryLabel}</span>
+                  <span className="text-[10px] text-gray-400 hover:text-gray-300">
+                    {industryLabel}
                     {focusAreaLabels.length > 0 && (
-                      <span className="text-[10px] text-gray-500 group-hover:text-gray-400">
-                        {focusAreaLabels.join(', ')}
+                      <span className="text-gray-500 group-hover:text-gray-400">
+                        {' '}• {focusAreaLabels.join(', ')}
                       </span>
                     )}
-                  </div>
+                  </span>
                   <ChevronDownIcon className="h-2 w-2 text-gray-500 group-hover:text-gray-400 transition-colors" />
                 </Link>
               </>
