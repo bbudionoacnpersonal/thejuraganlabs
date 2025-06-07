@@ -16,7 +16,7 @@ const ConversationNode: React.FC<ConversationNodeProps> = ({ data }) => {
       switch (data.type) {
         case 'user':
           return 'bg-white border-gray-200 text-gray-900';
-        case 'final_task':
+        case 'completion':
           return 'bg-white border-gray-200 text-gray-900';
         case 'team':
           return 'bg-white border-gray-200 text-gray-900';
@@ -31,8 +31,8 @@ const ConversationNode: React.FC<ConversationNodeProps> = ({ data }) => {
       switch (data.type) {
         case 'user':
           return '👤';
-        case 'final_task':
-          return '🎯';
+        case 'completion':
+          return '✅';
         case 'team':
           return getTeamTypeIcon(data.teamType);
         case 'agent':
@@ -167,7 +167,7 @@ const ConversationNode: React.FC<ConversationNodeProps> = ({ data }) => {
         
         {data.confidence && (
           <div className="flex items-center justify-center mt-2">
-            <div className={`w-2 h-2 rounded-full ${data.confidence > 0.7 ? 'bg-green-500' : data.confidence > 0.4 ? 'bg-yellow-500' : 'bg-red-500'}`} />
+            <div className={`w-2 h-2 rounded-full ${data.confidence > 0.7 ? 'bg-secondary-600' : data.confidence > 0.4 ? 'bg-yellow-500' : 'bg-red-500'}`} />
             <span className="text-xs ml-1 text-gray-700">{Math.round(data.confidence * 100)}% confidence</span>
           </div>
         )}

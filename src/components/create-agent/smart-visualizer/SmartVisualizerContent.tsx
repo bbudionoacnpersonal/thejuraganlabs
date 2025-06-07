@@ -110,7 +110,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           state.hasGeneratedTask && 
           messages.length > 0) {
         setState(prev => ({ ...prev, conversationEnded: true }));
-        console.log('🏁 Conversation ended - will replace user input with final task');
+        console.log('🏁 Conversation ended - maintaining all nodes and edges');
       }
     } catch (error) {
       console.error('Error detecting conversation end:', error);
@@ -192,7 +192,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     return () => clearTimeout(timeoutId);
   }, [messages, state.lastMessageCount, state.isAnalyzing, conversationId, state.analysisStage, state.teamStructure, state.hasGeneratedTask, state.pendingJsonUpdate]);
 
-  // Generate and update flow visualization
+  // Generate and update flow visualization - FIXED: Set nodes and edges together
   const updateFlowVisualization = useCallback(() => {
     try {
       const { nodes: newNodes, edges: newEdges } = generateProgressiveFlow({
@@ -215,10 +215,9 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         const teamType = state.progressiveElements.teamType || 'RoundRobinGroupChat';
         const layoutedElements = applyLayoutToFlow(newNodes, newEdges, teamType);
         
+        // 🎯 FIXED: Set nodes and edges at the same time to prevent race condition
         setNodes(layoutedElements.nodes);
-        setTimeout(() => {
-          setEdges(layoutedElements.edges);
-        }, 50);
+        setEdges(layoutedElements.edges);
       } else {
         setNodes(newNodes);
         setEdges(newEdges);
@@ -249,6 +248,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       const teamType = state.progressiveElements.teamType || 'RoundRobinGroupChat';
       const layouted = relayoutNodes(nodes, edges, teamType);
       
+      // 🎯 FIXED: Set nodes and edges together here too
       setNodes(layouted.nodes);
       setEdges(layouted.edges);
       
@@ -369,9 +369,9 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
               state.error ? 'bg-red-500' :
               state.isAnalyzing ? 'bg-orange-500 animate-pulse' :
-              state.conversationEnded ? 'bg-green-500' :
-              state.analysisStage === 'structure_complete' ? 'bg-green-500' :
-              state.analysisStage !== 'initial' ? 'bg-blue-500' :
+              state.conversationEnded ? 'bg-secondary-600' :
+              state.analysisStage === 'structure_complete' ? 'bg-secondary-600' :
+              state.analysisStage !== 'initial' ? 'bg-secondary-600' :
               'bg-gray-500'
             }`} />
             <h3 className="text-sm font-medium text-white">Smart Visualizer</h3>
@@ -385,7 +385,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
               <SparklesIcon className="h-3 w-3 text-orange-500 animate-spin" />
             )}
             {state.hasJsonReady && state.conversationEnded && (
-              <span className="text-xs text-green-400 flex items-center gap-1">
+              <span className="text-xs text-secondary-600 flex items-center gap-1">
                 <CheckIcon className="h-3 w-3" />
                 JSON Ready
               </span>
@@ -470,7 +470,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                     {state.conversationEnded && (
                       <>
                         <span>•</span>
-                        <span className="text-green-400">Completed</span>
+                        <span className="text-secondary-600">Completed</span>
                       </>
                     )}
                   </div>
@@ -480,7 +480,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                     </div>
                   )}
                   {state.hasJsonReady && state.conversationEnded && (
-                    <div className="text-xs text-green-500 mb-3">
+                    <div className="text-xs text-secondary-600 mb-3">
                       📄 JSON Ready - Close to Update Editors
                     </div>
                   )}
@@ -532,7 +532,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                     Nodes: {nodes.length} | Edges: {edges.length}
                   </div>
                   {state.hasJsonReady && state.conversationEnded && (
-                    <div className="text-xs text-green-500 mt-1">
+                    <div className="text-xs text-secondary-600 mt-1">
                       JSON: Ready for Export
                     </div>
                   )}
@@ -554,7 +554,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                 <span className="ml-2">• Stored</span>
               )}
               {state.hasJsonReady && state.conversationEnded && (
-                <span className="ml-2 text-green-400">• JSON Ready</span>
+                <span className="ml-2 text-secondary-600">• JSON Ready</span>
               )}
             </p>
           </div>
