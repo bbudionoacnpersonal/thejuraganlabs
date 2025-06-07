@@ -1,6 +1,6 @@
 import { Role, RoleFeatures } from '@/types';
 
-export const AGENT_GROUPS = {
+const AGENT_GROUPS = {
   MARKETING: 'marketing',
   HR: 'hr',
   IT: 'it_services',

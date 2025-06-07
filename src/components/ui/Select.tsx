@@ -1,6 +1,6 @@
 import React from 'react';
 
-export interface SelectOption {
+interface SelectOption {
   value: string;
   label: string;
 }

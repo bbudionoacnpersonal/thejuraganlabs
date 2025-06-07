@@ -1,5 +1,5 @@
 // Pre-built AI agents that can be leveraged by other users
-export interface PrebuiltAgent {
+interface PrebuiltAgent {
   id: string;
   name: string;
   description: string;
@@ -380,7 +380,7 @@ export const prebuiltAgents: PrebuiltAgent[] = [
 ];
 
 // Department types for TypeScript
-export type Department = 
+type Department = 
   | 'all'
   | 'marketing'
   | 'sales'

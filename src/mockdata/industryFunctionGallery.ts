@@ -45,7 +45,7 @@ export interface UseCaseTemplate {
   lastUpdated: string;
 }
 
-export const industryFunctionGallery: UseCaseTemplate[] = [
+const industryFunctionGallery: UseCaseTemplate[] = [
   // Banking & Finance Use Cases
   {
     id: 'banking_fraud_detection',
@@ -681,11 +681,11 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
 ];
 
 // Helper functions to filter gallery data
-export const getUseCasesByIndustry = (industry: string): UseCaseTemplate[] => {
+const getUseCasesByIndustry = (industry: string): UseCaseTemplate[] => {
   return industryFunctionGallery.filter(useCase => useCase.industry === industry);
 };
 
-export const getUseCasesByFunction = (functionArea: string): UseCaseTemplate[] => {
+const getUseCasesByFunction = (functionArea: string): UseCaseTemplate[] => {
   return industryFunctionGallery.filter(useCase => 
     useCase.functionAreas.includes(functionArea)
   );
@@ -704,6 +704,6 @@ export const getPopularUseCases = (limit: number = 5): UseCaseTemplate[] => {
     .slice(0, limit);
 };
 
-export const getUseCasesByDifficulty = (difficulty: 'beginner' | 'intermediate' | 'advanced'): UseCaseTemplate[] => {
+const getUseCasesByDifficulty = (difficulty: 'beginner' | 'intermediate' | 'advanced'): UseCaseTemplate[] => {
   return industryFunctionGallery.filter(useCase => useCase.difficulty === difficulty);
 };

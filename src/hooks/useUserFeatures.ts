@@ -3,7 +3,7 @@ import useAuthStore from '@/store/authStore';
 import { ROLES, GROUP_DESCRIPTIONS } from '@/config/roles';
 import type { RoleFeatures } from '@/types';
 
-export const useUserFeatures = () => {
+const useUserFeatures = () => {
   const { user } = useAuthStore();
   
   const hasFeature = useCallback((feature: keyof RoleFeatures['features']) => {

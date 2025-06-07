@@ -1,5 +1,5 @@
 // Team Types
-export const teamTypes = [
+const teamTypes = [
   {
     id: 'roundrobin',
     name: "RoundRobinGroupChat",
@@ -43,7 +43,7 @@ export const teamTypes = [
 ];
 
 // Agent Types
-export const agentTypes = [
+const agentTypes = [
   {
     id: 'assistant',
     name: "AssistantAgent",
@@ -138,7 +138,7 @@ export const agentTypes = [
 ];
 
 // Models
-export const models = [
+const models = [
   {
     id: 'gpt4',
     name: 'GPT-4',
@@ -186,7 +186,7 @@ export const models = [
 ];
 
 // Tools
-export const tools = [
+const tools = [
   {
     id: 'websearch',
     name: "Web Search",
@@ -370,7 +370,7 @@ export const tools = [
 ];
 
 // Termination Types
-export const terminationTypes = [
+const terminationTypes = [
   {
     id: 'auto',
     name: "Auto Termination",

@@ -1,7 +1,7 @@
 import dagre from 'dagre';
 import { Node, Edge, Position } from 'reactflow';
 
-export interface LayoutOptions {
+interface LayoutOptions {
   direction: 'TB' | 'BT' | 'LR' | 'RL';
   nodeWidth: number;
   nodeHeight: number;
@@ -17,7 +17,7 @@ const defaultOptions: LayoutOptions = {
   nodeSeparation: 100,
 };
 
-export const getLayoutedElements = (
+const getLayoutedElements = (
   nodes: Node[],
   edges: Edge[],
   options: Partial<LayoutOptions> = {}
@@ -93,7 +93,7 @@ export const getLayoutedElements = (
 };
 
 // Specialized layout for different team types
-export const getTeamTypeLayout = (
+const getTeamTypeLayout = (
   teamType: string,
   nodes: Node[],
   edges: Edge[]
