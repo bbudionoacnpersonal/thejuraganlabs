@@ -9,8 +9,8 @@ import Button from '@/components/ui/Button';
 import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
 import Tooltip from '@/components/ui/Tooltip';
-import { 
-  ChatBubbleLeftRightIcon, 
+import {
+  ChatBubbleLeftRightIcon,
   MagnifyingGlassIcon,
   UserGroupIcon,
   ChartPieIcon,
@@ -24,15 +24,15 @@ const DashboardPage: React.FC = () => {
   const { getDashboardItems } = useUserFeatures();
   const { user } = useAuthStore();
   const navigate = useNavigate();
-  
+
   const dashboardItems = getDashboardItems();
   const isAdmin = user?.role === 'admin';
-  
+
   // Get user's industry and focus areas
   const userIndustry = localStorage.getItem('user_industry') || '';
   const userFocusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
   const hasIndustryAndFocus = userIndustry && userFocusAreas.length > 0;
-  
+
   const teams = [
     {
       name: 'Procurement Analyst Team',
@@ -86,7 +86,7 @@ const DashboardPage: React.FC = () => {
         return <PuzzlePieceIcon className="h-3 w-3 text-secondary-600" />;
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-dark-background flex flex-col">
       <Navbar />
@@ -103,7 +103,8 @@ const DashboardPage: React.FC = () => {
           </motion.div>
         )}
 
-        <div className={`grid grid-cols-1 ${hasIndustryAndFocus ? 'lg:grid-cols-3' : 'md:grid-cols-2'} gap-8`}>
+        {/* Wrapper for the top two cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Create AI agents Team Card */}
           {dashboardItems.includes('createTeam') && (
             <motion.div
@@ -166,8 +167,8 @@ const DashboardPage: React.FC = () => {
                           className="w-full bg-dark-surface border border-dark-border rounded-md py-1 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-secondary-600"
                         />
                       </div>
-                      <Button 
-                        variant="secondary" 
+                      <Button
+                        variant="secondary"
                         className="!h-[38px]"
                       >
                         Search
@@ -185,7 +186,7 @@ const DashboardPage: React.FC = () => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
-                              <span className="text-white text-medium font-medium truncate">{team.name}</span>  
+                              <span className="text-white text-medium font-medium truncate">{team.name}</span>
                               <span className="text-gray-600 text-xs ml-2">{team.lastModified}</span>
                             </div>
 
@@ -205,15 +206,17 @@ const DashboardPage: React.FC = () => {
               </Card>
             </motion.div>
           )}
+        </div>
 
-          {/* Industry Gallery Card - Only show if user has selected industry and focus areas */}
-          {hasIndustryAndFocus && (
-            <IndustryGallery 
+        {/* Wrapper for the Industry Gallery */}
+        {hasIndustryAndFocus && (
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mt-8">
+            <IndustryGallery
               userIndustry={userIndustry}
               userFocusAreas={userFocusAreas}
             />
-          )}
-        </div>
+          </div>
+        )}
       </main>
       <Footer />
     </div>
