@@ -59,7 +59,7 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
           sourcePosition: Position.Bottom,
           targetPosition: Position.Top,
         });
-        yPosition += 300; //originally 200
+        yPosition += 200; //originally 200
       }
     } else if (analysisStage !== 'initial') {
       // 🎯 NEW: Create a default user input node even without messages
@@ -76,7 +76,7 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
         sourcePosition: Position.Bottom,
         targetPosition: Position.Top,
       });
-      yPosition += 200;
+      yPosition += 300;//originally 200
     }
 
     // Team Node (when team is identified or we have stored data)
