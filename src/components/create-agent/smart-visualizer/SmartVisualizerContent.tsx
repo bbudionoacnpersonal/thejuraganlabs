@@ -100,29 +100,19 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           
           console.log('🎨 Smart Visualizer state updated with stored data');
         } else {
-          console.log('⚠️ No stored data found, creating mock data for visualization');
+          console.log('🆕 New conversation - starting with clean state');
           
-          // Create mock data for demonstration
+          // 🎯 FIXED: For new conversations, start with completely clean state
           setState(prev => ({
             ...prev,
             currentConversationId: conversationId,
-            analysisStage: 'structure_complete',
-            progressiveElements: {
-              teamName: 'Customer Service Team',
-              teamDescription: 'AI agents team for customer service',
-              teamType: 'RoundRobinGroupChat',
-              identifiedAgents: [
-                {
-                  name: 'Ticket Analyzer',
-                  description: 'Analyzes customer support tickets',
-                  role: 'assistant',
-                  confidence: 0.9
-                }
-              ]
-            },
-            hasGeneratedTask: true,
-            conversationEnded: true,
-            hasJsonReady: false
+            analysisStage: 'initial',
+            teamStructure: null,
+            progressiveElements: {},
+            hasGeneratedTask: false,
+            conversationEnded: false,
+            hasJsonReady: false,
+            pendingJsonUpdate: null
           }));
         }
       } catch (error) {
@@ -270,7 +260,8 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         analysisStage: state.analysisStage,
         hasTeamStructure: !!state.teamStructure,
         progressiveElements: state.progressiveElements,
-        messageCount: messages.length
+        messageCount: messages.length,
+        conversationId // 🎯 NEW: Pass conversation ID to flow generation
       });
 
       const { nodes: newNodes, edges: newEdges } = generateProgressiveFlow({
@@ -282,6 +273,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         messages,
         hasGeneratedTask: state.hasGeneratedTask,
         conversationEnded: state.conversationEnded,
+        conversationId // 🎯 NEW: Pass conversation ID to determine if it's new or existing
       });
       
       console.log('🔄 Generated flow elements:', { 
@@ -320,7 +312,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       console.error('Error updating flow:', error);
       setState(prev => ({ ...prev, error: 'Failed to update flow visualization' }));
     }
-  }, [state, conversationState, messages, setNodes, setEdges, fitView]);
+  }, [state, conversationState, messages, conversationId, setNodes, setEdges, fitView]);
 
   useEffect(() => {
     updateFlowVisualization();

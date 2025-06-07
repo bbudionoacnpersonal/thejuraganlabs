@@ -10,6 +10,7 @@ interface FlowGenerationOptions {
   messages: any[];
   hasGeneratedTask: boolean;
   conversationEnded: boolean;
+  conversationId?: string | null; // 🎯 NEW: Add conversation ID to determine if it's new or existing
 }
 
 export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
@@ -24,20 +25,25 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
       isAnalyzing,
       messages,
       hasGeneratedTask,
-      conversationEnded
+      conversationEnded,
+      conversationId
     } = options;
 
     const newNodes: Node[] = [];
     const newEdges: Edge[] = [];
     let yPosition = 50;
 
-    // 🎯 CRITICAL FIX: Always generate nodes even with minimal data
-    console.log('🔍 Flow generation input:', {
-      analysisStage,
-      hasProgressiveElements: !!progressiveElements,
+    // 🎯 CRITICAL FIX: Check if this is a new conversation or existing one with localStorage data
+    const isNewConversation = !conversationId || !hasStoredConversationData(conversationId);
+    const shouldUseTeamStructure = !isNewConversation && teamStructure;
+    
+    console.log('🔍 Conversation type analysis:', {
+      conversationId,
+      isNewConversation,
+      shouldUseTeamStructure,
       hasTeamStructure: !!teamStructure,
-      messageCount: messages.length,
-      progressiveElementsKeys: Object.keys(progressiveElements || {})
+      analysisStage,
+      messageCount: messages.length
     });
 
     // --- STAGE 1: NODE CREATION (Create all nodes first) ---
@@ -67,8 +73,12 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
       console.log('✅ Created user-input node');
     }
 
-    // 2. Team Node - Create if we have team info OR team structure
-    const shouldCreateTeam = (analysisStage !== 'initial' && progressiveElements?.teamName) || teamStructure;
+    // 2. Team Node - 🎯 FIXED: Only create if we have team info AND it's not a brand new conversation
+    const shouldCreateTeam = !isNewConversation && (
+      (analysisStage !== 'initial' && progressiveElements?.teamName) || 
+      shouldUseTeamStructure
+    );
+    
     if (shouldCreateTeam) {
       const teamName = progressiveElements?.teamName || teamStructure?.label || 'AI Agents Team';
       const teamDescription = progressiveElements?.teamDescription || teamStructure?.description || 'AI agents team for task processing';
@@ -94,9 +104,14 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
       console.log('✅ Created team node:', teamName);
     }
 
-    // 3. Agent Nodes - Create if we have agents in the right stage
-    const agents = progressiveElements?.identifiedAgents || extractAgentsFromTeamStructure(teamStructure) || [];
-    const shouldCreateAgents = (analysisStage === 'agents_emerging' || analysisStage === 'structure_complete') && agents.length > 0;
+    // 3. Agent Nodes - 🎯 FIXED: Only create if we have agents AND it's not a brand new conversation
+    const agents = !isNewConversation ? (
+      progressiveElements?.identifiedAgents || extractAgentsFromTeamStructure(teamStructure) || []
+    ) : [];
+    
+    const shouldCreateAgents = !isNewConversation && 
+      (analysisStage === 'agents_emerging' || analysisStage === 'structure_complete') && 
+      agents.length > 0;
     
     if (shouldCreateAgents) {
       agents.forEach((agent: any, index: number) => {
@@ -106,7 +121,7 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
         let agentType = 'AssistantAgent';
         let tools: any[] = [];
 
-        if (teamStructure?.config?.participants && teamStructure.config.participants[index]) {
+        if (shouldUseTeamStructure && teamStructure?.config?.participants && teamStructure.config.participants[index]) {
           const participant = teamStructure.config.participants[index];
           llmModel = participant.config?.model_client?.config?.model || 'gpt-4o-mini';
           llmProvider = participant.config?.model_client?.provider?.split('.').pop() || 'OpenAI';
@@ -146,7 +161,7 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
     }
 
     // 4. Completion Node - Create if conversation is truly complete
-    const shouldCreateCompletion = conversationEnded && hasGeneratedTask && analysisStage === 'structure_complete';
+    const shouldCreateCompletion = !isNewConversation && conversationEnded && hasGeneratedTask && analysisStage === 'structure_complete';
     if (shouldCreateCompletion) {
       const completionNode: Node = {
         id: 'completion-indicator',
@@ -275,6 +290,7 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
       nodeCount: newNodes.length, 
       edgeCount: newEdges.length,
       stage: analysisStage,
+      isNewConversation,
       conversationEnded,
       hasGeneratedTask,
       nodeIds: newNodes.map(n => n.id),
@@ -288,7 +304,21 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
   }
 };
 
-// 🎯 NEW: Helper function to extract team type from provider
+// 🎯 NEW: Helper function to check if conversation has stored data
+const hasStoredConversationData = (conversationId: string | null): boolean => {
+  if (!conversationId) return false;
+  
+  try {
+    const storageKey = `juragan_conversation_${conversationId}`;
+    const storedData = localStorage.getItem(storageKey);
+    return !!storedData;
+  } catch (error) {
+    console.error('Error checking stored conversation data:', error);
+    return false;
+  }
+};
+
+// 🎯 CONDITIONAL: Helper function to extract team type from provider - only for existing conversations
 const extractTeamTypeFromProvider = (provider?: string): string => {
   if (!provider) return 'RoundRobinGroupChat';
   
@@ -305,7 +335,7 @@ const extractTeamTypeFromProvider = (provider?: string): string => {
   return 'RoundRobinGroupChat';
 };
 
-// 🎯 NEW: Helper function to extract agents from team structure
+// 🎯 CONDITIONAL: Helper function to extract agents from team structure - only for existing conversations
 const extractAgentsFromTeamStructure = (teamStructure?: any): any[] => {
   if (!teamStructure?.config?.participants) return [];
   
