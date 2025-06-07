@@ -129,7 +129,7 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
         });
       }
 
-      yPosition += 280;
+      yPosition += 280; //originally 280
     }
 
     // Agent Nodes (when agents are emerging or from stored data)
