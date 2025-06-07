@@ -1,4 +1,5 @@
 import { Node, Edge, MarkerType, Position } from 'reactflow';
+import { getAutoLayout } from '../../../utils/dagreLayout';
 
 export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
   try {
