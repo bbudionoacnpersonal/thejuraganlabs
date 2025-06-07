@@ -1,17 +1,3 @@
-import { Node, Edge, MarkerType, Position } from 'reactflow';
-import { getAutoLayout } from '@/utils/dagreLayout';
-
-interface FlowGenerationOptions {
-  analysisStage: string;
-  progressiveElements: any;
-  teamStructure: any;
-  conversationState: string;
-  isAnalyzing: boolean;
-  messages: any[];
-  hasGeneratedTask: boolean;
-  conversationEnded: boolean;
-}
-
 export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
   try {
     console.log('🎨 Generating progressive flow visualization:', options);
@@ -31,66 +17,26 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
     const newEdges: Edge[] = [];
     let yPosition = 50;
 
-    // Generate final task example based on progressive elements
-    const generateFinalTaskExample = (elements: any) => {
-      try {
-        if (elements.teamName && elements.identifiedAgents && Array.isArray(elements.identifiedAgents)) {
-          const agentNames = elements.identifiedAgents.map((a: any) => a.name || 'Agent').join(', ');
-          const teamType = elements.teamType || 'RoundRobinGroupChat';
-          const teamTypeName = teamType.split('GroupChat')[0].replace(/([A-Z])/g, ' $1').trim();
-          
-          return `Deploy ${elements.teamName} using ${teamTypeName} coordination with specialized agents: ${agentNames}. The team will process user requests efficiently through coordinated agent collaboration.`;
-        }
-        if (elements.teamName) {
-          return `Deploy ${elements.teamName} for coordinated AI task processing with intelligent agent collaboration.`;
-        }
-        return 'Deploy AI agents team to handle complex user requests through intelligent multi-agent coordination and task distribution.';
-      } catch (error) {
-        console.error('Error generating final task example:', error);
-        return 'Deploy AI agents team to handle complex user requests through intelligent multi-agent coordination.';
-      }
-    };
-
-    // Replace user input with final task when conversation ends
-    if (conversationEnded && hasGeneratedTask) {
-      const finalTaskExample = generateFinalTaskExample(progressiveElements);
-      
-      newNodes.push({
-        id: 'final-task-input',
-        type: 'conversation',
-        position: { x: 400, y: yPosition },
-        data: {
-          type: 'final_task',
-          label: 'Final Task Generated',
-          description: finalTaskExample,
-          confidence: 1.0
-        },
-        sourcePosition: Position.Bottom,
-        targetPosition: Position.Top,
-      });
-      yPosition += 200;
-    } else {
-      // Show original user input when conversation is active
-      if (analysisStage !== 'initial' && messages.length > 0) {
-        const userMessages = messages.filter(m => m.role === 'user');
-        if (userMessages.length > 0) {
-          const lastUserMessage = userMessages[userMessages.length - 1];
-          
-          newNodes.push({
-            id: 'user-input',
-            type: 'conversation',
-            position: { x: 400, y: yPosition },
-            data: {
-              type: 'user',
-              label: 'User Input',
-              description: lastUserMessage.content.substring(0, 100) + (lastUserMessage.content.length > 100 ? '...' : ''),
-              confidence: 1.0
-            },
-            sourcePosition: Position.Bottom,
-            targetPosition: Position.Top,
-          });
-          yPosition += 200;
-        }
+    // Always show user input (never replace with final task)
+    if (analysisStage !== 'initial' && messages.length > 0) {
+      const userMessages = messages.filter(m => m.role === 'user');
+      if (userMessages.length > 0) {
+        const lastUserMessage = userMessages[userMessages.length - 1];
+        
+        newNodes.push({
+          id: 'user-input',
+          type: 'conversation',
+          position: { x: 400, y: yPosition },
+          data: {
+            type: 'user',
+            label: 'User Input',
+            description: lastUserMessage.content.substring(0, 100) + (lastUserMessage.content.length > 100 ? '...' : ''),
+            confidence: 1.0
+          },
+          sourcePosition: Position.Bottom,
+          targetPosition: Position.Top,
+        });
+        yPosition += 200;
       }
     }
 
@@ -114,14 +60,13 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
       newNodes.push(teamNode);
 
       // Create edge from input to team
-      const sourceNodeId = conversationEnded ? 'final-task-input' : 'user-input';
-      const sourceNode = newNodes.find(n => n.id === sourceNodeId);
+      const sourceNode = newNodes.find(n => n.id === 'user-input');
       
       if (sourceNode) {
-        console.log('🔗 Creating edge from', sourceNodeId, 'to team');
+        console.log('🔗 Creating edge from user-input to team');
         newEdges.push({
-          id: `edge-${sourceNodeId}-team`,
-          source: sourceNodeId,
+          id: `edge-user-input-team`,
+          source: 'user-input',
           target: 'team',
           type: 'smoothstep',
           animated: true,
@@ -217,6 +162,51 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
       });
 
       yPosition += 280;
+    }
+
+    // Add completion indicator node (optional, only when conversation is truly complete)
+    if (conversationEnded && hasGeneratedTask && analysisStage === 'structure_complete') {
+      const completionNode: Node = {
+        id: 'completion-indicator',
+        type: 'conversation',
+        position: { x: 400, y: yPosition },
+        data: {
+          type: 'completion',
+          label: 'Task Complete',
+          description: 'AI agents team configuration completed and ready for deployment',
+          confidence: 1.0
+        },
+        sourcePosition: Position.Bottom,
+        targetPosition: Position.Top,
+      };
+      newNodes.push(completionNode);
+
+      // Connect from the last agent or team to completion
+      const lastAgentIndex = (progressiveElements.identifiedAgents || []).length - 1;
+      const sourceId = lastAgentIndex >= 0 ? `agent-${lastAgentIndex}` : 'team';
+      
+      if (newNodes.find(n => n.id === sourceId)) {
+        newEdges.push({
+          id: `edge-${sourceId}-completion`,
+          source: sourceId,
+          target: 'completion-indicator',
+          type: 'smoothstep',
+          animated: true,
+          style: { 
+            stroke: '#4D9CFF',
+            strokeWidth: 2
+          },
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 12,
+            height: 12,
+            color: '#4D9CFF',
+          },
+          label: 'Complete',
+          labelStyle: { fontSize: 10, fontWeight: 500, fill: '#ffffff' },
+          labelBgStyle: { fill: '#1e1e1e', fillOpacity: 0.7 },
+        });
+      }
     }
 
     console.log('🎨 Generated progressive flow:', { 
