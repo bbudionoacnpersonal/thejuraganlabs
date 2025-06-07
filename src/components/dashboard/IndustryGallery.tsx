@@ -102,7 +102,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
                 
               <Button
                 size="lg"
-                leftIcon={<UserGroupIcon className="h-6 w-6" />}
+                leftIcon={<UserGroupIcon className="h-4 w-4" />}
                 onClick={() => setShowGallery(true)}
                 className="w-full"
               >
