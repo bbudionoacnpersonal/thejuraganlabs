@@ -192,7 +192,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     return () => clearTimeout(timeoutId);
   }, [messages, state.lastMessageCount, state.isAnalyzing, conversationId, state.analysisStage, state.teamStructure, state.hasGeneratedTask, state.pendingJsonUpdate]);
 
-  // Generate and update flow visualization
+  // Generate and update flow visualization - FIXED: Set nodes and edges together
   const updateFlowVisualization = useCallback(() => {
     try {
       const { nodes: newNodes, edges: newEdges } = generateProgressiveFlow({
@@ -215,10 +215,9 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         const teamType = state.progressiveElements.teamType || 'RoundRobinGroupChat';
         const layoutedElements = applyLayoutToFlow(newNodes, newEdges, teamType);
         
+        // 🎯 FIXED: Set nodes and edges at the same time to prevent race condition
         setNodes(layoutedElements.nodes);
-        setTimeout(() => {
-          setEdges(layoutedElements.edges);
-        }, 50);
+        setEdges(layoutedElements.edges); // Removed setTimeout
       } else {
         setNodes(newNodes);
         setEdges(newEdges);
@@ -249,6 +248,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       const teamType = state.progressiveElements.teamType || 'RoundRobinGroupChat';
       const layouted = relayoutNodes(nodes, edges, teamType);
       
+      // 🎯 FIXED: Set nodes and edges together here too
       setNodes(layouted.nodes);
       setEdges(layouted.edges);
       
