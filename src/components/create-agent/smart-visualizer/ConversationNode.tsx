@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; import { SparklesIcon } from '@heroicons/react/24/outline'; import { Bot, Wrench } from 'lucide-react'; import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'; import { getTeamTypeInfo } from './smart-visualizer/teamTypeUtils';
+import React, { useState } from 'react'; import { SparklesIcon } from '@heroicons/react/24/outline'; import { Bot, Wrench } from 'lucide-react'; import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'; import { getTeamTypeInfo } from './teamTypeUtils';
 interface ConversationNodeProps {
 data: any;
 }

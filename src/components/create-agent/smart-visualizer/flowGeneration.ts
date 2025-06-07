@@ -385,7 +385,7 @@ const hasStoredConversationData = (conversationId: string | null): boolean => {
 if (!conversationId) return false;
 
 try {
-const storageKey = juragan_conversation_${conversationId};
+const storageKey = `juragan_conversation_${conversationId}`;
 const storedData = localStorage.getItem(storageKey);
 return !!storedData;
 } catch (error) {
@@ -416,7 +416,7 @@ const extractAgentsFromTeamStructure = (teamStructure?: any): any[] => {
 if (!teamStructure?.config?.participants) return [];
 
 return teamStructure.config.participants.map((participant: any, index: number) => ({
-name: participant.label || Agent ${index + 1},
+name: participant.label || `Agent ${index + 1}`,
 description: participant.description || 'AI agent',
 role: 'assistant',
 confidence: 0.8
