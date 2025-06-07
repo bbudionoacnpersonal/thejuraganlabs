@@ -9,7 +9,7 @@ import Button from '@/components/ui/Button';
 import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
 import Tooltip from '@/components/ui/Tooltip';
-import {botMessageSquare} from 'lucide-react';
+import {BotMessageSquare} from 'lucide-react';
 import {
   ChatBubbleLeftRightIcon,
   MagnifyingGlassIcon,
@@ -132,7 +132,7 @@ const DashboardPage: React.FC = () => {
 
                   <Button
                     size="sm"
-                    leftIcon={<botMessageSquare className="h-4 w-4" />}
+                    leftIcon={<BotMessageSquare className="h-4 w-4" />}
                     onClick={() => navigate('/agents/create')}
                   >
                     Start Creating Team
