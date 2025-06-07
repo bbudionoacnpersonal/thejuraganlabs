@@ -1,6 +1,17 @@
 import { Node, Edge, MarkerType, Position } from 'reactflow';
 import { getAutoLayout } from '../../../utils/dagreLayout';
 
+interface FlowGenerationOptions {
+  analysisStage: string;
+  progressiveElements: any;
+  teamStructure: any;
+  conversationState: string;
+  isAnalyzing: boolean;
+  messages: any[];
+  hasGeneratedTask: boolean;
+  conversationEnded: boolean;
+}
+
 export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
   try {
     console.log('🎨 Generating progressive flow visualization:', options);
@@ -22,7 +33,7 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
 
     // Always show user input (never replace with final task)
     if (analysisStage !== 'initial' && messages.length > 0) {
-      const userMessages = messages.filter(m => m.role === 'user');
+      const userMessages = messages.filter((m: any) => m.role === 'user');
       if (userMessages.length > 0) {
         const lastUserMessage = userMessages[userMessages.length - 1];
         
