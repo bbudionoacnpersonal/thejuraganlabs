@@ -1,3 +1,17 @@
+import { Node, Edge, MarkerType, Position } from 'reactflow';
+import { getAutoLayout } from '@/utils/dagreLayout';
+
+interface FlowGenerationOptions {
+  analysisStage: string;
+  progressiveElements: any;
+  teamStructure: any;
+  conversationState: string;
+  isAnalyzing: boolean;
+  messages: any[];
+  hasGeneratedTask: boolean;
+  conversationEnded: boolean;
+}
+
 export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
   try {
     console.log('🎨 Generating progressive flow visualization:', options);
@@ -37,46 +51,47 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
       }
     };
 
-    // 🎯 FIXED: Always show user input when conversation is active
-    if (analysisStage !== 'initial' && messages.length > 0) {
-      const userMessages = messages.filter(m => m.role === 'user');
-      if (userMessages.length > 0) {
-        const lastUserMessage = userMessages[userMessages.length - 1];
-        
-        newNodes.push({
-          id: 'user-input',
-          type: 'conversation',
-          position: { x: 400, y: yPosition },
-          data: {
-            type: 'user',
-            label: 'User Input',
-            description: lastUserMessage.content.substring(0, 100) + (lastUserMessage.content.length > 100 ? '...' : ''),
-            confidence: 1.0
-          },
-          sourcePosition: Position.Bottom,
-          targetPosition: Position.Top,
-        });
-        yPosition += 200;
-      }
-    }
-
-    // 🎯 NEW: Add final task node as separate node when conversation ends and task is generated
+    // Replace user input with final task when conversation ends
     if (conversationEnded && hasGeneratedTask) {
       const finalTaskExample = generateFinalTaskExample(progressiveElements);
       
       newNodes.push({
-        id: 'final-task-output',
+        id: 'final-task-input',
         type: 'conversation',
-        position: { x: 600, y: yPosition - 200 }, // Position next to user input
+        position: { x: 400, y: yPosition },
         data: {
           type: 'final_task',
-          label: 'Generated Task',
+          label: 'Final Task Generated',
           description: finalTaskExample,
           confidence: 1.0
         },
         sourcePosition: Position.Bottom,
         targetPosition: Position.Top,
       });
+      yPosition += 200;
+    } else {
+      // Show original user input when conversation is active
+      if (analysisStage !== 'initial' && messages.length > 0) {
+        const userMessages = messages.filter(m => m.role === 'user');
+        if (userMessages.length > 0) {
+          const lastUserMessage = userMessages[userMessages.length - 1];
+          
+          newNodes.push({
+            id: 'user-input',
+            type: 'conversation',
+            position: { x: 400, y: yPosition },
+            data: {
+              type: 'user',
+              label: 'User Input',
+              description: lastUserMessage.content.substring(0, 100) + (lastUserMessage.content.length > 100 ? '...' : ''),
+              confidence: 1.0
+            },
+            sourcePosition: Position.Bottom,
+            targetPosition: Position.Top,
+          });
+          yPosition += 200;
+        }
+      }
     }
 
     // Team Node (when team is identified)
@@ -98,13 +113,15 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
       };
       newNodes.push(teamNode);
 
-      // Create edge from user input to team
-      const userInputNode = newNodes.find(n => n.id === 'user-input');
-      if (userInputNode) {
-        console.log('🔗 Creating edge from user-input to team');
+      // Create edge from input to team
+      const sourceNodeId = conversationEnded ? 'final-task-input' : 'user-input';
+      const sourceNode = newNodes.find(n => n.id === sourceNodeId);
+      
+      if (sourceNode) {
+        console.log('🔗 Creating edge from', sourceNodeId, 'to team');
         newEdges.push({
-          id: `edge-user-input-team`,
-          source: 'user-input',
+          id: `edge-${sourceNodeId}-team`,
+          source: sourceNodeId,
           target: 'team',
           type: 'smoothstep',
           animated: true,
@@ -124,34 +141,10 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
         });
       }
 
-      // 🎯 NEW: Create edge from team to final task when available
-      if (conversationEnded && hasGeneratedTask) {
-        newEdges.push({
-          id: `edge-team-final-task`,
-          source: 'team',
-          target: 'final-task-output',
-          type: 'smoothstep',
-          animated: true,
-          style: { 
-            stroke: '#10b981',
-            strokeWidth: 2
-          },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            width: 12,
-            height: 12,
-            color: '#10b981',
-          },
-          label: 'Task Generated',
-          labelStyle: { fontSize: 12, fontWeight: 600, fill: '#ffffff' },
-          labelBgStyle: { fill: '#1e1e1e', fillOpacity: 0.8 },
-        });
-      }
-
       yPosition += 280;
     }
 
-    // 🎯 FIXED: Agent Nodes with proper tool assignment (when agents are emerging)
+    // Agent Nodes (when agents are emerging)
     if (analysisStage === 'agents_emerging' || analysisStage === 'structure_complete') {
       const agents = progressiveElements.identifiedAgents || [];
       
@@ -167,15 +160,12 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
           llmModel = participant.config.model_client?.config.model || 'gpt-4o-mini';
           llmProvider = participant.config.model_client?.provider.split('.').pop() || 'OpenAI';
           agentType = participant.provider.split('.').pop() || 'AssistantAgent';
-          
-          // 🎯 CRITICAL FIX: Extract tools properly from participant config
           tools = participant.config.tools?.map((tool: any) => ({
-            name: tool.config?.name || tool.label || 'Tool',
-            description: tool.description || 'Tool description'
+            name: tool.config?.name || tool.label,
+            description: tool.description
           })) || [];
         }
 
-        // 🎯 FIXED: Create agent node with tools as properties, not separate nodes
         const agentNode: Node = {
           id: `agent-${index}`,
           type: 'conversation',
@@ -192,7 +182,7 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
             agentType,
             llmModel,
             llmProvider,
-            tools // 🎯 CRITICAL: Tools are now part of agent data, not separate nodes
+            tools
           },
           sourcePosition: Position.Bottom,
           targetPosition: Position.Top,
