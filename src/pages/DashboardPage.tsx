@@ -132,7 +132,7 @@ const DashboardPage: React.FC = () => {
 
                   <Button
                     size="sm"
-                    leftIcon={<BotMessageSquare className="h-4 w-4" />}
+                    leftIcon={<botMessageSquare className="h-4 w-4" />}
                     onClick={() => navigate('/agents/create')}
                   >
                     Start Creating Team
