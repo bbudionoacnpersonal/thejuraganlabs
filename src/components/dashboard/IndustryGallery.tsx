@@ -91,7 +91,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
         <Card className="h-full">
           <CardBody className="flex flex-col items-center text-center p-2">
             <h2 className="text-2xl font-bold text-white mb-2">Industry Use Case Gallery</h2>
-            <p className="text-gray-400 mb-2">
+            <p className="text-gray-400 mb-4">
               Explore pre-built AI agents templates tailored for {industryDetails?.label} industry
               {focusAreaDetails.length > 0 && (
                 <span> focusing on {focusAreaDetails.map(f => f.label).join(', ')}</span>
@@ -120,7 +120,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
         title="Industry and Functional Use Case Gallery"
         size="xl"
       >
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Tabs */}
           <div className="flex space-x-1 bg-dark-background rounded-lg p-1">
             {[
