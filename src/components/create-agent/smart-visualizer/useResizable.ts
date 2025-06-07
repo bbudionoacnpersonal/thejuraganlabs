@@ -7,7 +7,7 @@ interface Size {
 
 export const useResizable = (ref: React.RefObject<HTMLDivElement>) => {
   const [isResizing, setIsResizing] = useState(false);
-  const [size, setSize] = useState<Size>({ width: 600, height: 900 });// size of the smart visualizer screen
+  const [size, setSize] = useState<Size>({ width: 700, height: 900 });// size of the smart visualizer screen
 
   useEffect(() => {
     try {
