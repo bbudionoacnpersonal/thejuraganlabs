@@ -37,20 +37,30 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
 
   // State for the filters, initialized with the user's profile settings
   const [currentFilterIndustry, setCurrentFilterIndustry] = useState(userIndustry);
-  const [currentFilterFunctionAreas, setCurrentFilterFunctionAreas] = useState<string[]>(userFocusAreas);
+  const [currentFilterFunctionAreas, setCurrentFilterFunctionAreas] = useState<string[]>(
+    userFocusAreas
+  );
 
   // Memoize the filtered list to avoid re-calculating on every render
   const displayedUseCases = useMemo(
-    () => filterUseCases({ industry: currentFilterIndustry, functionAreas: currentFilterFunctionAreas }),
+    () =>
+      filterUseCases({
+        industry: currentFilterIndustry,
+        functionAreas: currentFilterFunctionAreas,
+      }),
     [currentFilterIndustry, currentFilterFunctionAreas]
   );
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'beginner': return 'text-success-600 bg-success-100';
-      case 'intermediate': return 'text-warning-600 bg-warning-100';
-      case 'advanced': return 'text-error-600 bg-error-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'beginner':
+        return 'text-success-600 bg-success-100';
+      case 'intermediate':
+        return 'text-warning-600 bg-warning-100';
+      case 'advanced':
+        return 'text-error-600 bg-error-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
     }
   };
 
@@ -118,17 +128,19 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <Select
                 label="Industry"
-                options={industries}
+                size="sm"
+                options={[{ value: '', label: 'All Industries' }, ...industries]}
                 value={currentFilterIndustry}
-                onChange={(value) => setCurrentFilterIndustry(value as string)}
+                onChange={(e) => setCurrentFilterIndustry(e.target.value)}
               />
               <Select
                 label="Function Areas"
-                options={focusAreas}
+                size="sm"
+                options={[{ value: '', label: 'All Function Areas' }, ...focusAreas]}
                 isMulti
                 value={currentFilterFunctionAreas}
                 onChange={(selectedOptions) =>
-                  setCurrentFilterFunctionAreas(selectedOptions)
+                  setCurrentFilterFunctionAreas(selectedOptions.map((opt: any) => opt.value))
                 }
               />
               <Button
@@ -159,7 +171,9 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     {useCase.difficulty}
                   </Badge>
                 </div>
-                <p className="text-gray-400 text-xs mb-3 line-clamp-2">{useCase.description}</p>
+                <p className="text-gray-400 text-xs mb-3 line-clamp-2">
+                  {useCase.description}
+                </p>
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   <div className="flex items-center gap-2">
                     <ClockIcon className="h-3 w-3" />
@@ -172,12 +186,17 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 </div>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {useCase.tags.slice(0, 2).map((tag) => (
-                    <span key={tag} className="text-xs bg-dark-background text-gray-400 px-2 py-1 rounded">
+                    <span
+                      key={tag}
+                      className="text-xs bg-dark-background text-gray-400 px-2 py-1 rounded"
+                    >
                       {tag}
                     </span>
                   ))}
                   {useCase.tags.length > 2 && (
-                    <span className="text-xs text-gray-500">+{useCase.tags.length - 2}</span>
+                    <span className="text-xs text-gray-500">
+                      +{useCase.tags.length - 2}
+                    </span>
                   )}
                 </div>
               </div>
@@ -205,7 +224,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
           title={selectedUseCase.title}
           size="xl"
         >
-            {/* ... modal content (assumed to be complete) ... */}
+          {/* ... modal content (assumed to be complete) ... */}
         </Modal>
       )}
     </>
