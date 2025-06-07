@@ -204,7 +204,7 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
         }
       });
 
-      yPosition += 280;
+      yPosition += 280; //originally 280
     }
 
     // Add completion indicator node (optional, only when conversation is truly complete)
