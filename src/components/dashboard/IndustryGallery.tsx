@@ -120,6 +120,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
         title="Industry and Functional Use Case Gallery"
         size="xl"
       >
+        <div className="space-y-4">
 
           {/* Use Cases Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
