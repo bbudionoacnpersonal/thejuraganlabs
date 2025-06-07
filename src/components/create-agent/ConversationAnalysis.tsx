@@ -302,6 +302,84 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
               transcript_summary: 'User requested an AI agents team for customer service ticket analysis with Zendesk integration. The conversation successfully resulted in a complete team configuration with specialized agents for ticket processing, priority classification, and department routing.'
             }
           };
+
+          // Create mock stored conversation data for Smart Visualizer
+          if (!localStorageData) {
+            setStoredConversationData({
+              conversationId,
+              autogenStructure: {
+                provider: "autogen_agentchat.teams.RoundRobinGroupChat",
+                component_type: "team",
+                version: 1,
+                component_version: 1,
+                description: "Customer service AI agents team",
+                label: "Customer Service Team",
+                config: {
+                  participants: [
+                    {
+                      provider: "autogen_agentchat.agents.AssistantAgent",
+                      component_type: "agent",
+                      version: 1,
+                      component_version: 1,
+                      description: "Analyzes customer tickets",
+                      label: "Ticket Analyzer",
+                      config: {
+                        name: "ticket_analyzer",
+                        model_client: {
+                          provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
+                          component_type: "model",
+                          version: 1,
+                          component_version: 1,
+                          description: "Chat completion client for OpenAI hosted models.",
+                          label: "OpenAIChatCompletionClient",
+                          config: {
+                            model: "gpt-4o-mini"
+                          }
+                        },
+                        tools: [
+                          {
+                            provider: "autogen_core.tools.FunctionTool",
+                            component_type: "tool",
+                            version: 1,
+                            component_version: 1,
+                            description: "Zendesk integration tool",
+                            label: "ZendeskTool",
+                            config: {
+                              source_code: "def zendesk_analyzer(ticket: str) -> str",
+                              name: "zendesk_analyzer",
+                              description: "Analyzes Zendesk tickets",
+                              global_imports: [],
+                              has_cancellation_support: false
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              flowState: {
+                team: {
+                  name: "Customer Service Team",
+                  description: "AI agents team for customer service ticket analysis",
+                  type: "RoundRobinGroupChat"
+                },
+                agents: [
+                  {
+                    name: "Ticket Analyzer",
+                    description: "Analyzes customer tickets",
+                    type: "AssistantAgent"
+                  }
+                ]
+              },
+              metadata: {
+                stage: "structure_complete",
+                totalMessages: 4
+              },
+              userIndustry: "retail",
+              userFocusAreas: ["customer_service"]
+            });
+          }
         }
 
         setData(transcriptData);
@@ -380,31 +458,46 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
     setShowSmartVisualizer(true);
   };
 
-  // 🎯 ENHANCED: Check if Smart Visualizer should be available
+  // 🎯 ENHANCED: Check if Smart Visualizer should be available - SIMPLIFIED LOGIC
   const shouldShowSmartVisualizer = () => {
-    // Check if we have stored conversation data with autogen structure
-    if (storedConversationData?.autogenStructure) {
+    // 🎯 CRITICAL FIX: Always show if we have ANY stored conversation data
+    if (!storedConversationData) {
+      console.log('❌ Smart Visualizer not available: No stored conversation data');
+      return false;
+    }
+
+    // Check for complete autogen structure (highest priority)
+    if (storedConversationData.autogenStructure) {
       console.log('✅ Smart Visualizer available: Has complete autogen structure');
       return true;
     }
     
-    // Check if we have flow state with team structure
-    if (storedConversationData?.flowState?.team) {
+    // Check for team structure in flow state
+    if (storedConversationData.flowState?.team) {
       console.log('✅ Smart Visualizer available: Has team structure');
       return true;
     }
     
-    // Check if conversation stage indicates structure completion
-    if (storedConversationData?.metadata?.stage === 'structure_complete' || 
-        storedConversationData?.metadata?.stage === 'finalization') {
+    // Check for completion stages
+    if (storedConversationData.metadata?.stage === 'structure_complete' || 
+        storedConversationData.metadata?.stage === 'finalization') {
       console.log('✅ Smart Visualizer available: Structure completion stage');
       return true;
     }
     
-    // Check if we have identified agents (even without complete structure)
-    if (storedConversationData?.flowState?.agents && 
+    // Check for identified agents
+    if (storedConversationData.flowState?.agents && 
+        Array.isArray(storedConversationData.flowState.agents) &&
         storedConversationData.flowState.agents.length > 0) {
       console.log('✅ Smart Visualizer available: Has identified agents');
+      return true;
+    }
+
+    // 🎯 NEW: Check if we have any meaningful conversation data
+    if (storedConversationData.messages && 
+        Array.isArray(storedConversationData.messages) &&
+        storedConversationData.messages.length > 2) {
+      console.log('✅ Smart Visualizer available: Has meaningful conversation data');
       return true;
     }
     
@@ -413,14 +506,19 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
   };
 
   const getSmartVisualizerStatus = () => {
-    if (storedConversationData?.autogenStructure) {
+    if (!storedConversationData) return 'No Data Available';
+    
+    if (storedConversationData.autogenStructure) {
       return 'Complete JSON Available';
     }
-    if (storedConversationData?.flowState?.team) {
+    if (storedConversationData.flowState?.team) {
       return 'Team Structure Available';
     }
-    if (storedConversationData?.flowState?.agents && storedConversationData.flowState.agents.length > 0) {
+    if (storedConversationData.flowState?.agents && storedConversationData.flowState.agents.length > 0) {
       return 'Agents Identified';
+    }
+    if (storedConversationData.messages && storedConversationData.messages.length > 2) {
+      return 'Conversation Data Available';
     }
     return 'No Structure Data';
   };
@@ -450,7 +548,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {/* Smart Visualizer Button - Enhanced visibility logic */}
+                {/* Smart Visualizer Button - ALWAYS CHECK ON RENDER */}
                 {shouldShowSmartVisualizer() && (
                   <Button
                     variant="secondary"
@@ -561,7 +659,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                     </div>
                   </div>
 
-                  {/* Smart Visualizer Info - Enhanced */}
+                  {/* Smart Visualizer Info - ALWAYS SHOW IF DATA EXISTS */}
                   {storedConversationData && (
                     <div className="bg-dark-400 rounded-lg p-2">
                       <h3 className="text-sm font-medium text-white mb-2">AI Team Data</h3>
@@ -605,19 +703,22 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                           </div>
                         )}
 
-                        {shouldShowSmartVisualizer() && (
-                          <div className="bg-secondary-600/10 border border-secondary-600/20 p-2 rounded">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Eye className="h-3 w-3 text-secondary-600" />
-                              <span className="text-xs text-secondary-600 font-medium">AI Team Flow Available</span>
-                            </div>
-                            <p className="text-xs text-gray-400">
-                              {storedConversationData.autogenStructure 
-                                ? 'Complete team structure can be visualized with full details.'
-                                : 'Team structure can be visualized based on identified components.'}
-                            </p>
+                        {/* ALWAYS SHOW AVAILABILITY STATUS */}
+                        <div className={`${shouldShowSmartVisualizer() ? 'bg-secondary-600/10 border-secondary-600/20' : 'bg-gray-600/10 border-gray-600/20'} border p-2 rounded`}>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Eye className={`h-3 w-3 ${shouldShowSmartVisualizer() ? 'text-secondary-600' : 'text-gray-500'}`} />
+                            <span className={`text-xs font-medium ${shouldShowSmartVisualizer() ? 'text-secondary-600' : 'text-gray-500'}`}>
+                              {shouldShowSmartVisualizer() ? 'AI Team Flow Available' : 'AI Team Flow Not Available'}
+                            </span>
                           </div>
-                        )}
+                          <p className="text-xs text-gray-400">
+                            {shouldShowSmartVisualizer() 
+                              ? (storedConversationData.autogenStructure 
+                                  ? 'Complete team structure can be visualized with full details.'
+                                  : 'Team structure can be visualized based on identified components.')
+                              : 'No sufficient AI team data found for visualization.'}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )}
