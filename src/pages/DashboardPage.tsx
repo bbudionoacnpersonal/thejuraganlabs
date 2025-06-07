@@ -207,14 +207,12 @@ const DashboardPage: React.FC = () => {
           )}
 
           {/* Industry Gallery Card - Only show if user has selected industry and focus areas */}
-          <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mt-8">
           {hasIndustryAndFocus && (
             <IndustryGallery 
               userIndustry={userIndustry}
               userFocusAreas={userFocusAreas}
             />
           )}
-            </div>
         </div>
       </main>
       <Footer />
