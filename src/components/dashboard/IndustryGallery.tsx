@@ -101,7 +101,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
             <div className="w-full bg-dark-background rounded-lg p-4">
                 
               <Button
-                size="lg"
+                size="sm"
                 leftIcon={<UserGroupIcon className="h-4 w-4" />}
                 onClick={() => setShowGallery(true)}
                 className="w-full"
@@ -120,7 +120,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
         title="Industry and Functional Use Case Gallery"
         size="xl"
       >
-        <div className="space-y-2">
+        <div className="space-y-4">
           {/* Tabs */}
           <div className="flex space-x-1 bg-dark-background rounded-lg p-1">
             {[
