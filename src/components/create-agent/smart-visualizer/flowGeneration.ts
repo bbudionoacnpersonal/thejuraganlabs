@@ -1,5 +1,3 @@
-import { Node, Edge, MarkerType, Position } from 'reactflow';
-
 export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
   try {
     console.log('🎨 Generating progressive flow visualization:', options);
