@@ -482,7 +482,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                 className="p-1 text-gray-400 hover:text-white transition-colors"
                 title="Export Autogen Structure"
               >
-                <DocumentArrowDownIcon className="h-4 w-4" />
+                <DocumentArrowDownIcon className="h-2 w-2" />
               </button>
             )}
             <button
