@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useUserFeatures from '@/hooks/useUserFeatures';
 import AdminSettings from '@/components/dashboard/AdminSettings';
+import IndustryGallery from '@/components/dashboard/IndustryGallery';
 import useAuthStore from '@/store/authStore';
 import Button from '@/components/ui/Button';
 import Navbar from '@/components/common/Navbar';
@@ -26,6 +27,11 @@ const DashboardPage: React.FC = () => {
   
   const dashboardItems = getDashboardItems();
   const isAdmin = user?.role === 'admin';
+  
+  // Get user's industry and focus areas
+  const userIndustry = localStorage.getItem('user_industry') || '';
+  const userFocusAreas = JSON.parse(localStorage.getItem('user_focus_areas') || '[]');
+  const hasIndustryAndFocus = userIndustry && userFocusAreas.length > 0;
   
   const teams = [
     {
@@ -97,7 +103,7 @@ const DashboardPage: React.FC = () => {
           </motion.div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className={`grid grid-cols-1 ${hasIndustryAndFocus ? 'lg:grid-cols-3' : 'md:grid-cols-2'} gap-8`}>
           {/* Create AI agents Team Card */}
           {dashboardItems.includes('createTeam') && (
             <motion.div
@@ -170,7 +176,6 @@ const DashboardPage: React.FC = () => {
 
                     <div className="overflow-y-auto max-h-[315px] space-y-1 pr-2">
                       {teams.map((team) => (
-                   
                         <div
                           key={team.name}
                           className="flex items-center py-2 px-3 rounded-md bg-dark-surface border border-dark-border hover:border-secondary-600 cursor-pointer transition-colors duration-200"
@@ -180,28 +185,33 @@ const DashboardPage: React.FC = () => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
-                            
                               <span className="text-white text-medium font-medium truncate">{team.name}</span>  
                               <span className="text-gray-600 text-xs ml-2">{team.lastModified}</span>
                             </div>
 
                             <div className="flex items-center">
-                           <Tooltip content={team.description}>
-                              <p className="truncate text-gray-400 text-ellipsis text-sm max-w-[300px] whitespace-nowrap overflow-hidden">
-                                {team.description}
-                              </p>
-                           </Tooltip>
+                              <Tooltip content={team.description}>
+                                <p className="truncate text-gray-400 text-ellipsis text-sm max-w-[300px] whitespace-nowrap overflow-hidden">
+                                  {team.description}
+                                </p>
+                              </Tooltip>
                             </div>
-                            
                           </div>
                         </div>
-                       
                       ))}
                     </div>
                   </div>
                 </CardBody>
               </Card>
             </motion.div>
+          )}
+
+          {/* Industry Gallery Card - Only show if user has selected industry and focus areas */}
+          {hasIndustryAndFocus && (
+            <IndustryGallery 
+              userIndustry={userIndustry}
+              userFocusAreas={userFocusAreas}
+            />
           )}
         </div>
       </main>
