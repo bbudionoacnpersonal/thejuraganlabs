@@ -17,7 +17,7 @@ const ConversationNode: React.FC<ConversationNodeProps> = ({ data }) => {
         case 'user':
           return 'bg-white border-gray-200 text-gray-900';
         case 'final_task':
-          return 'bg-white border-gray-200 text-gray-900';
+          return 'bg-white border-green-200 text-gray-900 border-2'; // Different styling for final task
         case 'team':
           return 'bg-white border-gray-200 text-gray-900';
         case 'agent':
@@ -32,7 +32,7 @@ const ConversationNode: React.FC<ConversationNodeProps> = ({ data }) => {
         case 'user':
           return '👤';
         case 'final_task':
-          return '🎯';
+          return '🎯'; // Different icon for final task
         case 'team':
           return getTeamTypeIcon(data.teamType);
         case 'agent':
@@ -106,7 +106,7 @@ const ConversationNode: React.FC<ConversationNodeProps> = ({ data }) => {
           </div>
         )}
 
-        {/* Agent Details Display */}
+        {/* 🎯 FIXED: Agent Details Display with proper tool rendering */}
         {data.type === 'agent' && (
           <div className="space-y-2">
             {/* Agent Type */}
@@ -134,7 +134,7 @@ const ConversationNode: React.FC<ConversationNodeProps> = ({ data }) => {
               </div>
             )}
 
-            {/* Tools */}
+            {/* 🎯 CRITICAL FIX: Tools displayed as part of agent, not separate nodes */}
             {data.tools && Array.isArray(data.tools) && data.tools.length > 0 && (
               <div className="bg-gray-100 rounded p-2">
                 <div className="flex items-center gap-2 mb-1">
