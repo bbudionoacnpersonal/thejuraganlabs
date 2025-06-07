@@ -130,7 +130,7 @@ const DashboardPage: React.FC = () => {
                   </p>
 
                   <Button
-                    size="lg"
+                    size="sm"
                     leftIcon={<ChatBubbleLeftRightIcon className="h-5 w-5" />}
                     onClick={() => navigate('/agents/create')}
                   >
