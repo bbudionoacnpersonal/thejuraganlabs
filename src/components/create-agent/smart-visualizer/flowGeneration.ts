@@ -115,7 +115,7 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
         targetPosition: Position.Top,
       };
       newNodes.push(teamNode);
-      yPosition += 380; //originally 280
+      yPosition += 400; //originally 280
       console.log('✅ Created team node:', teamName);
     }
 
