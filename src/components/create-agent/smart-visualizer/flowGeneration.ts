@@ -114,7 +114,7 @@ if (shouldCreateTeam) {
     targetPosition: Position.Top,
   };
   newNodes.push(teamNode);
-  yPosition += 280; //default 280. 
+  yPosition += 380; //default 280. 
   console.log('✅ Created team node:', teamName);
 }
 
