@@ -12,7 +12,7 @@ interface FlowGenerationOptions {
   conversationEnded: boolean;
 }
 
-export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
+/* //Previous version: export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
   try {
     console.log('🎨 Generating progressive flow visualization:', options);
     
@@ -265,7 +265,133 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
     console.error('Error generating progressive flow:', error);
     return { nodes: [], edges: [] };
   }
+};*/
+/*New version Jun 7 based on gemini recommendation*/
+export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
+    try {
+        console.log('🎨 Generating progressive flow visualization:', options);
+        
+        const {
+            analysisStage,
+            progressiveElements,
+            teamStructure,
+            conversationState,
+            isAnalyzing,
+            messages,
+            hasGeneratedTask,
+            conversationEnded
+        } = options;
+
+        const newNodes: Node[] = [];
+        const newEdges: Edge[] = [];
+        let yPosition = 50;
+
+        // --- STAGE 1: NODE CREATION ---
+
+        // 1. User Input Node
+        if (analysisStage !== 'initial') {
+            const userMessages = messages.filter((m: any) => m.role === 'user');
+            const lastUserMessage = userMessages.length > 0 ? userMessages[userMessages.length - 1] : null;
+            
+            newNodes.push({
+                id: 'user-input',
+                type: 'conversation',
+                position: { x: 400, y: yPosition },
+                data: {
+                    type: 'user',
+                    label: 'User Input',
+                    description: lastUserMessage ? (lastUserMessage.content.substring(0, 100) + (lastUserMessage.content.length > 100 ? '...' : '')) : 'User requested AI agents team creation',
+                    confidence: 1.0
+                },
+                sourcePosition: Position.Bottom,
+                targetPosition: Position.Top,
+            });
+            yPosition += 200;
+        }
+
+        // 2. Team Node
+        if ((analysisStage !== 'initial' && progressiveElements.teamName) || teamStructure) {
+            const teamName = progressiveElements.teamName || teamStructure?.label || 'AI Agents Team';
+            const teamDescription = progressiveElements.teamDescription || teamStructure?.description || 'AI agents team for task processing';
+            const teamType = progressiveElements.teamType || extractTeamTypeFromProvider(teamStructure?.provider) || 'RoundRobinGroupChat';
+            
+            newNodes.push({
+                id: 'team',
+                type: 'conversation',
+                position: { x: 300, y: yPosition },
+                data: {
+                    type: 'team',
+                    label: teamName,
+                    description: teamDescription,
+                    confidence: analysisStage === 'structure_complete' ? 0.9 : 0.7,
+                    teamType: teamType,
+                    agents: progressiveElements.identifiedAgents || extractAgentsFromTeamStructure(teamStructure) || []
+                },
+                sourcePosition: Position.Bottom,
+                targetPosition: Position.Top,
+            });
+            yPosition += 280;
+        }
+
+        // 3. Agent Nodes
+        const agents = progressiveElements.identifiedAgents || extractAgentsFromTeamStructure(teamStructure) || [];
+        if ((analysisStage === 'agents_emerging' || analysisStage === 'structure_complete') && agents.length > 0) {
+            agents.forEach((agent: any, index: number) => {
+                // ... (agent data extraction logic remains the same)
+                const agentNode: Node = {
+                    id: `agent-${index}`,
+                    // ... (rest of agent node definition remains the same)
+                };
+                newNodes.push(agentNode);
+            });
+            yPosition += 280;
+        }
+        
+        // --- STAGE 2: EDGE CREATION (AFTER ALL NODES ARE DEFINED) ---
+
+        // Create edge from input to team
+        const userInputNode = newNodes.find(n => n.id === 'user-input');
+        const teamNode = newNodes.find(n => n.id === 'team');
+
+        if (userInputNode && teamNode) {
+            console.log('🔗 Creating edge from user-input to team');
+            newEdges.push({
+                id: `edge-user-input-team`,
+                source: 'user-input',
+                target: 'team',
+                // ... (rest of edge properties)
+            });
+        }
+
+        // Create edges from team to agents
+        if (teamNode) {
+            agents.forEach((agent: any, index: number) => {
+                const agentNode = newNodes.find(n => n.id === `agent-${index}`);
+                if (agentNode) {
+                    console.log('🔗 Creating edge from team to agent', index);
+                    newEdges.push({
+                        id: `edge-team-agent-${index}`,
+                        source: 'team',
+                        target: `agent-${index}`,
+                        // ... (rest of edge properties)
+                    });
+                }
+            });
+        }
+
+        console.log('🎨 Generated progressive flow:', {
+            nodeCount: newNodes.length,
+            edgeCount: newEdges.length,
+        });
+        
+        return { nodes: newNodes, edges: newEdges };
+
+    } catch (error) {
+        console.error('Error generating progressive flow:', error);
+        return { nodes: [], edges: [] };
+    }
 };
+
 
 // 🎯 NEW: Helper function to extract team type from provider
 const extractTeamTypeFromProvider = (provider?: string): string => {
