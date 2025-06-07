@@ -694,7 +694,7 @@ const getUseCasesByFunction = (functionArea: string): UseCaseTemplate[] => {
 export const getUseCasesByIndustryAndFunction = (industry: string, functionAreas: string[]): UseCaseTemplate[] => {
   return industryFunctionGallery.filter(useCase => 
     useCase.industry === industry)
-  );
+  ;
 };
 
 export const getPopularUseCases = (limit: number = 5): UseCaseTemplate[] => {
