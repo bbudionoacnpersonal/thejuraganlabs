@@ -120,27 +120,6 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
         title="Industry and Functional Use Case Gallery"
         size="xl"
       >
-        <div className="space-y-4">
-          {/* Tabs */}
-          <div className="flex space-x-1 bg-dark-background rounded-lg p-1">
-            {[
-              { id: 'recommended', label: 'Recommended', count: recommendedUseCases.length },
-              { id: 'popular', label: 'Popular', count: popularUseCases.length },
-              { id: 'all', label: 'All Templates', count: getDisplayUseCases().length }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-secondary-600 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-dark-surface'
-                }`}
-              >
-                {tab.label} ({tab.count})
-              </button>
-            ))}
-          </div>
 
           {/* Use Cases Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
