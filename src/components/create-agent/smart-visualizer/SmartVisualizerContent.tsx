@@ -217,7 +217,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         
         // 🎯 FIXED: Set nodes and edges at the same time to prevent race condition
         setNodes(layoutedElements.nodes);
-        setEdges(layoutedElements.edges); // Removed setTimeout
+        setEdges(layoutedElements.edges);
       } else {
         setNodes(newNodes);
         setEdges(newEdges);
