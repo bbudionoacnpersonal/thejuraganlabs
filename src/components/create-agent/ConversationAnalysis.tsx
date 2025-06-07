@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import { XMarkIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { Wrench, Eye } from 'lucide-react';
+import { Wrench, Eye, Play } from 'lucide-react';
 import TranscriptHandler from './TranscriptHandler';
 import SmartVisualizer from './SmartVisualizer';
 
@@ -358,6 +358,43 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
     setShowSmartVisualizer(true);
   };
 
+  const handleResumeConversation = () => {
+    console.log('▶️ Resuming conversation:', conversationId);
+    // Close the analysis modal and trigger resume in parent
+    onClose();
+    // Emit custom event to notify VoiceSDKOverlay to resume conversation
+    window.dispatchEvent(new CustomEvent('resume-conversation', { 
+      detail: { conversationId } 
+    }));
+  };
+
+  // 🎯 ENHANCED: Check if Smart Visualizer should be available
+  const shouldShowSmartVisualizer = () => {
+    // Check if we have stored conversation data with autogen structure
+    if (storedConversationData?.autogenStructure) {
+      return true;
+    }
+    
+    // Check if we have flow state with team structure
+    if (storedConversationData?.flowState?.team) {
+      return true;
+    }
+    
+    // Check if conversation stage indicates structure completion
+    if (storedConversationData?.metadata?.stage === 'structure_complete' || 
+        storedConversationData?.metadata?.stage === 'finalization') {
+      return true;
+    }
+    
+    // Check if we have identified agents (even without complete structure)
+    if (storedConversationData?.flowState?.agents && 
+        storedConversationData.flowState.agents.length > 0) {
+      return true;
+    }
+    
+    return false;
+  };
+
   return (
     <AnimatePresence>
       {isVisible && (
@@ -383,8 +420,18 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {/* Smart Visualizer Button */}
-                {storedConversationData && storedConversationData.autogenStructure && (
+                {/* Resume Conversation Button */}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleResumeConversation}
+                  leftIcon={<Play className="h-4 w-4" />}
+                >
+                  Resume Conversation
+                </Button>
+                
+                {/* Smart Visualizer Button - Enhanced visibility logic */}
+                {shouldShowSmartVisualizer() && (
                   <Button
                     variant="secondary"
                     size="sm"
@@ -394,6 +441,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                     Smart Visualizer
                   </Button>
                 )}
+                
                 <Button
                   variant="secondary"
                   size="sm"
@@ -493,7 +541,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                     </div>
                   </div>
 
-                  {/* Smart Visualizer Info */}
+                  {/* Smart Visualizer Info - Enhanced */}
                   {storedConversationData && (
                     <div className="bg-dark-400 rounded-lg p-2">
                       <h3 className="text-sm font-medium text-white mb-2">Stored Data</h3>
@@ -503,9 +551,15 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                           <span className={`text-sm ${
                             storedConversationData.autogenStructure 
                               ? 'text-secondary-600' 
+                              : storedConversationData.flowState?.team
+                              ? 'text-blue-500'
                               : 'text-gray-500'
                           }`}>
-                            {storedConversationData.autogenStructure ? 'Available' : 'Not Available'}
+                            {storedConversationData.autogenStructure 
+                              ? 'Complete JSON Available' 
+                              : storedConversationData.flowState?.team
+                              ? 'Partial Structure Available'
+                              : 'Not Available'}
                           </span>
                         </div>
                         
@@ -514,17 +568,24 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                             <h4 className="text-sm font-medium text-white mb-1">Team Information</h4>
                             <p className="text-sm text-gray-300">{storedConversationData.flowState.team.name}</p>
                             <p className="text-xs text-gray-400">{storedConversationData.flowState.team.description}</p>
+                            {storedConversationData.flowState.agents && storedConversationData.flowState.agents.length > 0 && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                {storedConversationData.flowState.agents.length} agents identified
+                              </p>
+                            )}
                           </div>
                         )}
 
-                        {storedConversationData.autogenStructure && (
+                        {shouldShowSmartVisualizer() && (
                           <div className="bg-secondary-600/10 border border-secondary-600/20 p-2 rounded">
                             <div className="flex items-center gap-2 mb-1">
                               <Eye className="h-3 w-3 text-secondary-600" />
                               <span className="text-xs text-secondary-600 font-medium">Smart Visualizer Available</span>
                             </div>
                             <p className="text-xs text-gray-400">
-                              This conversation has generated team structure data that can be visualized.
+                              {storedConversationData.autogenStructure 
+                                ? 'Complete team structure can be visualized with full details.'
+                                : 'Partial team structure can be visualized based on identified components.'}
                             </p>
                           </div>
                         )}

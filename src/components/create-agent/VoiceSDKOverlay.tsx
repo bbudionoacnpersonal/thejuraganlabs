@@ -106,6 +106,23 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
     }
   }, [conversationId, conversationMessages]);
 
+  // 🎯 NEW: Listen for resume conversation events
+  useEffect(() => {
+    const handleResumeConversation = (event: CustomEvent) => {
+      const { conversationId: resumeId } = event.detail;
+      console.log('▶️ Resuming conversation from analysis:', resumeId);
+      
+      // Resume the conversation with ElevenLabs using the same ID
+      resumeConversationWithId(resumeId);
+    };
+
+    window.addEventListener('resume-conversation', handleResumeConversation as EventListener);
+    
+    return () => {
+      window.removeEventListener('resume-conversation', handleResumeConversation as EventListener);
+    };
+  }, []);
+
   const handleTaskGenerator = async (input: any): Promise<void> => {
     try {
       console.log('Simulating task generation for input:', input);
@@ -319,6 +336,49 @@ const VoiceSDKOverlay: React.FC<VoiceSDKOverlayProps> = ({
       console.error(err);
     }
   }
+
+  // 🎯 NEW: Function to resume conversation with specific ID
+  const resumeConversationWithId = async (resumeId: string) => {
+    const hasPermission = await requestMicrophonePermission();
+    if (!hasPermission) {
+      setError("No microphone permission");
+      return;
+    }
+    
+    try {
+      console.log('▶️ Resuming conversation with ID:', resumeId);
+      
+      // Load existing conversation data
+      const existingData = getConversationData(resumeId);
+      if (existingData) {
+        setConversationMessages(existingData.messages);
+        console.log(`📂 Loaded ${existingData.messages.length} messages for resume`);
+      }
+      
+      // Resume session with ElevenLabs using the same conversation ID
+      const sessionId = await conversation.startSession({
+        conversationId: resumeId, // 🎯 CRITICAL: Pass the conversation ID to resume
+        dynamicVariables: {
+          industry: userIndustry,
+          function_focus: userFocusAreas.join(', '),
+          agentConsiderations: industryDetails?.keyPrompts.agentConsiderations.join(', ') || '',
+          functionConsiderations: focusAreaDetails.map(f => f.keyConsiderations.join(', ')).join(' | ')
+        },
+        clientTools: {
+          task_generator: handleTaskGenerator
+        }
+      });
+      
+      setConversationId(sessionId);
+      setShowSmartVisualizer(true);
+      
+      console.log('✅ Successfully resumed conversation:', sessionId);
+      
+    } catch (err) {
+      setError("Failed to resume conversation");
+      console.error('❌ Resume conversation error:', err);
+    }
+  };
 
   const stopConversation = async () => {
     try {
