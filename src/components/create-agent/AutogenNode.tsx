@@ -10,6 +10,7 @@ interface AutogenNodeProps {
     teamType?: string; // Enhanced team type support
     model?: string;
     tools?: number;
+    toolNames?: string[]; // 🎯 NEW: Array of actual tool names
     description?: string;
     agents?: { 
       name: string;
@@ -176,14 +177,29 @@ const AutogenNode: React.FC<AutogenNodeProps> = ({ data }) => {
           <div className="px-1.5 py-1 border-t border-gray-100">
             <div className="flex items-center justify-between">
               <span className="text-[9px] font-medium text-gray-500 uppercase">TOOLS</span>
-              <span className="text-[9px] text-green-600">{data.tools} Tools</span>
+              <span className="text-[9px] text-green-600">{data.tools || 0} Tools</span>
             </div>
-            {data.tools && data.tools > 0 && (
+            {/* 🎯 FIXED: Display actual tool names instead of hardcoded "calculator" */}
+            {data.toolNames && data.toolNames.length > 0 ? (
+              <div className="mt-1 space-y-1">
+                {data.toolNames.slice(0, 2).map((toolName, index) => (
+                  <div key={index} className="flex items-center gap-1.5">
+                    <Wrench className="w-2 h-2 text-gray-500" />
+                    <span className="text-[10px] text-gray-700">{toolName}</span>
+                  </div>
+                ))}
+                {data.toolNames.length > 2 && (
+                  <div className="text-[9px] text-gray-500 ml-3">
+                    +{data.toolNames.length - 2} more tools
+                  </div>
+                )}
+              </div>
+            ) : data.tools && data.tools > 0 ? (
               <div className="mt-1 flex items-center gap-1.5">
                 <Wrench className="w-2 h-2 text-gray-500" />
-                <span className="text-[10px] text-gray-700">calculator</span>
+                <span className="text-[10px] text-gray-700">{data.tools} tool{data.tools > 1 ? 's' : ''}</span>
               </div>
-            )}
+            ) : null}
             <div className="mt-1.5 border border-dashed border-gray-200 rounded p-1.5 text-[9px] text-gray-400">
               Drop tools here
             </div>

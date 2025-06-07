@@ -15,8 +15,6 @@ import 'reactflow/dist/style.css';
 import Button from '@/components/ui/Button';
 import { 
   XMarkIcon, 
-  EyeIcon, 
-  EyeSlashIcon, 
   DocumentArrowDownIcon,
   ExclamationTriangleIcon,
   ArrowPathIcon,
@@ -67,6 +65,69 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
   const { size, isResizing } = useResizable(windowRef);
   const { fitView, zoomIn, zoomOut } = useReactFlow();
 
+  // 🎯 CRITICAL FIX: Load stored conversation data when opening
+  useEffect(() => {
+    const loadStoredConversationData = async () => {
+      if (!conversationId || !isVisible) return;
+
+      try {
+        console.log('🔍 Smart Visualizer loading stored data for:', conversationId);
+        
+        // Import the conversation storage service
+        const { getConversationData } = await import('@/services/conversationStorageService');
+        const storedData = getConversationData(conversationId);
+        
+        if (storedData) {
+          console.log('✅ Found stored conversation data:', storedData);
+          
+          // Set up the visualizer state with stored data
+          setState(prev => ({
+            ...prev,
+            currentConversationId: conversationId,
+            analysisStage: storedData.metadata?.stage === 'structure_complete' ? 'structure_complete' : 'agents_emerging',
+            teamStructure: storedData.autogenStructure || null,
+            progressiveElements: {
+              teamName: storedData.flowState?.team?.name || 'AI Team',
+              teamDescription: storedData.flowState?.team?.description || 'AI agents team',
+              teamType: storedData.flowState?.team?.type || 'RoundRobinGroupChat',
+              identifiedAgents: storedData.flowState?.agents || []
+            },
+            hasGeneratedTask: true,
+            conversationEnded: storedData.status === 'completed',
+            hasJsonReady: !!storedData.autogenStructure,
+            pendingJsonUpdate: storedData.autogenStructure
+          }));
+          
+          console.log('🎨 Smart Visualizer state updated with stored data');
+        } else {
+          console.log('🆕 New conversation - starting with clean state');
+          
+          // 🎯 FIXED: For new conversations, start with completely clean state
+          setState(prev => ({
+            ...prev,
+            currentConversationId: conversationId,
+            analysisStage: 'initial',
+            teamStructure: null,
+            progressiveElements: {},
+            hasGeneratedTask: false,
+            conversationEnded: false,
+            hasJsonReady: false,
+            pendingJsonUpdate: null
+          }));
+        }
+      } catch (error) {
+        console.error('❌ Error loading stored conversation data:', error);
+        setState(prev => ({ 
+          ...prev, 
+          error: 'Failed to load conversation data',
+          currentConversationId: conversationId
+        }));
+      }
+    };
+
+    loadStoredConversationData();
+  }, [conversationId, isVisible]);
+
   // Reset state when conversation ID changes
   useEffect(() => {
     try {
@@ -110,7 +171,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
           state.hasGeneratedTask && 
           messages.length > 0) {
         setState(prev => ({ ...prev, conversationEnded: true }));
-        console.log('🏁 Conversation ended - will replace user input with final task');
+        console.log('🏁 Conversation ended - maintaining all nodes and edges');
       }
     } catch (error) {
       console.error('Error detecting conversation end:', error);
@@ -192,9 +253,17 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
     return () => clearTimeout(timeoutId);
   }, [messages, state.lastMessageCount, state.isAnalyzing, conversationId, state.analysisStage, state.teamStructure, state.hasGeneratedTask, state.pendingJsonUpdate]);
 
-  // Generate and update flow visualization
+  // Generate and update flow visualization - FIXED: Set nodes and edges together
   const updateFlowVisualization = useCallback(() => {
     try {
+      console.log('🎨 Updating flow visualization with state:', {
+        analysisStage: state.analysisStage,
+        hasTeamStructure: !!state.teamStructure,
+        progressiveElements: state.progressiveElements,
+        messageCount: messages.length,
+        conversationId // 🎯 NEW: Pass conversation ID to flow generation
+      });
+
       const { nodes: newNodes, edges: newEdges } = generateProgressiveFlow({
         analysisStage: state.analysisStage,
         progressiveElements: state.progressiveElements,
@@ -204,9 +273,10 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         messages,
         hasGeneratedTask: state.hasGeneratedTask,
         conversationEnded: state.conversationEnded,
+        conversationId // 🎯 NEW: Pass conversation ID to determine if it's new or existing
       });
       
-      console.log('🔄 Updating ReactFlow with progressive nodes/edges:', { 
+      console.log('🔄 Generated flow elements:', { 
         nodeCount: newNodes.length, 
         edgeCount: newEdges.length 
       });
@@ -215,11 +285,16 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
         const teamType = state.progressiveElements.teamType || 'RoundRobinGroupChat';
         const layoutedElements = applyLayoutToFlow(newNodes, newEdges, teamType);
         
+        console.log('📐 Applied layout to flow:', {
+          layoutedNodeCount: layoutedElements.nodes.length,
+          layoutedEdgeCount: layoutedElements.edges.length
+        });
+        
+        // 🎯 FIXED: Set nodes and edges at the same time to prevent race condition
         setNodes(layoutedElements.nodes);
-        setTimeout(() => {
-          setEdges(layoutedElements.edges);
-        }, 50);
+        setEdges(layoutedElements.edges);
       } else {
+        console.log('⚠️ No nodes generated, setting empty arrays');
         setNodes(newNodes);
         setEdges(newEdges);
       }
@@ -237,7 +312,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       console.error('Error updating flow:', error);
       setState(prev => ({ ...prev, error: 'Failed to update flow visualization' }));
     }
-  }, [state, conversationState, messages, setNodes, setEdges, fitView]);
+  }, [state, conversationState, messages, conversationId, setNodes, setEdges, fitView]);
 
   useEffect(() => {
     updateFlowVisualization();
@@ -249,6 +324,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
       const teamType = state.progressiveElements.teamType || 'RoundRobinGroupChat';
       const layouted = relayoutNodes(nodes, edges, teamType);
       
+      // 🎯 FIXED: Set nodes and edges together here too
       setNodes(layouted.nodes);
       setEdges(layouted.edges);
       
@@ -369,9 +445,9 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
             <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
               state.error ? 'bg-red-500' :
               state.isAnalyzing ? 'bg-orange-500 animate-pulse' :
-              state.conversationEnded ? 'bg-green-500' :
-              state.analysisStage === 'structure_complete' ? 'bg-green-500' :
-              state.analysisStage !== 'initial' ? 'bg-blue-500' :
+              state.conversationEnded ? 'bg-secondary-600' :
+              state.analysisStage === 'structure_complete' ? 'bg-secondary-600' :
+              state.analysisStage !== 'initial' ? 'bg-secondary-600' :
               'bg-gray-500'
             }`} />
             <h3 className="text-sm font-medium text-white">Smart Visualizer</h3>
@@ -385,7 +461,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
               <SparklesIcon className="h-3 w-3 text-orange-500 animate-spin" />
             )}
             {state.hasJsonReady && state.conversationEnded && (
-              <span className="text-xs text-green-400 flex items-center gap-1">
+              <span className="text-xs text-secondary-600 flex items-center gap-1">
                 <CheckIcon className="h-3 w-3" />
                 JSON Ready
               </span>
@@ -398,15 +474,9 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                 className="p-1 text-gray-400 hover:text-white transition-colors"
                 title="Export Autogen Structure"
               >
-                <DocumentArrowDownIcon className="h-4 w-4" />
+                <DocumentArrowDownIcon className="h-2 w-2" />
               </button>
             )}
-            <button
-              onClick={() => setState(prev => ({ ...prev, isMinimized: !prev.isMinimized }))}
-              className="p-1 text-gray-400 hover:text-white transition-colors"
-            >
-              {state.isMinimized ? <EyeIcon className="h-4 w-4" /> : <EyeSlashIcon className="h-4 w-4" />}
-            </button>
             <button
               onClick={handleClose}
               className="p-1 text-gray-400 hover:text-white transition-colors"
@@ -470,7 +540,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                     {state.conversationEnded && (
                       <>
                         <span>•</span>
-                        <span className="text-green-400">Completed</span>
+                        <span className="text-secondary-600">Completed</span>
                       </>
                     )}
                   </div>
@@ -480,7 +550,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                     </div>
                   )}
                   {state.hasJsonReady && state.conversationEnded && (
-                    <div className="text-xs text-green-500 mb-3">
+                    <div className="text-xs text-secondary-600 mb-3">
                       📄 JSON Ready - Close to Update Editors
                     </div>
                   )}
@@ -492,7 +562,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                       variant="ghost"
                       onClick={handleAutoLayout}
                       className="text-xs px-2 py-1 border border-dark-border hover:bg-dark-400"
-                      leftIcon={<ArrowPathIcon className="h-3 w-3" />}
+                      leftIcon={<ArrowPathIcon className="h-2 w-2" />}
                     >
                       Auto Layout
                     </Button>
@@ -510,7 +580,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                       onClick={() => zoomIn({ duration: 300 })}
                       className="text-xs px-1 py-1 border border-dark-border hover:bg-dark-400"
                     >
-                      <MagnifyingGlassPlusIcon className="h-3 w-3" />
+                      <MagnifyingGlassPlusIcon className="h-2 w-2" />
                     </Button>
                     <Button
                       size="xs"
@@ -518,7 +588,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                       onClick={() => zoomOut({ duration: 300 })}
                       className="text-xs px-1 py-1 border border-dark-border hover:bg-dark-400"
                     >
-                      <MagnifyingGlassMinusIcon className="h-3 w-3" />
+                      <MagnifyingGlassMinusIcon className="h-2 w-2" />
                     </Button>
                   </div>
                 </Panel>
@@ -532,7 +602,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                     Nodes: {nodes.length} | Edges: {edges.length}
                   </div>
                   {state.hasJsonReady && state.conversationEnded && (
-                    <div className="text-xs text-green-500 mt-1">
+                    <div className="text-xs text-secondary-600 mt-1">
                       JSON: Ready for Export
                     </div>
                   )}
@@ -554,7 +624,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                 <span className="ml-2">• Stored</span>
               )}
               {state.hasJsonReady && state.conversationEnded && (
-                <span className="ml-2 text-green-400">• JSON Ready</span>
+                <span className="ml-2 text-secondary-600">• JSON Ready</span>
               )}
             </p>
           </div>

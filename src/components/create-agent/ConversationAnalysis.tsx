@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import { XMarkIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { Wrench } from 'lucide-react';
+import { Wrench, Eye } from 'lucide-react';
 import TranscriptHandler from './TranscriptHandler';
+import SmartVisualizer from './SmartVisualizer';
 
 interface ConversationAnalysisProps {
   isVisible: boolean;
@@ -154,8 +155,10 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
   const [data, setData] = useState<ConversationData | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
   const [showTranscriptHandler, setShowTranscriptHandler] = useState(false);
+  const [showSmartVisualizer, setShowSmartVisualizer] = useState(false);
   const [transcript, setTranscript] = useState<string>('');
   const [taskData, setTaskData] = useState<any>(null);
+  const [storedConversationData, setStoredConversationData] = useState<any>(null);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -172,64 +175,71 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           throw new Error('No conversation ID provided');
         }
 
-        // 🎯 ENHANCED: Try to get data from ElevenLabs API first
+        // 🎯 ENHANCED: Try to get data from localStorage first
         let transcriptData: ConversationData | null = null;
+        let localStorageData: any = null;
         
         try {
-          console.log('📡 Attempting to fetch from ElevenLabs API...');
-          const transcriptResponse = await fetch(`https://api.elevenlabs.io/v1/convai/conversations/${conversationId}`, {
-            method: 'GET',
-            headers: {
-              'xi-api-key': 'sk_23315796af0e04dca2d364ac3da923dc1f385c4e375a249c'
-            }
-          });
-
-          if (transcriptResponse.ok) {
-            transcriptData = await transcriptResponse.json();
-            console.log('✅ Successfully fetched from ElevenLabs API');
-          } else {
-            console.log('⚠️ ElevenLabs API failed, will try localStorage fallback');
-          }
-        } catch (apiError) {
-          console.log('⚠️ ElevenLabs API error, trying localStorage fallback:', apiError);
-        }
-
-        // 🎯 FALLBACK: Try to get data from localStorage if API fails
-        if (!transcriptData) {
           console.log('📂 Attempting to fetch from localStorage...');
-          
-          // Import the conversation storage service
           const { getConversationData } = await import('@/services/conversationStorageService');
-          const storedData = getConversationData(conversationId);
+          localStorageData = getConversationData(conversationId);
           
-          if (storedData && storedData.messages && storedData.messages.length > 0) {
+          if (localStorageData && localStorageData.messages && localStorageData.messages.length > 0) {
             console.log('✅ Found stored conversation data in localStorage');
+            setStoredConversationData(localStorageData);
+            
+            // 🎯 NEW: Sync industry and focus areas from stored conversation
+            syncIndustryAndFocusAreas(localStorageData);
             
             // Convert stored data to expected format
             transcriptData = {
               agent_id: 'stored_agent',
               conversation_id: conversationId,
-              status: storedData.status === 'completed' ? 'done' : 'in-progress',
-              transcript: storedData.messages.map((msg, index) => ({
+              status: localStorageData.status === 'completed' ? 'done' : 'in-progress',
+              transcript: localStorageData.messages.map((msg: any, index: number) => ({
                 role: msg.role === 'assistant' ? 'agent' : 'user',
                 time_in_call_secs: index * 10, // Approximate timing
                 message: msg.content,
                 source_medium: 'audio' as const
               })),
               metadata: {
-                start_time_unix_secs: Math.floor(storedData.timestamp / 1000),
-                call_duration_secs: storedData.messages.length * 10,
+                start_time_unix_secs: Math.floor(localStorageData.timestamp / 1000),
+                call_duration_secs: localStorageData.messages.length * 10,
                 main_language: 'id', // Bahasa Indonesia
-                cost: 0.01 * storedData.messages.length
+                cost: 0.01 * localStorageData.messages.length
               },
               has_audio: true,
               has_user_audio: true,
               has_response_audio: true,
               analysis: {
                 call_successful: 'success' as const,
-                transcript_summary: `Conversation about creating AI agents team. Generated ${storedData.metadata.totalMessages} messages with ${storedData.metadata.stage} completion stage.`
+                transcript_summary: `Conversation about creating AI agents team. Generated ${localStorageData.metadata.totalMessages} messages with ${localStorageData.metadata.stage} completion stage.`
               }
             };
+          }
+        } catch (localError) {
+          console.log('⚠️ localStorage fetch failed, trying ElevenLabs API:', localError);
+        }
+
+        // 🎯 ENHANCED: Try to get data from ElevenLabs API if localStorage fails
+        if (!transcriptData) {
+          try {
+            console.log('📡 Attempting to fetch from ElevenLabs API...');
+            const transcriptResponse = await fetch(`https://api.elevenlabs.io/v1/convai/conversations/${conversationId}`, {
+              method: 'GET',
+              headers: {
+                'xi-api-key': 'sk_23315796af0e04dca2d364ac3da923dc1f385c4e375a249c'
+              }
+            });
+
+            if (transcriptResponse.ok) {
+              transcriptData = await transcriptResponse.json();
+              console.log('✅ Successfully fetched from ElevenLabs API');
+            } else {
+              console.log('⚠️ ElevenLabs API failed, will try mock data fallback');
+            }
+          } catch (apiError) {
+            console.log('⚠️ ElevenLabs API error, trying mock data fallback:', apiError);
           }
         }
 
@@ -292,6 +302,90 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
               transcript_summary: 'User requested an AI agents team for customer service ticket analysis with Zendesk integration. The conversation successfully resulted in a complete team configuration with specialized agents for ticket processing, priority classification, and department routing.'
             }
           };
+
+          // Create mock stored conversation data for Smart Visualizer
+          if (!localStorageData) {
+            setStoredConversationData({
+              conversationId,
+              autogenStructure: {
+                provider: "autogen_agentchat.teams.RoundRobinGroupChat",
+                component_type: "team",
+                version: 1,
+                component_version: 1,
+                description: "Customer service AI agents team",
+                label: "Customer Service Team",
+                config: {
+                  participants: [
+                    {
+                      provider: "autogen_agentchat.agents.AssistantAgent",
+                      component_type: "agent",
+                      version: 1,
+                      component_version: 1,
+                      description: "Analyzes customer tickets",
+                      label: "Ticket Analyzer",
+                      config: {
+                        name: "ticket_analyzer",
+                        model_client: {
+                          provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
+                          component_type: "model",
+                          version: 1,
+                          component_version: 1,
+                          description: "Chat completion client for OpenAI hosted models.",
+                          label: "OpenAIChatCompletionClient",
+                          config: {
+                            model: "gpt-4o-mini"
+                          }
+                        },
+                        tools: [
+                          {
+                            provider: "autogen_core.tools.FunctionTool",
+                            component_type: "tool",
+                            version: 1,
+                            component_version: 1,
+                            description: "Zendesk integration tool",
+                            label: "ZendeskTool",
+                            config: {
+                              source_code: "def zendesk_analyzer(ticket: str) -> str",
+                              name: "zendesk_analyzer",
+                              description: "Analyzes Zendesk tickets",
+                              global_imports: [],
+                              has_cancellation_support: false
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              flowState: {
+                team: {
+                  name: "Customer Service Team",
+                  description: "AI agents team for customer service ticket analysis",
+                  type: "RoundRobinGroupChat"
+                },
+                agents: [
+                  {
+                    name: "Ticket Analyzer",
+                    description: "Analyzes customer tickets",
+                    type: "AssistantAgent"
+                  }
+                ]
+              },
+              metadata: {
+                stage: "structure_complete",
+                totalMessages: 4
+              },
+              userIndustry: "retail",
+              userFocusAreas: ["customer_service"],
+              messages: [
+                { role: 'user', content: 'Buatin AI agents team yang bisa analisa tiket dari pelanggan dan mengkategorikannya berdasarkan prioritas dan departemennya.', timestamp: Date.now() - 300000 },
+                { role: 'assistant', content: 'Siap Gan! Gw bantuin bikin AI agents team untuk customer service. Tim ini akan punya beberapa agent khusus untuk analisa tiket, kategorisasi prioritas, dan routing ke departemen yang tepat.', timestamp: Date.now() - 250000 },
+                { role: 'user', content: 'Wah mantap! Gw juga mau ini terintegrasi dengan akun Zendesk perusahaan ya.', timestamp: Date.now() - 200000 },
+                { role: 'assistant', content: 'Noted Gan! Gw dah tambahin Zendesk integration ke AI agents teamnya. Sekarang tim AI Agan bisa langsung akses dan proses tiket dari Zendesk secara otomatis.', timestamp: Date.now() - 150000 }
+              ]
+            });
+          }
         }
 
         setData(transcriptData);
@@ -335,6 +429,25 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
     fetchConversationData();
   }, [isVisible, conversationId]);
 
+  // 🎯 NEW: Function to sync industry and focus areas from stored conversation
+  const syncIndustryAndFocusAreas = (conversationData: any) => {
+    try {
+      if (conversationData.userIndustry) {
+        console.log('🔄 Syncing industry from conversation:', conversationData.userIndustry);
+        localStorage.setItem('user_industry', conversationData.userIndustry);
+      }
+      
+      if (conversationData.userFocusAreas && Array.isArray(conversationData.userFocusAreas)) {
+        console.log('🔄 Syncing focus areas from conversation:', conversationData.userFocusAreas);
+        localStorage.setItem('user_focus_areas', JSON.stringify(conversationData.userFocusAreas));
+      }
+      
+      console.log('✅ Industry and focus areas synced successfully');
+    } catch (error) {
+      console.error('❌ Error syncing industry and focus areas:', error);
+    }
+  };
+
   const formatDate = (unixSeconds: number) => {
     return new Date(unixSeconds * 1000).toLocaleString();
   };
@@ -343,6 +456,50 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
     const mins = Math.floor(seconds / 60);
     const secs = Math.round(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleSmartVisualizerClick = () => {
+    console.log('🎨 Opening Smart Visualizer for conversation:', conversationId);
+    console.log('📊 Using stored conversation data:', storedConversationData);
+    setShowSmartVisualizer(true);
+  };
+
+  // 🎯 CRITICAL FIX: Simplified logic to always show Smart Visualizer when we have data
+  const shouldShowSmartVisualizer = () => {
+    // Always show if we have stored conversation data OR if we have transcript data
+    const hasStoredData = !!storedConversationData;
+    const hasTranscriptData = !!data && data.transcript && data.transcript.length > 0;
+    
+    console.log('🔍 Smart Visualizer availability check:', {
+      hasStoredData,
+      hasTranscriptData,
+      conversationId,
+      storedDataKeys: storedConversationData ? Object.keys(storedConversationData) : [],
+      transcriptLength: data?.transcript?.length || 0
+    });
+    
+    return hasStoredData || hasTranscriptData;
+  };
+
+  const getSmartVisualizerStatus = () => {
+    if (!storedConversationData && !data) return 'No Data Available';
+    
+    if (storedConversationData?.autogenStructure) {
+      return 'Complete JSON Available';
+    }
+    if (storedConversationData?.flowState?.team) {
+      return 'Team Structure Available';
+    }
+    if (storedConversationData?.flowState?.agents && storedConversationData.flowState.agents.length > 0) {
+      return 'Agents Identified';
+    }
+    if (storedConversationData?.messages && storedConversationData.messages.length > 2) {
+      return 'Conversation Data Available';
+    }
+    if (data?.transcript && data.transcript.length > 0) {
+      return 'Transcript Data Available';
+    }
+    return 'Basic Data Available';
   };
 
   return (
@@ -370,12 +527,23 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                 )}
               </div>
               <div className="flex items-center gap-2">
+                {/* Smart Visualizer Button - ALWAYS SHOW IF WE HAVE ANY DATA */}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleSmartVisualizerClick}
+                  leftIcon={<Eye className="h-2 w-2" />}
+                  disabled={!shouldShowSmartVisualizer()}
+                >
+                  Show AI Flow
+                </Button>
+                
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => setShowTranscriptHandler(true)}
                 >
-                  Generate AI Agent Code
+                  Generate Agents Code
                 </Button>
                 <Button
                   variant="ghost"
@@ -466,6 +634,62 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                           <span className="ml-2 text-white">{data.metadata.cost}</span>
                         </div>
                       )}
+                    </div>
+                  </div>
+
+                  {/* Smart Visualizer Info - ALWAYS SHOW STATUS */}
+                  <div className="bg-dark-400 rounded-lg p-2">
+                    <h3 className="text-sm font-medium text-white mb-2">AI Team Data</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-sm">Structure Status:</span>
+                        <span className={`text-sm ${
+                          shouldShowSmartVisualizer() ? 'text-secondary-600' : 'text-gray-500'
+                        }`}>
+                          {getSmartVisualizerStatus()}
+                        </span>
+                      </div>
+                      
+                      {/* Industry and Focus Areas Display */}
+                      {(storedConversationData?.userIndustry || storedConversationData?.userFocusAreas) && (
+                        <div className="bg-dark-surface/50 p-2 rounded">
+                          <h4 className="text-sm font-medium text-white mb-1">Context Information</h4>
+                          {storedConversationData.userIndustry && (
+                            <p className="text-xs text-gray-400">Industry: {storedConversationData.userIndustry}</p>
+                          )}
+                          {storedConversationData.userFocusAreas && Array.isArray(storedConversationData.userFocusAreas) && (
+                            <p className="text-xs text-gray-400">Focus: {storedConversationData.userFocusAreas.join(', ')}</p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {storedConversationData?.flowState?.team && (
+                        <div className="bg-dark-surface/50 p-2 rounded">
+                          <h4 className="text-sm font-medium text-white mb-1">Team Information</h4>
+                          <p className="text-sm text-gray-300">{storedConversationData.flowState.team.name}</p>
+                          <p className="text-xs text-gray-400">{storedConversationData.flowState.team.description}</p>
+                          {storedConversationData.flowState.agents && storedConversationData.flowState.agents.length > 0 && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              {storedConversationData.flowState.agents.length} agents identified
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* ALWAYS SHOW AVAILABILITY STATUS */}
+                      <div className={`${shouldShowSmartVisualizer() ? 'bg-secondary-600/10 border-secondary-600/20' : 'bg-gray-600/10 border-gray-600/20'} border p-2 rounded`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Eye className={`h-3 w-3 ${shouldShowSmartVisualizer() ? 'text-secondary-600' : 'text-gray-500'}`} />
+                          <span className={`text-xs font-medium ${shouldShowSmartVisualizer() ? 'text-secondary-600' : 'text-gray-500'}`}>
+                            {shouldShowSmartVisualizer() ? 'AI Team Flow Available' : 'AI Team Flow Not Available'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-400">
+                          {shouldShowSmartVisualizer() 
+                            ? 'Team structure can be visualized based on conversation data.'
+                            : 'No sufficient AI team data found for visualization.'}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -583,6 +807,23 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
         taskData={taskData || ''}
         conversationId={conversationId}
       />
+
+      {/* Smart Visualizer Modal - CRITICAL FIX: Always render when showSmartVisualizer is true */}
+      {showSmartVisualizer && (
+        <SmartVisualizer
+          isVisible={showSmartVisualizer}
+          onClose={() => setShowSmartVisualizer(false)}
+          conversationState="idle"
+          agentFlow={[]}
+          messages={storedConversationData?.messages || data?.transcript?.map((t: any) => ({
+            role: t.role,
+            content: t.message,
+            timestamp: Date.now() - (t.time_in_call_secs * 1000)
+          })) || []}
+          conversationId={conversationId}
+          onJsonGenerated={() => {}} // No-op since this is read-only view
+        />
+      )}
     </AnimatePresence>
   );
 };
