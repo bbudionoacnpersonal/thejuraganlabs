@@ -132,6 +132,26 @@ export const updateConversationData = (
   }
 };
 
+// Validate conversation data structure
+const isValidConversationData = (data: any): data is StoredConversationData => {
+  return (
+    data &&
+    typeof data === 'object' &&
+    typeof data.conversationId === 'string' &&
+    typeof data.timestamp === 'number' &&
+    typeof data.lastUpdated === 'number' &&
+    typeof data.status === 'string' &&
+    data.flowState &&
+    Array.isArray(data.messages) &&
+    data.metadata &&
+    typeof data.metadata === 'object' &&
+    typeof data.metadata.totalMessages === 'number' &&
+    typeof data.metadata.analysisCount === 'number' &&
+    typeof data.metadata.confidence === 'number' &&
+    typeof data.metadata.stage === 'string'
+  );
+};
+
 // Get all stored conversations (for listing/management)
 export const getAllConversations = (): StoredConversationData[] => {
   try {
@@ -143,10 +163,20 @@ export const getAllConversations = (): StoredConversationData[] => {
         const data = localStorage.getItem(key);
         if (data) {
           try {
-            const conversationData: StoredConversationData = JSON.parse(data);
-            conversations.push(conversationData);
+            const conversationData = JSON.parse(data);
+            
+            // Validate conversation data structure before adding to array
+            if (isValidConversationData(conversationData)) {
+              conversations.push(conversationData);
+            } else {
+              console.warn(`⚠️ Invalid conversation data structure for key: ${key}`, conversationData);
+              // Optionally remove invalid data
+              localStorage.removeItem(key);
+            }
           } catch (parseError) {
-            console.warn(`⚠️ Invalid conversation data for key: ${key}`);
+            console.warn(`⚠️ Invalid conversation data for key: ${key}`, parseError);
+            // Optionally remove corrupted data
+            localStorage.removeItem(key);
           }
         }
       }
