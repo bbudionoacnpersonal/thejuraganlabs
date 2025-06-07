@@ -101,7 +101,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
             <div className="w-full bg-dark-background rounded-lg p-4">
                 
               <Button
-                size="am"
+                size="sm"
                 leftIcon={<UserGroupIcon className="h-4 w-4" />}
                 onClick={() => setShowGallery(true)}
                 className="w-full"
