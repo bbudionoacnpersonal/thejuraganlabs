@@ -4,10 +4,10 @@ import Card, { CardBody } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
+import Library from 'lucide-react';
 import { 
   SparklesIcon, 
   ClockIcon, 
-  UserGroupIcon,
   StarIcon,
   TagIcon,
   DocumentArrowDownIcon,
