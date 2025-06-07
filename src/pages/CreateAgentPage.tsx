@@ -80,13 +80,20 @@ const CreateAgentPage: React.FC = () => {
   // 🎯 NEW: Handle JSON generation from Smart Visualizer
   const handleJsonGenerated = (json: TeamStructure) => {
     console.log('🎯 JSON generated, updating editors:', json);
-    setCurrentTeamStructure(json);
     
-    // Switch to visual mode to show the updated structure
-    setViewMode('visual');
-    
-    // Show a brief notification that the JSON has been updated
-    // You could add a toast notification here if you have one
+    // Validate that json is not null/undefined and has required properties
+    if (json && typeof json === 'object' && json.config) {
+      setCurrentTeamStructure(json);
+      
+      // Switch to visual mode to show the updated structure
+      setViewMode('visual');
+      
+      // Show a brief notification that the JSON has been updated
+      // You could add a toast notification here if you have one
+    } else {
+      console.warn('Invalid team structure received from Smart Visualizer:', json);
+      // Optionally show an error message to the user
+    }
   };
 
   // 🎯 NEW: Handle team structure changes from editors
