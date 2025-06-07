@@ -588,7 +588,7 @@ const SmartVisualizerContent: React.FC<SmartVisualizerProps> = ({
                       onClick={() => zoomIn({ duration: 300 })}
                       className="text-xs px-1 py-1 border border-dark-border hover:bg-dark-400"
                     >
-                      <MagnifyingGlassPlusIcon className="h-3 w-3" />
+                      <MagnifyingGlassPlusIcon className="h-2 w-2" />
                     </Button>
                     <Button
                       size="xs"
