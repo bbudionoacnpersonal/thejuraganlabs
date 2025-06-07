@@ -427,7 +427,7 @@ const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
                   onClick={handleResumeConversation}
                   leftIcon={<Play className="h-4 w-4" />}
                 >
-                  Resume Conversation
+                  Show Agent Visualizer
                 </Button>
                 
                 {/* Smart Visualizer Button - Enhanced visibility logic */}
