@@ -153,7 +153,7 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
           id: `agent-${index}`,
           type: 'conversation',
           position: { 
-            x: 200 + (index * 280), 
+            x: 300 + (index * 280), 
             y: yPosition 
           },
           data: {
