@@ -99,24 +99,11 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
             </p>
 
             <div className="w-full bg-dark-background rounded-lg p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="bg-dark-surface rounded-lg p-4 border border-dark-border">
-                  <div className="flex items-center gap-2 mb-2">
-                    <SparklesIcon className="h-5 w-5 text-secondary-600" />
-                    <span className="text-white font-medium">Recommended for You</span>
-                  </div>
-                  <p className="text-gray-400 text-sm">{recommendedUseCases.length} templates match your profile</p>
-                </div>
                 
                 <div className="bg-dark-surface rounded-lg p-4 border border-dark-border">
-                  <div className="flex items-center gap-2 mb-2">
-                    <StarIcon className="h-5 w-5 text-warning-500" />
-                    <span className="text-white font-medium">Popular Templates</span>
-                  </div>
                   <p className="text-gray-400 text-sm">Most used across all industries</p>
                 </div>
-              </div>
-
+              
               <Button
                 size="lg"
                 leftIcon={<UserGroupIcon className="h-6 w-6" />}
