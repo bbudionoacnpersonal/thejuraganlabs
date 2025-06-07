@@ -53,17 +53,23 @@ const ConversationList: React.FC<ConversationListProps> = ({
   const loadConversations = async () => {
     setIsLoading(true);
     try {
+      // Get conversations from localStorage using the storage service
       const allConversations = getAllConversations();
       const stats = getStorageStats();
+      
+      console.log('📂 Loading conversations from localStorage:', {
+        found: allConversations.length,
+        conversations: allConversations.map(c => ({
+          id: c.conversationId,
+          status: c.status,
+          messages: c.metadata.totalMessages
+        }))
+      });
       
       setConversations(allConversations);
       setFilteredConversations(allConversations);
       setStorageStats(stats);
       
-      console.log('📂 Loaded conversations:', {
-        count: allConversations.length,
-        stats
-      });
     } catch (error) {
       console.error('❌ Error loading conversations:', error);
     } finally {
@@ -159,7 +165,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
                 </div>
                 <input
                   type="text"
-                  placeholder="Search conversations..."
+                  placeholder="Search by conversation ID, team name, or industry..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-dark-background border border-dark-border rounded-md py-2 pl-10 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-secondary-600"
@@ -172,7 +178,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
               <div className="px-4 py-2 bg-dark-background/50 border-b border-dark-border">
                 <div className="flex items-center justify-between text-xs text-gray-400">
                   <span>{storageStats.conversationCount} conversations stored</span>
-                  <span>{storageStats.totalSizeKB} KB used</span>
+                  <span>{storageStats.totalSizeKB} KB used in localStorage</span>
                 </div>
               </div>
             )}
@@ -195,6 +201,11 @@ const ConversationList: React.FC<ConversationListProps> = ({
                       : 'Start a conversation with the voice assistant to see it here'
                     }
                   </p>
+                  {!searchTerm && (
+                    <p className="text-gray-500 text-xs mt-2">
+                      Conversations are automatically saved to localStorage
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="p-4 space-y-3">
@@ -239,7 +250,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
                           )}
                         </div>
                         <span className="font-mono">
-                          {conversation.conversationId.slice(-8)}
+                          ID: {conversation.conversationId.slice(-8)}
                         </span>
                       </div>
                     </motion.div>
