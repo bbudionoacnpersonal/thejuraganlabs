@@ -29,7 +29,7 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
 
     const newNodes: Node[] = [];
     const newEdges: Edge[] = [];
-    let yPosition = 70;
+    let yPosition = 100;
 
     // 🎯 CRITICAL FIX: Always generate nodes even with minimal data
     console.log('🔍 Flow generation input:', {
