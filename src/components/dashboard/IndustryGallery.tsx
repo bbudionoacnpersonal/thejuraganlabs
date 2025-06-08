@@ -218,7 +218,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 {/* Provider */}
                 {useCase.autogenStructure?.provider && (
                   <div className="text-xs text-gray-500 mb-2">
-                    Team Type: {useCase.autogenStructure.provider}
+                    Team Type: {useCase.autogenStructure.provider.split('.').pop()}
                   </div>
                 )}
           
