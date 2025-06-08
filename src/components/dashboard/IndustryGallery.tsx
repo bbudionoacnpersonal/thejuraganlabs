@@ -16,7 +16,8 @@ import {
   TagIcon,
   DocumentArrowDownIcon,
   PlayIcon,
-  BuildingOffice2Icon, // Import a relevant icon for industry
+  BuildingOffice2Icon,
+  MagnifyingGlassIcon, // Import search icon
 } from '@heroicons/react/24/outline';
 import {
   filterUseCases,
@@ -36,20 +37,22 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
   const [showGallery, setShowGallery] = useState(false);
   const [selectedUseCase, setSelectedUseCase] = useState<UseCaseTemplate | null>(null);
 
-  // State for the filters, initialized with the user's profile settings
+  // State for the filters
   const [currentFilterIndustry, setCurrentFilterIndustry] = useState(userIndustry);
   const [currentFilterFunctionAreas, setCurrentFilterFunctionAreas] = useState<string[]>(
     userFocusAreas
   );
+  const [searchTerm, setSearchTerm] = useState(''); // New state for search term
 
-  // Memoize the filtered list to avoid re-calculating on every render
+  // Memoize the filtered list to include the new search term
   const displayedUseCases = useMemo(
     () =>
       filterUseCases({
         industry: currentFilterIndustry,
         functionAreas: currentFilterFunctionAreas,
+        searchTerm: searchTerm, // Pass search term to filter function
       }),
-    [currentFilterIndustry, currentFilterFunctionAreas]
+    [currentFilterIndustry, currentFilterFunctionAreas, searchTerm] // Add searchTerm to dependency array
   );
 
   const getDifficultyColor = (difficulty: string) => {
@@ -120,45 +123,70 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
         size="3xl"
       >
         <div className="space-y-4">
-          {/* Filters */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-dark-surface p-4 rounded-lg border border-dark-border"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        {/* Filters */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-dark-surface p-4 rounded-lg border border-dark-border"
+        >
+          <div className="flex flex-wrap items-end gap-4">
+            {/* Industry Select */}
+            <div className="flex-1 min-w-[200px]">
               <Select
                 label="Industry"
                 size="sm"
                 options={[{ value: '', label: 'All Industries' }, ...industries]}
                 value={currentFilterIndustry}
-                onChange={(e) => setCurrentFilterIndustry(e.target.value)}
+                onChange={(value) => setCurrentFilterIndustry(value as string)}
               />
+            </div>
+        
+            {/* Function Areas Select */}
+            <div className="flex-1 min-w-[200px]">
               <Select
                 label="Function Areas"
                 size="sm"
-                options={[{ value: '', label: 'All Function Areas' }, ...focusAreas]}
+                options={focusAreas} // "All" is handled by clearing the filter
                 value={currentFilterFunctionAreas}
-                onChange={(selectedOptions) =>
-                  setCurrentFilterFunctionAreas(
-                    (selectedOptions as any[]).map((opt) => opt.value)
-                  )
-                }
+                onChange={(value) => setCurrentFilterFunctionAreas(value as string[])}
               />
+            </div>
+        
+            {/* Search Input */}
+            <div className="relative flex-grow min-w-[250px]">
+              <label htmlFor="gallery-search" className="block text-sm font-medium text-gray-300 mb-1">
+                Search
+              </label>
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none top-7">
+                <MagnifyingGlassIcon className="h-2 w-2 text-gray-400" />
+              </div>
+              <input
+                id="gallery-search"
+                type="text"
+                placeholder="Search by title, description, or tag..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-dark-surface border border-dark-border rounded-md py-2 pl-12 pr-4 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-secondary-600"
+              />
+            </div>
+        
+            {/* Clear Button */}
+            <div className="flex-shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
-                className="border border-dark-border h-[60%]"
                 onClick={() => {
                   setCurrentFilterIndustry('');
                   setCurrentFilterFunctionAreas([]);
+                  setSearchTerm(''); // Also clear the search term
                 }}
                 leftIcon={<FilterX className="h-2 w-2" />}
               >
-                Clear Filters
+                Clear All Filters
               </Button>
             </div>
-          </motion.div>
+          </div>
+        </motion.div>
 
           {/* Use Cases Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto p-1">
@@ -174,18 +202,16 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 >
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="text-white font-medium text-sm pr-2">{useCase.title}</h3>
-                    {/* Wrapper for badges */}
                     <div className="flex-shrink-0 flex items-center gap-2">
-                      <Badge
-                        className="text-primary-700 bg-primary-100"
-                        size="sm"
-                      >
-                         <div className="flex items-center gap-1">
-                           <BuildingOffice2Icon className="h-3 w-3" />
-                           {industryLabel}
-                         </div>
+                      <Badge className="text-primary-700 bg-primary-100" size="sm">
+                        <div className="flex items-center gap-1">
+                          <BuildingOffice2Icon className="h-3 w-3" />
+                          {industryLabel}
+                        </div>
                       </Badge>
-                    
+                      <Badge className={getDifficultyColor(useCase.difficulty)} size="sm">
+                        {useCase.difficulty}
+                      </Badge>
                     </div>
                   </div>
                   <p className="text-gray-400 text-xs mb-3 line-clamp-2">
@@ -195,11 +221,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     <div className="flex items-center gap-2">
                       <ClockIcon className="h-3 w-3" />
                       <span>{useCase.estimatedTime}</span>
-                      <Badge className={getDifficultyColor(useCase.difficulty)} size="sm">
-                        {useCase.difficulty}
-                      </Badge>
                     </div>
-                  
                     <div className="flex items-center gap-2">
                       <UserGroupIcon className="h-3 w-3" />
                       <span>{useCase.usage} uses</span>
@@ -207,10 +229,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   </div>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {useCase.tags.slice(0, 2).map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-xs bg-dark-background text-gray-400 px-2 py-1 rounded"
-                      >
+                      <span key={tag} className="text-xs bg-dark-background text-gray-400 px-2 py-1 rounded">
                         {tag}
                       </span>
                     ))}
@@ -231,14 +250,14 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
               <SparklesIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-white mb-2">No Templates Found</h3>
               <p className="text-gray-400 text-sm">
-                Try adjusting or clearing your filters to see all available templates.
+                Try adjusting or clearing your filters to find a use case.
               </p>
             </div>
           )}
         </div>
       </Modal>
 
-      {/* Use Case Detail Modal (No changes needed here) */}
+      {/* Use Case Detail Modal */}
       {selectedUseCase && (
         <Modal
           isOpen={!!selectedUseCase}

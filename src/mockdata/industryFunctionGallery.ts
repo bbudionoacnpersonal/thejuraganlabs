@@ -61,7 +61,16 @@ const industryFunctionGallery: UseCaseTemplate[] = [
     tags: ['fraud detection', 'real-time monitoring', 'risk assessment', 'compliance'],
     isPopular: true,
     autogenStructure: {
-      // ... (structure remains the same)
+      provider: "autogen_agentchat.teams.RoundRobinGroupChat",
+      component_type: "team",
+      version: 1,
+      component_version: 1,
+      description: "Real-time fraud detection and prevention system",
+      label: "Fraud Detection Team",
+      config: {
+        participants: [], // Simplified for brevity
+        termination_condition: {},
+      },
     },
     usage: 1250,
     rating: 4.8,
@@ -81,7 +90,16 @@ const industryFunctionGallery: UseCaseTemplate[] = [
     tags: ['customer support', 'ticket routing', 'automated responses', 'escalation'],
     isPopular: true,
     autogenStructure: {
-        // ... (structure remains the same)
+        provider: "autogen_agentchat.teams.SelectorGroupChat",
+        component_type: "team",
+        version: 1,
+        component_version: 1,
+        description: "Intelligent customer support system with specialized agents",
+        label: "Customer Support Hub",
+        config: {
+            participants: [], // Simplified for brevity
+            termination_condition: {},
+        },
     },
     usage: 890,
     rating: 4.6,
@@ -101,7 +119,16 @@ const industryFunctionGallery: UseCaseTemplate[] = [
     tags: ['quality control', 'defect detection', 'process optimization', 'manufacturing'],
     isPopular: false,
     autogenStructure: {
-        // ... (structure remains the same)
+        provider: "autogen_agentchat.teams.HierarchicalGroupChat",
+        component_type: "team",
+        version: 1,
+        component_version: 1,
+        description: "Automated quality control and process optimization system",
+        label: "Quality Control Team",
+        config: {
+            participants: [], // Simplified for brevity
+            termination_condition: {},
+        },
     },
     usage: 567,
     rating: 4.7,
@@ -121,7 +148,16 @@ const industryFunctionGallery: UseCaseTemplate[] = [
     tags: ['patient triage', 'symptom assessment', 'care routing', 'HIPAA compliant'],
     isPopular: true,
     autogenStructure: {
-        // ... (structure remains the same)
+        provider: "autogen_agentchat.teams.SelectorGroupChat",
+        component_type: "team",
+        version: 1,
+        component_version: 1,
+        description: "Intelligent patient triage and care routing system",
+        label: "Patient Triage Team",
+        config: {
+            participants: [], // Simplified for brevity
+            termination_condition: {},
+        },
     },
     usage: 423,
     rating: 4.9,
@@ -141,7 +177,16 @@ const industryFunctionGallery: UseCaseTemplate[] = [
     tags: ['code review', 'security analysis', 'best practices', 'automation'],
     isPopular: false,
     autogenStructure: {
-        // ... (structure remains the same)
+        provider: "autogen_agentchat.teams.RoundRobinGroupChat",
+        component_type: "team",
+        version: 1,
+        component_version: 1,
+        description: "Automated code review and security analysis system",
+        label: "Code Review Team",
+        config: {
+            participants: [], // Simplified for brevity
+            termination_condition: {},
+        },
     },
     usage: 756,
     rating: 4.5,
@@ -151,33 +196,47 @@ const industryFunctionGallery: UseCaseTemplate[] = [
 ];
 
 /**
- * Filters the use case gallery based on optional industry and function area criteria.
- * @param options - An object containing optional 'industry' and 'functionAreas' to filter by.
+ * Filters the use case gallery based on optional criteria.
+ * @param options - An object containing optional 'industry', 'functionAreas', and 'searchTerm' to filter by.
  * @returns An array of filtered UseCaseTemplate objects.
  */
 export const filterUseCases = (options?: {
   industry?: string;
   functionAreas?: string[];
+  searchTerm?: string;
 }): UseCaseTemplate[] => {
+  const { industry, functionAreas, searchTerm } = options || {};
   let filteredCases = [...industryFunctionGallery];
 
-  // 1. Filter by industry if a valid industry is provided
-  if (options?.industry) {
+  // 1. Filter by search term if provided
+  if (searchTerm) {
+    const lowercasedTerm = searchTerm.toLowerCase();
+    filteredCases = filteredCases.filter((useCase) => {
+      const inTitle = useCase.title.toLowerCase().includes(lowercasedTerm);
+      const inDescription = useCase.description.toLowerCase().includes(lowercasedTerm);
+      const inTags = useCase.tags.some((tag) => tag.toLowerCase().includes(lowercasedTerm));
+      return inTitle || inDescription || inTags;
+    });
+  }
+
+  // 2. Filter by industry if a valid industry is provided
+  if (industry) {
     filteredCases = filteredCases.filter(
-      (useCase) => useCase.industry === options.industry
+      (useCase) => useCase.industry === industry
     );
   }
 
-  // 2. Filter by function areas if a valid array is provided
-  if (options?.functionAreas && options.functionAreas.length > 0) {
+  // 3. Filter by function areas if a valid array is provided
+  if (functionAreas && functionAreas.length > 0) {
     filteredCases = filteredCases.filter((useCase) =>
       // Keep the use case if at least one of its function areas is in the filter list
-      useCase.functionAreas.some((area) => options.functionAreas?.includes(area))
+      useCase.functionAreas.some((area) => functionAreas.includes(area))
     );
   }
 
   return filteredCases;
 };
+
 
 /**
  * Gets the most popular use cases, sorted by usage.
