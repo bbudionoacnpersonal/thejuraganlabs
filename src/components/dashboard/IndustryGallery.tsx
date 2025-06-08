@@ -126,7 +126,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
             animate={{ opacity: 1 }}
             className="bg-dark-surface p-4 rounded-lg border border-dark-border"
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-top">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Select
                 label="Industry"
                 size="sm"
