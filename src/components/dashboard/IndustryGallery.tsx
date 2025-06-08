@@ -252,7 +252,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     {/* tools */}
                     {(useCase.autogenStructure?.config?.tools || []).map((tool: any, idx: number) => (
                       <Badge key={idx} size="sm" className="bg-primary-500 text-white">
-                        <CodeBracketIcon className="h-2 w-2 text-white-500 mr-1" />
+                        <Wrench className="h-2 w-2 text-white-500 mr-1" />
                         {tool.name || 'Unnamed Tool'}
                       </Badge>
                     ))}
