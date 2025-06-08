@@ -236,7 +236,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                       {participant.label || 'Unnamed Agent'}
                     </Badge>
                     
-                ))}
+                    ))}
                   </div>
                 )}
 
