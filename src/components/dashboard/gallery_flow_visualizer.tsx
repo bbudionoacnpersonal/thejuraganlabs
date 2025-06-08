@@ -12,7 +12,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import dagre from 'dagre'; // 🚀 Dagre imported
-import AutogenNode from './AutogenNode'; // <-- use your custom AutogenNode
+import AutogenNode from '..//AutogenNode'; // <-- use your custom AutogenNode
 
 interface GalleryFlowVisualizerProps {
   autogenStructure: any; // This comes from useCase.autogenStructure
