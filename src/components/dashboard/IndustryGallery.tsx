@@ -11,6 +11,7 @@ import {
   UsersIcon,
   UserGroupIcon,
   MagnifyingGlassIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { industries, focusAreas } from '@/mockdata/industry_functions';
 import { industryFunctionGallery } from '@/mockdata/industryFunctionGallery'; 
