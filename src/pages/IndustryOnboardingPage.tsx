@@ -7,22 +7,16 @@ import Select from '@/components/ui/Select';
 import useAuthStore from '@/store/authStore';
 import { industries, focusAreas } from '@/mockdata/industry_functions';
 
-type GroupedOption = {
-  label: string;
-  options: { value: string; label: string }[];
-};
-
 const IndustryOnboardingPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   
-  // State will now hold the simple string values.
   const [selectedIndustry, setSelectedIndustry] = useState<string>('');
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([]);
   
   const [error, setError] = useState<string | null>(null);
 
-  // Set initial state from localStorage only once when the component mounts
+  // Load any saved preferences from localStorage when the page first loads
   useEffect(() => {
     const savedIndustry = localStorage.getItem('user_industry');
     const savedFocusAreas = localStorage.getItem('user_focus_areas');
@@ -34,22 +28,30 @@ const IndustryOnboardingPage: React.FC = () => {
     }
   }, []);
 
-  // Group focus areas for the dropdown's visual presentation
-  const groupedFocusAreaOptions: GroupedOption[] = useMemo(() => {
-    const groups: Record<string, { value: string; label: string }[]> = {};
-    for (const area of focusAreas) {
-      const groupName = area.function_group || 'Other';
-      if (!groups[groupName]) {
-        groups[groupName] = [];
+  // Group focus areas by their 'function_group' property to render them in sections
+  const groupedFocusAreas = useMemo(() => {
+    return focusAreas.reduce((acc, area) => {
+      const group = area.function_group || 'Other';
+      if (!acc[group]) {
+        acc[group] = [];
       }
-      groups[groupName].push({ value: area.value, label: area.label });
-    }
-    return Object.keys(groups).map(groupName => ({
-      label: groupName,
-      options: groups[groupName],
-    }));
+      acc[group].push(area);
+      return acc;
+    }, {} as Record<string, typeof focusAreas>);
   }, []);
-  
+
+  // Simple and robust handler for checkbox changes
+  const handleFocusAreaChange = (value: string) => {
+    // Clear any previous errors when the user starts making selections
+    if (error) setError(null);
+    
+    setSelectedFocusAreas((prev) =>
+      prev.includes(value)
+        ? prev.filter((item) => item !== value)
+        : [...prev, value]
+    );
+  };
+
   const handleSubmit = () => {
     if (!selectedIndustry) {
       setError('Please select your industry.');
@@ -70,7 +72,7 @@ const IndustryOnboardingPage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-2xl"
+        className="w-full max-w-3xl" // Increased width for better layout
       >
         <Card>
           <CardBody className="p-8">
@@ -81,43 +83,58 @@ const IndustryOnboardingPage: React.FC = () => {
               </p>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-8">
               {error && (
                 <div className="bg-error-500/20 border border-error-500 text-error-100 px-4 py-3 rounded">
                   {error}
                 </div>
               )}
 
-              <div className="space-y-6">
-                <Select
-                  label="What industry are you in?"
-                  options={industries}
-                  // Use defaultValue to set the initial visible state
-                  defaultValue={industries.find(i => i.value === selectedIndustry)}
-                  onChange={(e) => setSelectedIndustry(e.target.value)}
-                />
+              {/* Step 1: Industry Selection (Unchanged) */}
+              <Select
+                label="What industry are you in?"
+                options={industries}
+                value={selectedIndustry}
+                onChange={(e) => {
+                  setSelectedIndustry(e.target.value);
+                  if (error) setError(null); // Clear error on change
+                }}
+              />
 
-                {/* --- UPDATED Grouped Select Dropdown --- */}
-                <Select
-                  label="What are your key focus areas?"
-                  options={groupedFocusAreaOptions}
-                  isMulti
-                  helperText="Select all that apply"
-                  // 🎯 Use defaultValue for initial render based on localStorage
-                  defaultValue={focusAreas.filter(area => selectedFocusAreas.includes(area.value))}
-                  // ===============================================
-                  // 🎯 THIS IS THE FIX 
-                  // The `value` prop is removed. The `onChange` handler is now much simpler
-                  // and more resilient. It just receives the new selection and updates state.
-                  // ===============================================
-                  onChange={(selectedOptions) => {
-                    // This defensive check ensures we always have an array
-                    const newValues = Array.isArray(selectedOptions)
-                      ? selectedOptions.map(opt => opt.value)
-                      : [];
-                    setSelectedFocusAreas(newValues);
-                  }}
-                />
+              {/* ================================================================== */}
+              {/* 🎯 THIS IS THE FIX: Replaced the broken Select with a Checkbox UI */}
+              {/* ================================================================== */}
+              <div>
+                <label className="block text-sm font-medium text-gray-200">
+                  What are your key focus areas?
+                </label>
+                <p className="text-sm text-gray-500 mb-4">Select all that apply.</p>
+                
+                <div className="space-y-5 max-h-64 overflow-y-auto pr-2">
+                  {Object.entries(groupedFocusAreas).map(([groupName, areas]) => (
+                    <div key={groupName}>
+                      <h4 className="text-base font-semibold text-gray-300 mb-3 border-b border-dark-border pb-2">
+                        {groupName}
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                        {areas.map((area) => (
+                          <label
+                            key={area.value}
+                            className="flex items-center space-x-3 p-2 rounded-md hover:bg-dark-surface cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 rounded bg-dark-surface border-dark-border text-primary-500 focus:ring-primary-500"
+                              checked={selectedFocusAreas.includes(area.value)}
+                              onChange={() => handleFocusAreaChange(area.value)}
+                            />
+                            <span className="text-sm text-gray-300">{area.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
