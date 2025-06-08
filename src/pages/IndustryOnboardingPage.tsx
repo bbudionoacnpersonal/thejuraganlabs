@@ -102,8 +102,8 @@ const IndustryOnboardingPage: React.FC = () => {
                 // The key ensures the component correctly displays the default value if it's loaded from localStorage
                 key={selectedIndustry} 
                 defaultValue={industries.find(i => i.value === selectedIndustry)}
-                onChange={(e) => {
-                  setSelectedIndustry(e.target.value);
+                onChange={(value) => {
+                  setSelectedIndustry(value);
                   if (error) setError(null);
                 }}
               />
