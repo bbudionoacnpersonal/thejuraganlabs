@@ -7,17 +7,18 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
 import Select from '@/components/ui/Select';
-import { Library, FilterX } from 'lucide-react';
+import { Library, FilterX, Bot } from 'lucide-react';
 import {
   SparklesIcon,
-  ClockIcon,
+  CodeBracketIcon,
   StarIcon,
   UserGroupIcon,
+  UsersIcon,
   TagIcon,
   DocumentArrowDownIcon,
   PlayIcon,
   BuildingOffice2Icon,
-  MagnifyingGlassIcon, // Import search icon
+  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import {
   filterUseCases,
@@ -42,7 +43,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
   const [currentFilterFunctionAreas, setCurrentFilterFunctionAreas] = useState<string[]>(
     userFocusAreas
   );
-  const [searchTerm, setSearchTerm] = useState(''); // New state for search term
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Memoize the filtered list to include the new search term
   const displayedUseCases = useMemo(
@@ -50,9 +51,9 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
       filterUseCases({
         industry: currentFilterIndustry,
         functionAreas: currentFilterFunctionAreas,
-        searchTerm: searchTerm, // Pass search term to filter function
+        searchTerm: searchTerm,
       }),
-    [currentFilterIndustry, currentFilterFunctionAreas, searchTerm] // Add searchTerm to dependency array
+    [currentFilterIndustry, currentFilterFunctionAreas, searchTerm]
   );
 
   const getDifficultyColor = (difficulty: string) => {
@@ -123,71 +124,66 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
         size="3xl"
       >
         <div className="space-y-4">
-        {/* Filters */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="bg-dark-surface p-4 rounded-lg border border-dark-border"
-        >
-          <div className="flex flex-wrap items-end gap-4">
-            {/* Industry Select */}
-            <div className="flex-1 min-w-[200px]">
-              <Select
-                label="Industry"
-                size="sm"
-                options={[{ value: '', label: 'All Industries' }, ...industries]}
-                value={currentFilterIndustry}
-                onChange={(value) => setCurrentFilterIndustry(value as string)}
-              />
-            </div>
-        
-            {/* Function Areas Select */}
-            <div className="flex-1 min-w-[200px]">
-              <Select
-                label="Function Areas"
-                size="sm"
-                options={focusAreas} // "All" is handled by clearing the filter
-                value={currentFilterFunctionAreas}
-                onChange={(value) => setCurrentFilterFunctionAreas(value as string[])}
-              />
-            </div>
-        
-            {/* Search Input */}
-            <div className="relative flex-grow min-w-[250px]">
-              <label htmlFor="gallery-search" className="block text-sm font-medium text-gray-300 mb-1">
-                Search
-              </label>
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none top-3">
-                <MagnifyingGlassIcon className="h-2 w-2 text-gray-400" />
+          {/* Filters */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-dark-surface p-4 rounded-lg border border-dark-border"
+          >
+            <div className="flex flex-wrap items-end gap-4">
+              <div className="flex-1 min-w-[200px]">
+                <Select
+                  label="Industry"
+                  size="sm"
+                  options={[{ value: '', label: 'All Industries' }, ...industries]}
+                  value={currentFilterIndustry}
+                  onChange={(e) => setCurrentFilterIndustry(e.target.value)}
+                />
               </div>
-              <input
-                id="gallery-search"
-                type="text"
-                placeholder="Search by title, description, or tag..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-dark-surface border border-dark-border rounded-md py-1.6 pl-12 pr-4 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-secondary-600"
-              />
+              <div className="flex-1 min-w-[200px]">
+                <Select
+                  label="Function Areas"
+                  size="sm"
+                  options={focusAreas}
+                  value={currentFilterFunctionAreas}
+                  onChange={(selectedOptions) =>
+                    // Fixed: selectedOptions is already an array of strings, not objects
+                    setCurrentFilterFunctionAreas(selectedOptions as string[])
+                  }
+                />
+              </div>
+              <div className="relative flex-grow min-w-[250px]">
+                <label htmlFor="gallery-search" className="block text-sm font-medium text-gray-300 mb-1">
+                  Search
+                </label>
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none top-7">
+                  <MagnifyingGlassIcon className="h-2 w-2 text-gray-400" />
+                </div>
+                <input
+                  id="gallery-search"
+                  type="text"
+                  placeholder="Search by title, description, or tag..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-dark-surface border border-dark-border rounded-md py-1.6 pl-12 pr-4 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-secondary-600"
+                />
+              </div>
+              <div className="flex-shrink-0 border rounded-md border-dark-border">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setCurrentFilterIndustry('');
+                    setCurrentFilterFunctionAreas([]);
+                    setSearchTerm('');
+                  }}
+                  leftIcon={<FilterX className="h-2 w-2" />}
+                >
+                  Clear All Filters
+                </Button>
+              </div>
             </div>
-        
-            {/* Clear Button */}
-            <div className="flex-shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="border border-dark-border"
-                onClick={() => {
-                  setCurrentFilterIndustry('');
-                  setCurrentFilterFunctionAreas([]);
-                  setSearchTerm(''); // Also clear the search term
-                }}
-                leftIcon={<FilterX className="h-2 w-2" />}
-              >
-                Clear All Filters
-              </Button>
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
 
           {/* Use Cases Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto p-1">
@@ -195,18 +191,27 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
               const industryLabel =
                 industries.find((i) => i.value === useCase.industry)?.label ||
                 useCase.industry;
+                const providerType = useCase.autogenStructure.provider.split('.').pop() || 'N/A';
               return (
                 <div
                   key={useCase.id}
-                  className="bg-dark-surface rounded-lg p-4 border border-dark-border hover:border-secondary-600 cursor-pointer transition-colors"
+                  className="bg-dark-surface rounded-lg p-4 border border-dark-border hover:border-secondary-600 cursor-pointer transition-colors flex flex-col"
                   onClick={() => handleUseCaseSelect(useCase)}
                 >
-                  <div className="flex justify-between items-start mb-3">
+                  <div className="flex justify-between items-start mb-3 gap-1 ">
+                     {/* Group 1: All elements that should be on the left */}
+                    <div className="flex items-center gap-2">
+                     <UserGroupIcon className="h-3 w-3 text-gray-400" /> 
                     <h3 className="text-white font-medium text-sm pr-2">{useCase.title}</h3>
-                    <div className="flex-shrink-0 flex items-center gap-2">
+                      <Badge className={getDifficultyColor(useCase.difficulty)} size="sm">
+                        {useCase.difficulty}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex-shrink-0 flex gap-2 justify-end">
                       <Badge className="text-primary-700 bg-primary-100" size="sm">
                         <div className="flex items-center gap-1">
-                          <BuildingOffice2Icon className="h-3 w-3" />
+                          <BuildingOffice2Icon className="h-2 w-2" />
                           {industryLabel}
                         </div>
                       </Badge>
@@ -215,30 +220,43 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   <p className="text-gray-400 text-xs mb-3 line-clamp-2">
                     {useCase.description}
                   </p>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <div className="flex items-center gap-2">
-                      <ClockIcon className="h-3 w-3" />
-                      <span>{useCase.estimatedTime}</span>
-                      <Badge className={getDifficultyColor(useCase.difficulty)} size="sm">
-                        {useCase.difficulty}
-                      </Badge>
+                  <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                      {/* THIS SECTION IS UPDATED */}
+                    <div className="flex items-center gap-2" title={useCase.autogenStructure.provider}>
+                      <CodeBracketIcon className="h-2 w-2" />
+                      <span>{providerType}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <UserGroupIcon className="h-3 w-3" />
+                      <UsersIcon className="h-2 w-2" />
                       <span>{useCase.usage} uses</span>
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {useCase.tags.slice(0, 2).map((tag) => (
-                      <span key={tag} className="text-xs bg-dark-background text-gray-400 px-2 py-1 rounded">
-                        {tag}
-                      </span>
-                    ))}
-                    {useCase.tags.length > 2 && (
-                      <span className="text-xs text-gray-500">
-                        +{useCase.tags.length - 2}
-                      </span>
-                    )}
+                  
+                   {/* Agent Participant Tags */}
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {useCase.autogenStructure.config.participants.map((participant) => (
+                        <span
+                          key={participant.label}
+                          className="flex items-center gap-1 text-xs bg-blue-900/60 text-blue-300 px-2 py-0.5 rounded"
+                        >
+                          <Bot className="h-2 w-2" />
+                          {participant.label}
+                        </span>
+                      ))}
+                    </div>
+                  {/* Tags and Agents Section */}
+                  <div className="mt-auto pt-2 border-t border-dark-border/50 space-y-2">
+                  
+                    {/* Use Case Tags */}
+                    <div className="flex flex-wrap gap-1">
+                      {useCase.tags.slice(0, 3).map((tag) => (
+                        <span key={tag} className="flex items-center gap-1 text-xs bg-dark-background text-gray-400 px-2 py-0.5 rounded">
+                          <TagIcon className="h-2 w-2"/>
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+          
                   </div>
                 </div>
               );

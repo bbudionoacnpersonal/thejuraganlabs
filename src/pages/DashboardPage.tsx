@@ -9,7 +9,6 @@ import Button from '@/components/ui/Button';
 import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
 import Tooltip from '@/components/ui/Tooltip';
-import {Bot} from 'lucide-react';
 import {
   ChatBubbleLeftRightIcon,
   MagnifyingGlassIcon,
@@ -125,17 +124,18 @@ const DashboardPage: React.FC = () => {
             >
               <Card className="h-full">
                 <CardBody className="flex flex-col items-center text-center p-6">
-                  <h2 className="text-xl font-bold text-white mb-3">Create Your AI Agents Team</h2>
+                  <h2 className="text-xl font-bold text-white mb-3">Create Your AI Agents</h2>
                   <p className="text-gray-400 mb-6 text-sm">
-                    Describe your use case and let our AI assistant build the optimal team for you.
+                    Describe your use case & let our AI assistant build the optimal team for you.
                   </p>
 
                   <Button
                     size="sm"
-                    leftIcon={<Bot className="h-4 w-4" />}
+                    leftIcon={<UserGroupIcon className="h-4 w-4" />}
                     onClick={() => navigate('/agents/create')}
                   >
-                    Start Creating Team
+                    Start Creating AI Team
+                  
                   </Button>
 
                   <div className="mt-6 bg-dark-background rounded-lg p-4 w-full text-left">
@@ -161,7 +161,7 @@ const DashboardPage: React.FC = () => {
             >
               <Card className="h-full">
                 <CardBody className="flex flex-col items-center text-center p-6">
-                  <h2 className="text-xl font-bold text-white mb-3">Modify Your AI Agents Team</h2>
+                  <h2 className="text-xl font-bold text-white mb-3">Modify Your AI Agents</h2>
                   <p className="text-gray-400 mb-6 text-sm">
                     Select one of your existing teams to view, modify, or test it.
                   </p>
