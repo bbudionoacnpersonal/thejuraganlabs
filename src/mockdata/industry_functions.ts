@@ -1,6 +1,25 @@
 // Industry and Focus Area options with enhanced prompts and context
 export const industries = [
   { 
+      { 
+    value: 'others',
+    label: 'General Industry Services',
+    keyPrompts: {
+      agentConsiderations: [
+        'Process automation',
+        'Resource optimization',
+        'Service delivery',
+        'Quality management'
+      ],
+      systemInstructions: `You are a general business AI specialist. Emphasize:
+        - Process efficiency
+        - Service quality
+        - Resource management
+        - Performance optimization
+        - Customer satisfaction`,
+      toolPriorities: ['process_automator', 'resource_optimizer', 'quality_monitor']
+    }
+  },
     value: 'banking',
     label: 'Banking & Financing',
     keyPrompts: {
@@ -168,25 +187,6 @@ export const industries = [
         - Regulatory compliance (EPA, OSHA, DOT)
         - Energy efficiency and sustainability`,
       toolPriorities: ['process_optimizer', 'safety_monitor', 'quality_analyzer', 'emissions_tracker', 'maintenance_scheduler']
-    }
-  },
-  { 
-    value: 'others',
-    label: 'General Industry Services',
-    keyPrompts: {
-      agentConsiderations: [
-        'Process automation',
-        'Resource optimization',
-        'Service delivery',
-        'Quality management'
-      ],
-      systemInstructions: `You are a general business AI specialist. Emphasize:
-        - Process efficiency
-        - Service quality
-        - Resource management
-        - Performance optimization
-        - Customer satisfaction`,
-      toolPriorities: ['process_automator', 'resource_optimizer', 'quality_monitor']
     }
   }
 ];
