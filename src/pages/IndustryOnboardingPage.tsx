@@ -1,3 +1,5 @@
+// src/pages/onboarding/IndustryOnboardingPage.tsx
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,11 +17,9 @@ const IndustryOnboardingPage: React.FC = () => {
   const [selectedIndustry, setSelectedIndustry] = useState<string>('');
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  // New state to manage which accordion group is open
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
 
-  // Load saved preferences from localStorage on initial render
+  // Load saved preferences from localStorage only once when the component mounts
   useEffect(() => {
     const savedIndustry = localStorage.getItem('user_industry');
     const savedFocusAreas = localStorage.getItem('user_focus_areas');
@@ -31,7 +31,7 @@ const IndustryOnboardingPage: React.FC = () => {
     }
   }, []);
 
-  // Group focus areas by their 'function_group' property
+  // Group focus areas for the accordion UI
   const groupedFocusAreas = useMemo(() => {
     return focusAreas.reduce((acc, area) => {
       const group = area.function_group || 'Other';
@@ -43,12 +43,10 @@ const IndustryOnboardingPage: React.FC = () => {
     }, {} as Record<string, typeof focusAreas>);
   }, []);
 
-  // Handler to toggle accordion items
   const handleAccordionClick = (groupName: string) => {
     setActiveAccordion(prev => (prev === groupName ? null : groupName));
   };
 
-  // Handler for checkbox changes
   const handleFocusAreaChange = (value: string) => {
     if (error) setError(null);
     setSelectedFocusAreas((prev) =>
@@ -67,6 +65,7 @@ const IndustryOnboardingPage: React.FC = () => {
       setError('Please select at least one focus area.');
       return;
     }
+    // The values from state are only used here, when the user clicks "Continue"
     localStorage.setItem('user_industry', selectedIndustry);
     localStorage.setItem('user_focus_areas', JSON.stringify(selectedFocusAreas));
     navigate('/dashboard');
@@ -96,19 +95,20 @@ const IndustryOnboardingPage: React.FC = () => {
                 </div>
               )}
 
+              {/* This Select component is now "uncontrolled" to prevent errors */}
               <Select
                 label="What industry are you in?"
                 options={industries}
-                value={selectedIndustry}
+                // The key ensures the component correctly displays the default value if it's loaded from localStorage
+                key={selectedIndustry} 
+                defaultValue={industries.find(i => i.value === selectedIndustry)}
                 onChange={(e) => {
                   setSelectedIndustry(e.target.value);
                   if (error) setError(null);
                 }}
               />
 
-              {/* ========================================================== */}
-              {/* 🎯 UPDATED: Grouped Checkboxes are now an Accordion      */}
-              {/* ========================================================== */}
+              {/* Accordion UI for Focus Areas */}
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1">
                   What are your key focus areas?
@@ -123,11 +123,11 @@ const IndustryOnboardingPage: React.FC = () => {
                         className="w-full flex justify-between items-center p-3 hover:bg-dark-surface rounded-md"
                         onClick={() => handleAccordionClick(groupName)}
                       >
-                        <span className="text-base font-semibold text-gray-300">
+                        <span className="text-base font-semibold text-gray-300 text-left">
                           {groupName}
                         </span>
                         <ChevronDownIcon
-                          className={`h-2 w-2 text-gray-400 transition-transform duration-300 ${
+                          className={`h-5 w-5 text-gray-400 transition-transform duration-300 ${
                             activeAccordion === groupName ? 'rotate-180' : ''
                           }`}
                         />
@@ -150,7 +150,7 @@ const IndustryOnboardingPage: React.FC = () => {
                                 >
                                   <input
                                     type="checkbox"
-                                    className="h-3 w-3 rounded bg-dark-surface border-dark-border text-primary-500 focus:ring-primary-500"
+                                    className="h-4 w-4 rounded bg-dark-surface border-dark-border text-primary-500 focus:ring-primary-500"
                                     checked={selectedFocusAreas.includes(area.value)}
                                     onChange={() => handleFocusAreaChange(area.value)}
                                   />
