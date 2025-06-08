@@ -145,6 +145,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   )
                 }
               />
+              Clear
               <Button
                 variant="ghost"
                 size="sm"
