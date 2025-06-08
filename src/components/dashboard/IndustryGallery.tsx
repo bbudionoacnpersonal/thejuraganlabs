@@ -157,7 +157,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
               <label htmlFor="gallery-search" className="block text-sm font-medium text-gray-300 mb-1">
                 Search
               </label>
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none py-7">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none ">
                 <MagnifyingGlassIcon className="h-2 w-2 text-gray-400" />
               </div>
               <input
