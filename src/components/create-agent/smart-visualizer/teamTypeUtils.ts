@@ -130,7 +130,7 @@ export const getTeamTypeInfo = (teamType?: string): TeamTypeInfo => {
   };
 };
 
-export const formatTeamTypeName = (teamType: string): string => {
+const formatTeamTypeName = (teamType: string): string => {
   return teamType
     .replace(/([A-Z])/g, ' $1')
     .replace(/^./, str => str.toUpperCase())

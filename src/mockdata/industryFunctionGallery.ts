@@ -1,13 +1,15 @@
-// Industry Function Gallery - Use cases grouped by industry and functions with Autogen JSON format
-export interface UseCaseTemplate {
+// src/mockdata/industryFunctionGallery.ts
+
+interface UseCaseTemplate {
   id: string;
   title: string;
   description: string;
-  industry: string;
+  industries: string[]; // <- Now supports multiple industries!
   functionAreas: string[];
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   estimatedTime: string;
   tags: string[];
+  isPopular?: boolean;
   autogenStructure: {
     provider: string;
     component_type: string;
@@ -25,17 +27,12 @@ export interface UseCaseTemplate {
         label: string;
         config: {
           name: string;
-          model_client?: any;
-          tools?: any[];
-          model_context?: any;
-          description?: string;
+          model_client: { model_name: string };
           system_message?: string;
-          model_client_stream?: boolean;
-          reflect_on_tool_use?: boolean;
-          tool_call_summary_format?: string;
+          tools?: Array<{ provider: string; config: { name: string } }>;
         };
       }>;
-      model_client?: any;
+      tools?: Array<{ name: string; provider: string; config: Record<string, any> }>;
       termination_condition: any;
     };
   };
@@ -46,554 +43,24 @@ export interface UseCaseTemplate {
 }
 
 export const industryFunctionGallery: UseCaseTemplate[] = [
-  // Banking & Finance Use Cases
+  // BANKING
   {
-    id: 'banking_fraud_detection',
-    title: 'Real-time Fraud Detection System',
-    description: 'AI agents team that monitors transactions in real-time, detects suspicious patterns, and automatically flags potential fraud cases for review.',
-    industry: 'banking',
-    functionAreas: ['risk', 'finance'],
-    difficulty: 'advanced',
-    estimatedTime: '45 minutes',
-    tags: ['fraud detection', 'real-time monitoring', 'risk assessment', 'compliance'],
-    autogenStructure: {
-      provider: "autogen_agentchat.teams.RoundRobinGroupChat",
-      component_type: "team",
-      version: 1,
-      component_version: 1,
-      description: "Real-time fraud detection and prevention system",
-      label: "Fraud Detection Team",
-      config: {
-        participants: [
-          {
-            provider: "autogen_agentchat.agents.AssistantAgent",
-            component_type: "agent",
-            version: 1,
-            component_version: 1,
-            description: "Monitors transaction patterns and detects anomalies",
-            label: "Transaction Monitor",
-            config: {
-              name: "transaction_monitor",
-              model_client: {
-                provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
-                component_type: "model",
-                version: 1,
-                component_version: 1,
-                description: "Chat completion client for OpenAI hosted models.",
-                label: "OpenAIChatCompletionClient",
-                config: { model: "gpt-4o-mini" }
-              },
-              tools: [
-                {
-                  provider: "autogen_core.tools.FunctionTool",
-                  component_type: "tool",
-                  version: 1,
-                  component_version: 1,
-                  description: "Analyzes transaction patterns for fraud indicators",
-                  label: "FraudAnalyzer",
-                  config: {
-                    source_code: "def analyze_transaction(transaction_data: dict, user_profile: dict) -> dict",
-                    name: "analyze_transaction",
-                    description: "Analyzes transaction for fraud indicators",
-                    global_imports: [],
-                    has_cancellation_support: false
-                  }
-                },
-                {
-                  provider: "autogen_core.tools.FunctionTool",
-                  component_type: "tool",
-                  version: 1,
-                  component_version: 1,
-                  description: "Connects to banking core system",
-                  label: "BankingConnector",
-                  config: {
-                    source_code: "def get_account_history(account_id: str, days: int) -> list",
-                    name: "get_account_history",
-                    description: "Retrieves account transaction history",
-                    global_imports: [],
-                    has_cancellation_support: false
-                  }
-                }
-              ],
-              system_message: "You are a fraud detection specialist. Monitor transactions and identify suspicious patterns based on user behavior, transaction amounts, and timing.",
-              model_client_stream: false,
-              reflect_on_tool_use: true,
-              tool_call_summary_format: "{result}"
-            }
-          },
-          {
-            provider: "autogen_agentchat.agents.AssistantAgent",
-            component_type: "agent",
-            version: 1,
-            component_version: 1,
-            description: "Assesses risk levels and makes blocking decisions",
-            label: "Risk Assessor",
-            config: {
-              name: "risk_assessor",
-              model_client: {
-                provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
-                component_type: "model",
-                version: 1,
-                component_version: 1,
-                description: "Chat completion client for OpenAI hosted models.",
-                label: "OpenAIChatCompletionClient",
-                config: { model: "gpt-4o-mini" }
-              },
-              tools: [
-                {
-                  provider: "autogen_core.tools.FunctionTool",
-                  component_type: "tool",
-                  version: 1,
-                  component_version: 1,
-                  description: "Calculates risk score based on multiple factors",
-                  label: "RiskCalculator",
-                  config: {
-                    source_code: "def calculate_risk_score(transaction: dict, fraud_indicators: list) -> float",
-                    name: "calculate_risk_score",
-                    description: "Calculates comprehensive risk score",
-                    global_imports: [],
-                    has_cancellation_support: false
-                  }
-                }
-              ],
-              system_message: "You are a risk assessment expert. Evaluate fraud indicators and determine appropriate actions including transaction blocking or flagging for review.",
-              model_client_stream: false,
-              reflect_on_tool_use: true,
-              tool_call_summary_format: "{result}"
-            }
-          }
-        ],
-        model_client: {
-          provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
-          component_type: "model",
-          version: 1,
-          component_version: 1,
-          description: "Chat completion client for OpenAI hosted models.",
-          label: "OpenAIChatCompletionClient",
-          config: { model: "gpt-4o-mini" }
-        },
-        termination_condition: {
-          provider: "autogen_agentchat.conditions.MaxMessageTermination",
-          component_type: "termination",
-          version: 1,
-          component_version: 1,
-          description: "Terminate after processing transaction",
-          label: "MaxMessageTermination",
-          config: { max_messages: 5, include_agent_event: false }
-        }
-      }
-    },
-    usage: 1250,
-    rating: 4.8,
-    createdBy: "Banking Security Team",
-    lastUpdated: "2024-01-15"
-  },
-
-  // Retail Use Cases
-  {
-    id: 'retail_customer_service',
-    title: 'Intelligent Customer Support Hub',
-    description: 'Multi-agent system that handles customer inquiries, processes returns, and escalates complex issues to human agents.',
-    industry: 'retail',
-    functionAreas: ['customer_service', 'operations'],
+    id: 'banking_customer_support_ai',
+    title: 'Banking Customer Support AI',
+    description: 'AI agents for handling banking customer queries, fraud reporting, and issue resolution.',
+    industries: ['banking'],
+    functionAreas: ['Customer Service & Support'],
     difficulty: 'intermediate',
     estimatedTime: '30 minutes',
-    tags: ['customer support', 'ticket routing', 'automated responses', 'escalation'],
-    autogenStructure: {
-      provider: "autogen_agentchat.teams.SelectorGroupChat",
-      component_type: "team",
-      version: 1,
-      component_version: 1,
-      description: "Intelligent customer support system with specialized agents",
-      label: "Customer Support Hub",
-      config: {
-        participants: [
-          {
-            provider: "autogen_agentchat.agents.AssistantAgent",
-            component_type: "agent",
-            version: 1,
-            component_version: 1,
-            description: "Routes customer inquiries to appropriate specialists",
-            label: "Support Coordinator",
-            config: {
-              name: "support_coordinator",
-              model_client: {
-                provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
-                component_type: "model",
-                version: 1,
-                component_version: 1,
-                description: "Chat completion client for OpenAI hosted models.",
-                label: "OpenAIChatCompletionClient",
-                config: { model: "gpt-4o-mini" }
-              },
-              tools: [
-                {
-                  provider: "autogen_core.tools.FunctionTool",
-                  component_type: "tool",
-                  version: 1,
-                  component_version: 1,
-                  description: "Categorizes customer inquiries by type and urgency",
-                  label: "InquiryClassifier",
-                  config: {
-                    source_code: "def classify_inquiry(message: str, customer_data: dict) -> dict",
-                    name: "classify_inquiry",
-                    description: "Classifies customer inquiry type and priority",
-                    global_imports: [],
-                    has_cancellation_support: false
-                  }
-                },
-                {
-                  provider: "autogen_core.tools.FunctionTool",
-                  component_type: "tool",
-                  version: 1,
-                  component_version: 1,
-                  description: "Connects to Zendesk for ticket management",
-                  label: "ZendeskConnector",
-                  config: {
-                    source_code: "def create_ticket(customer_id: str, issue_type: str, description: str) -> str",
-                    name: "create_ticket",
-                    description: "Creates support ticket in Zendesk",
-                    global_imports: [],
-                    has_cancellation_support: false
-                  }
-                }
-              ],
-              system_message: "You are a customer support coordinator. Analyze customer inquiries and route them to the most appropriate specialist agent.",
-              model_client_stream: false,
-              reflect_on_tool_use: true,
-              tool_call_summary_format: "{result}"
-            }
-          },
-          {
-            provider: "autogen_agentchat.agents.AssistantAgent",
-            component_type: "agent",
-            version: 1,
-            component_version: 1,
-            description: "Handles order-related inquiries and issues",
-            label: "Order Specialist",
-            config: {
-              name: "order_specialist",
-              model_client: {
-                provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
-                component_type: "model",
-                version: 1,
-                component_version: 1,
-                description: "Chat completion client for OpenAI hosted models.",
-                label: "OpenAIChatCompletionClient",
-                config: { model: "gpt-4o-mini" }
-              },
-              tools: [
-                {
-                  provider: "autogen_core.tools.FunctionTool",
-                  component_type: "tool",
-                  version: 1,
-                  component_version: 1,
-                  description: "Retrieves order information and status",
-                  label: "OrderTracker",
-                  config: {
-                    source_code: "def get_order_status(order_id: str) -> dict",
-                    name: "get_order_status",
-                    description: "Gets current order status and tracking info",
-                    global_imports: [],
-                    has_cancellation_support: false
-                  }
-                }
-              ],
-              system_message: "You are an order specialist. Help customers with order tracking, modifications, and delivery issues.",
-              model_client_stream: false,
-              reflect_on_tool_use: true,
-              tool_call_summary_format: "{result}"
-            }
-          }
-        ],
-        model_client: {
-          provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
-          component_type: "model",
-          version: 1,
-          component_version: 1,
-          description: "Chat completion client for OpenAI hosted models.",
-          label: "OpenAIChatCompletionClient",
-          config: { model: "gpt-4o-mini" }
-        },
-        termination_condition: {
-          provider: "autogen_agentchat.conditions.TextMentionTermination",
-          component_type: "termination",
-          version: 1,
-          component_version: 1,
-          description: "Terminate when issue is resolved",
-          label: "TextMentionTermination",
-          config: { text: "RESOLVED" }
-        }
-      }
-    },
-    usage: 890,
-    rating: 4.6,
-    createdBy: "Retail Excellence Team",
-    lastUpdated: "2024-01-12"
-  },
-
-  // Manufacturing Use Cases
-  {
-    id: 'manufacturing_quality_control',
-    title: 'Automated Quality Control System',
-    description: 'AI agents that monitor production quality, detect defects, and optimize manufacturing processes in real-time.',
-    industry: 'manufacturing',
-    functionAreas: ['operations', 'risk'],
-    difficulty: 'advanced',
-    estimatedTime: '60 minutes',
-    tags: ['quality control', 'defect detection', 'process optimization', 'manufacturing'],
-    autogenStructure: {
-      provider: "autogen_agentchat.teams.HierarchicalGroupChat",
-      component_type: "team",
-      version: 1,
-      component_version: 1,
-      description: "Automated quality control and process optimization system",
-      label: "Quality Control Team",
-      config: {
-        participants: [
-          {
-            provider: "autogen_agentchat.agents.AssistantAgent",
-            component_type: "agent",
-            version: 1,
-            component_version: 1,
-            description: "Monitors production line and detects quality issues",
-            label: "Quality Inspector",
-            config: {
-              name: "quality_inspector",
-              model_client: {
-                provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
-                component_type: "model",
-                version: 1,
-                component_version: 1,
-                description: "Chat completion client for OpenAI hosted models.",
-                label: "OpenAIChatCompletionClient",
-                config: { model: "gpt-4o-mini" }
-              },
-              tools: [
-                {
-                  provider: "autogen_core.tools.FunctionTool",
-                  component_type: "tool",
-                  version: 1,
-                  component_version: 1,
-                  description: "Analyzes sensor data for quality metrics",
-                  label: "SensorAnalyzer",
-                  config: {
-                    source_code: "def analyze_sensor_data(sensor_readings: dict, quality_thresholds: dict) -> dict",
-                    name: "analyze_sensor_data",
-                    description: "Analyzes production sensor data for quality indicators",
-                    global_imports: [],
-                    has_cancellation_support: false
-                  }
-                },
-                {
-                  provider: "autogen_core.tools.FunctionTool",
-                  component_type: "tool",
-                  version: 1,
-                  component_version: 1,
-                  description: "Connects to manufacturing execution system",
-                  label: "MESConnector",
-                  config: {
-                    source_code: "def get_production_data(line_id: str, time_range: str) -> dict",
-                    name: "get_production_data",
-                    description: "Retrieves production data from MES",
-                    global_imports: [],
-                    has_cancellation_support: false
-                  }
-                }
-              ],
-              system_message: "You are a quality control inspector. Monitor production data and identify quality issues or deviations from standards.",
-              model_client_stream: false,
-              reflect_on_tool_use: true,
-              tool_call_summary_format: "{result}"
-            }
-          },
-          {
-            provider: "autogen_agentchat.agents.AssistantAgent",
-            component_type: "agent",
-            version: 1,
-            component_version: 1,
-            description: "Optimizes production processes based on quality data",
-            label: "Process Optimizer",
-            config: {
-              name: "process_optimizer",
-              model_client: {
-                provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
-                component_type: "model",
-                version: 1,
-                component_version: 1,
-                description: "Chat completion client for OpenAI hosted models.",
-                label: "OpenAIChatCompletionClient",
-                config: { model: "gpt-4o-mini" }
-              },
-              tools: [
-                {
-                  provider: "autogen_core.tools.FunctionTool",
-                  component_type: "tool",
-                  version: 1,
-                  component_version: 1,
-                  description: "Optimizes production parameters",
-                  label: "ParameterOptimizer",
-                  config: {
-                    source_code: "def optimize_parameters(current_params: dict, quality_data: dict) -> dict",
-                    name: "optimize_parameters",
-                    description: "Optimizes production parameters for better quality",
-                    global_imports: [],
-                    has_cancellation_support: false
-                  }
-                }
-              ],
-              system_message: "You are a process optimization expert. Analyze quality data and recommend parameter adjustments to improve production quality.",
-              model_client_stream: false,
-              reflect_on_tool_use: true,
-              tool_call_summary_format: "{result}"
-            }
-          }
-        ],
-        model_client: {
-          provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
-          component_type: "model",
-          version: 1,
-          component_version: 1,
-          description: "Chat completion client for OpenAI hosted models.",
-          label: "OpenAIChatCompletionClient",
-          config: { model: "gpt-4o-mini" }
-        },
-        termination_condition: {
-          provider: "autogen_agentchat.conditions.MaxMessageTermination",
-          component_type: "termination",
-          version: 1,
-          component_version: 1,
-          description: "Terminate after quality check cycle",
-          label: "MaxMessageTermination",
-          config: { max_messages: 8, include_agent_event: false }
-        }
-      }
-    },
-    usage: 567,
-    rating: 4.7,
-    createdBy: "Manufacturing Excellence Team",
-    lastUpdated: "2024-01-10"
-  },
-
-  // Healthcare Use Cases
-  {
-    id: 'healthcare_patient_triage',
-    title: 'Intelligent Patient Triage System',
-    description: 'AI agents that assess patient symptoms, prioritize cases, and route patients to appropriate care providers.',
-    industry: 'healthcare',
-    functionAreas: ['operations', 'risk'],
-    difficulty: 'advanced',
-    estimatedTime: '50 minutes',
-    tags: ['patient triage', 'symptom assessment', 'care routing', 'HIPAA compliant'],
-    autogenStructure: {
-      provider: "autogen_agentchat.teams.SelectorGroupChat",
-      component_type: "team",
-      version: 1,
-      component_version: 1,
-      description: "Intelligent patient triage and care routing system",
-      label: "Patient Triage Team",
-      config: {
-        participants: [
-          {
-            provider: "autogen_agentchat.agents.AssistantAgent",
-            component_type: "agent",
-            version: 1,
-            component_version: 1,
-            description: "Assesses patient symptoms and determines urgency",
-            label: "Triage Nurse",
-            config: {
-              name: "triage_nurse",
-              model_client: {
-                provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
-                component_type: "model",
-                version: 1,
-                component_version: 1,
-                description: "Chat completion client for OpenAI hosted models.",
-                label: "OpenAIChatCompletionClient",
-                config: { model: "gpt-4o-mini" }
-              },
-              tools: [
-                {
-                  provider: "autogen_core.tools.FunctionTool",
-                  component_type: "tool",
-                  version: 1,
-                  component_version: 1,
-                  description: "Assesses symptom severity and urgency",
-                  label: "SymptomAssessor",
-                  config: {
-                    source_code: "def assess_symptoms(symptoms: list, patient_history: dict) -> dict",
-                    name: "assess_symptoms",
-                    description: "Assesses patient symptoms for urgency and severity",
-                    global_imports: [],
-                    has_cancellation_support: false
-                  }
-                },
-                {
-                  provider: "autogen_core.tools.FunctionTool",
-                  component_type: "tool",
-                  version: 1,
-                  component_version: 1,
-                  description: "Connects to Electronic Health Records",
-                  label: "EHRConnector",
-                  config: {
-                    source_code: "def get_patient_history(patient_id: str) -> dict",
-                    name: "get_patient_history",
-                    description: "Retrieves patient medical history from EHR",
-                    global_imports: [],
-                    has_cancellation_support: false
-                  }
-                }
-              ],
-              system_message: "You are a triage nurse. Assess patient symptoms, review medical history, and determine appropriate care priority and routing.",
-              model_client_stream: false,
-              reflect_on_tool_use: true,
-              tool_call_summary_format: "{result}"
-            }
-          }
-        ],
-        model_client: {
-          provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
-          component_type: "model",
-          version: 1,
-          component_version: 1,
-          description: "Chat completion client for OpenAI hosted models.",
-          label: "OpenAIChatCompletionClient",
-          config: { model: "gpt-4o-mini" }
-        },
-        termination_condition: {
-          provider: "autogen_agentchat.conditions.TextMentionTermination",
-          component_type: "termination",
-          version: 1,
-          component_version: 1,
-          description: "Terminate when patient is routed",
-          label: "TextMentionTermination",
-          config: { text: "ROUTED" }
-        }
-      }
-    },
-    usage: 423,
-    rating: 4.9,
-    createdBy: "Healthcare Innovation Team",
-    lastUpdated: "2024-01-08"
-  },
-
-  // Technology Use Cases
-  {
-    id: 'tech_code_review',
-    title: 'Automated Code Review System',
-    description: 'AI agents that perform comprehensive code reviews, security analysis, and suggest improvements.',
-    industry: 'technology',
-    functionAreas: ['innovation', 'risk'],
-    difficulty: 'intermediate',
-    estimatedTime: '35 minutes',
-    tags: ['code review', 'security analysis', 'best practices', 'automation'],
+    tags: ['#banking', '#customer-support', '#fraud-detection'],
+    isPopular: true,
     autogenStructure: {
       provider: "autogen_agentchat.teams.RoundRobinGroupChat",
       component_type: "team",
       version: 1,
       component_version: 1,
-      description: "Automated code review and security analysis system",
-      label: "Code Review Team",
+      description: "Banking AI Support Team",
+      label: "Bank Support AI",
       config: {
         participants: [
           {
@@ -601,109 +68,508 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
             component_type: "agent",
             version: 1,
             component_version: 1,
-            description: "Reviews code for best practices and quality",
-            label: "Code Reviewer",
+            description: "Handles general banking queries",
+            label: "Banking Assistant",
             config: {
-              name: "code_reviewer",
-              model_client: {
-                provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
-                component_type: "model",
-                version: 1,
-                component_version: 1,
-                description: "Chat completion client for OpenAI hosted models.",
-                label: "OpenAIChatCompletionClient",
-                config: { model: "gpt-4o-mini" }
-              },
+              name: "banking_assistant",
+              model_client: { model_name: "gpt-4" },
+              system_message: "Assist customers with banking inquiries.",
               tools: [
-                {
-                  provider: "autogen_core.tools.FunctionTool",
-                  component_type: "tool",
-                  version: 1,
-                  component_version: 1,
-                  description: "Analyzes code for quality and best practices",
-                  label: "CodeAnalyzer",
-                  config: {
-                    source_code: "def analyze_code(code: str, language: str) -> dict",
-                    name: "analyze_code",
-                    description: "Analyzes code quality and adherence to best practices",
-                    global_imports: [],
-                    has_cancellation_support: false
-                  }
-                },
-                {
-                  provider: "autogen_core.tools.FunctionTool",
-                  component_type: "tool",
-                  version: 1,
-                  component_version: 1,
-                  description: "Scans code for security vulnerabilities",
-                  label: "SecurityScanner",
-                  config: {
-                    source_code: "def scan_security(code: str, dependencies: list) -> dict",
-                    name: "scan_security",
-                    description: "Scans code for security vulnerabilities",
-                    global_imports: [],
-                    has_cancellation_support: false
-                  }
-                }
-              ],
-              system_message: "You are a senior code reviewer. Analyze code for quality, security, and best practices. Provide constructive feedback and suggestions.",
-              model_client_stream: false,
-              reflect_on_tool_use: true,
-              tool_call_summary_format: "{result}"
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "query_handler" } }
+              ]
+            }
+          },
+          {
+            provider: "autogen_agentchat.agents.AssistantAgent",
+            component_type: "agent",
+            version: 1,
+            component_version: 1,
+            description: "Fraud detection support",
+            label: "Fraud Specialist",
+            config: {
+              name: "fraud_specialist",
+              model_client: { model_name: "claude-3-sonnet" },
+              system_message: "Detect and report fraudulent transactions.",
+              tools: [
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "fraud_detector" } }
+              ]
             }
           }
         ],
-        model_client: {
-          provider: "autogen_ext.models.openai.OpenAIChatCompletionClient",
-          component_type: "model",
-          version: 1,
-          component_version: 1,
-          description: "Chat completion client for OpenAI hosted models.",
-          label: "OpenAIChatCompletionClient",
-          config: { model: "gpt-4o-mini" }
-        },
-        termination_condition: {
-          provider: "autogen_agentchat.conditions.TextMentionTermination",
-          component_type: "termination",
-          version: 1,
-          component_version: 1,
-          description: "Terminate when review is complete",
-          label: "TextMentionTermination",
-          config: { text: "REVIEW_COMPLETE" }
-        }
+        tools: [
+          { name: "Banking Core API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Fraud Detection API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Customer 360 API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+        ],
+        termination_condition: { description: "Session ends after ticket is closed." }
       }
     },
-    usage: 756,
+    usage: 1200,
+    rating: 4.8,
+    createdBy: 'Banking Customer Experience Team',
+    lastUpdated: '2025-06-05'
+  },
+
+  // HEALTHCARE
+  {
+    id: 'healthcare_appointment_scheduling',
+    title: 'Healthcare Appointment Scheduling Assistant',
+    description: 'AI agents automate appointment scheduling and patient triage.',
+    industries: ['healthcare_public_sector'],
+    functionAreas: ['Customer Service & Support', 'Ops & Process Engineering'],
+    difficulty: 'beginner',
+    estimatedTime: '20 minutes',
+    tags: ['#healthcare', '#patient-care', '#scheduling'],
+    isPopular: true,
+    autogenStructure: {
+      provider: "autogen_agentchat.teams.SelectorGroupChat",
+      component_type: "team",
+      version: 1,
+      component_version: 1,
+      description: "AI team for patient appointment management",
+      label: "Healthcare Scheduler",
+      config: {
+        participants: [
+          {
+            provider: "autogen_agentchat.agents.AssistantAgent",
+            component_type: "agent",
+            version: 1,
+            component_version: 1,
+            description: "Handles patient appointments",
+            label: "Appointment Bot",
+            config: {
+              name: "appointment_bot",
+              model_client: { model_name: "gemini-1.5-pro" },
+              system_message: "Manage appointment scheduling.",
+              tools: [
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "schedule_appointment" } }
+              ]
+            }
+          }
+        ],
+        tools: [
+          { name: "Hospital EHR API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Patient CRM API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+        ],
+        termination_condition: { description: "Session ends after appointment confirmation." }
+      }
+    },
+    usage: 700,
     rating: 4.5,
-    createdBy: "Engineering Excellence Team",
-    lastUpdated: "2024-01-14"
-  }
+    createdBy: 'Healthcare Ops Team',
+    lastUpdated: '2025-06-05'
+  },
+
+  // RETAIL
+  {
+    id: 'retail_sales_recommendation',
+    title: 'Retail Sales Recommendation AI',
+    description: 'AI agents recommend personalized products based on user preferences and history.',
+    industries: ['retail', 'consumergoods_manufacturing'],
+    functionAreas: ['Sales & Revenue Growth', 'Marketing & Brand Mgmt.'],
+    difficulty: 'intermediate',
+    estimatedTime: '35 minutes',
+    tags: ['#retail', '#sales', '#recommendation'],
+    isPopular: true,
+    autogenStructure: {
+      provider: "autogen_agentchat.teams.RoundRobinGroupChat",
+      component_type: "team",
+      version: 1,
+      component_version: 1,
+      description: "Retail recommendation AI team",
+      label: "Sales Recommender",
+      config: {
+        participants: [
+          {
+            provider: "autogen_agentchat.agents.AssistantAgent",
+            component_type: "agent",
+            version: 1,
+            component_version: 1,
+            description: "Generates personalized product suggestions",
+            label: "Product Recommender",
+            config: {
+              name: "product_recommender",
+              model_client: { model_name: "gpt-4" },
+              system_message: "Provide personalized product recommendations.",
+              tools: [
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "recommend_products" } }
+              ]
+            }
+          }
+        ],
+        tools: [
+          { name: "Tiktok API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Product Inventory API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Recommendation Engine API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+        ],
+        termination_condition: { description: "Session ends after recommendation is delivered." }
+      }
+    },
+    usage: 1500,
+    rating: 4.9,
+    createdBy: 'Retail Sales Team',
+    lastUpdated: '2025-06-05'
+  },
+
+  // TELECOMMUNICATIONS
+  {
+    id: 'telecom_network_ops',
+    title: 'Telecom Network Operations Optimizer',
+    description: 'Optimize telecom network performance with AI agents.',
+    industries: ['telecom_technology'],
+    functionAreas: ['Ops & Process Engineering', 'IT & Data'],
+    difficulty: 'advanced',
+    estimatedTime: '60 minutes',
+    tags: ['#telecom', '#network-optimization', '#ops'],
+    isPopular: false,
+    autogenStructure: {
+      provider: "autogen_agentchat.teams.SelectorGroupChat",
+      component_type: "team",
+      version: 1,
+      component_version: 1,
+      description: "Optimize telecom network operations",
+      label: "Telecom Network Ops AI",
+      config: {
+        participants: [
+          {
+            provider: "autogen_agentchat.agents.AssistantAgent",
+            component_type: "agent",
+            version: 1,
+            component_version: 1,
+            description: "Monitor network performance",
+            label: "Network Monitor",
+            config: {
+              name: "network_monitor",
+              model_client: { model_name: "claude-3-sonnet" },
+              system_message: "Monitor and optimize network traffic.",
+              tools: [
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "network_traffic_analysis" } }
+              ]
+            }
+          }
+        ],
+        tools: [
+          { name: "Network Monitoring API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Performance Analytics API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+        ],
+        termination_condition: { description: "Session ends after performance report generation." }
+      }
+    },
+    usage: 500,
+    rating: 4.7,
+    createdBy: 'Telecom Ops Team',
+    lastUpdated: '2025-06-05'
+  },
+  
+  // UTILITIES
+  {
+    id: 'utilities_grid_optimizer',
+    title: 'Utilities Smart Grid Optimization',
+    description: 'Optimize energy grid performance using AI agents.',
+    industries: ['utilities'],
+    functionAreas: ['Ops & Process Engineering', 'Environmental & Safety'],
+    difficulty: 'advanced',
+    estimatedTime: '50 minutes',
+    tags: ['#utilities', '#grid-optimization', '#energy'],
+    isPopular: true,
+    autogenStructure: {
+      provider: "autogen_agentchat.teams.RoundRobinGroupChat",
+      component_type: "team",
+      version: 1,
+      component_version: 1,
+      description: "AI agents to optimize energy grids",
+      label: "Smart Grid Optimizer",
+      config: {
+        participants: [
+          {
+            provider: "autogen_agentchat.agents.AssistantAgent",
+            component_type: "agent",
+            version: 1,
+            component_version: 1,
+            description: "Optimize load distribution",
+            label: "Load Optimizer",
+            config: {
+              name: "load_optimizer",
+              model_client: { model_name: "gpt-4" },
+              system_message: "Optimize grid load balancing.",
+              tools: [
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "optimize_load_distribution" } }
+              ]
+            }
+          }
+        ],
+        tools: [
+          { name: "Smart Meter API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Grid Analytics API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+        ],
+        termination_condition: { description: "Optimization report generated." }
+      }
+    },
+    usage: 300,
+    rating: 4.5,
+    createdBy: 'Utility Grid Ops Team',
+    lastUpdated: '2025-06-05'
+  },
+
+  //Consumer Goods & Manufacturing — Supply Chain Optimization
+  {
+  id: 'consumer_goods_supply_chain_optimization',
+  title: 'Supply Chain Forecasting & Optimization AI',
+  description: 'AI agents for predictive inventory management and supplier risk analysis.',
+  industries: ['consumergoods_manufacturing', 'retail'],
+  functionAreas: ['Procurement & Supply Chain', 'Ops & Process Engineering'],
+  difficulty: 'advanced',
+  estimatedTime: '55 minutes',
+  tags: ['#supply-chain', '#forecasting', '#inventory-management'],
+  isPopular: true,
+  autogenStructure: {
+    provider: "autogen_agentchat.teams.RoundRobinGroupChat",
+    component_type: "team",
+    version: 1,
+    component_version: 1,
+    description: "Supply chain optimization with AI",
+    label: "Supply Chain AI",
+    config: {
+      participants: [
+        {
+          provider: "autogen_agentchat.agents.AssistantAgent",
+          component_type: "agent",
+          version: 1,
+          component_version: 1,
+          description: "Forecast inventory demand",
+          label: "Demand Forecaster",
+          config: {
+            name: "demand_forecaster",
+            model_client: { model_name: "gpt-4" },
+            system_message: "Forecast product demand based on historical sales.",
+            tools: [
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "demand_forecasting" } }
+            ]
+          }
+        },
+        {
+          provider: "autogen_agentchat.agents.AssistantAgent",
+          component_type: "agent",
+          version: 1,
+          component_version: 1,
+          description: "Supplier risk evaluation",
+          label: "Risk Evaluator",
+          config: {
+            name: "risk_evaluator",
+            model_client: { model_name: "claude-3-sonnet" },
+            system_message: "Assess supplier risks based on reliability data.",
+            tools: [
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "supplier_risk_assessment" } }
+            ]
+          }
+        }
+      ],
+      tools: [
+        { name: "Inventory Management API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+        { name: "Supply Chain Risk API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+        { name: "Logistics Optimization API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+      ],
+      termination_condition: { description: "Session ends after optimized supply chain plan delivered." }
+    }
+  },
+  usage: 900,
+  rating: 4.7,
+  createdBy: 'Supply Chain Analytics Team',
+  lastUpdated: '2025-06-06'
+},
+
+  //Bank underwriting automation
+{
+  id: 'banking_underwriting_automation',
+  title: 'Underwriting Automation AI',
+  description: 'AI-driven team to streamline and automate loan and insurance underwriting processes using risk modeling, document analysis, and personalized product recommendations.',
+  industries: ['banking'],
+  functionAreas: ['risk_compliance', 'operations', 'sales'],
+  difficulty: 'advanced',
+  estimatedTime: '75 minutes',
+  tags: ['#underwriting', '#risk-assessment', '#document-analysis', '#automation', '#product-recommendation'],
+  isPopular: true,
+  autogenStructure: {
+    provider: "autogen_agentchat.teams.SelectorGroupChat",
+    component_type: "team",
+    version: 1,
+    component_version: 1,
+    description: "Automate underwriting processes and suggest financial products with AI agents",
+    label: "Underwriting AI Team",
+    config: {
+      participants: [
+        {
+          provider: "autogen_agentchat.agents.AssistantAgent",
+          component_type: "agent",
+          version: 1,
+          component_version: 1,
+          description: "Analyzes customer risk profiles based on financial data",
+          label: "Risk Modeler",
+          config: {
+            name: "risk_modeler",
+            model_client: { model_name: "gpt-4" },
+            system_message: "Analyze financial data and generate customer risk scores.",
+            tools: [
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "risk_score_calculator" } },
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "credit_report_reader" } }
+            ]
+          }
+        },
+        {
+          provider: "autogen_agentchat.agents.AssistantAgent",
+          component_type: "agent",
+          version: 1,
+          component_version: 1,
+          description: "Performs automated document review for underwriting decisions",
+          label: "Document Reviewer",
+          config: {
+            name: "document_reviewer",
+            model_client: { model_name: "claude-3-haiku" },
+            system_message: "Review customer documents for underwriting validation.",
+            tools: [
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "document_analysis" } },
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "compliance_checker" } }
+            ]
+          }
+        },
+        {
+          provider: "autogen_agentchat.agents.AssistantAgent",
+          component_type: "agent",
+          version: 1,
+          component_version: 1,
+          description: "Recommends optimal financial products based on customer profile and risk assessment",
+          label: "Product Recommender",
+          config: {
+            name: "product_recommender",
+            model_client: { model_name: "gemini-1.5-pro" },
+            system_message: "Suggest best-fit loan or insurance products for the customer.",
+            tools: [
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "recommendation_engine" } }
+            ]
+          }
+        }
+      ],
+      tools: [
+        { name: "Financial Data API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+        { name: "Document Validation API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+        { name: "Credit Bureau Integration", provider: "autogen_core.tools.ExternalAPI", config: {} },
+        { name: "Recommendation Engine API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+      ],
+      termination_condition: { description: "Terminate after underwriting decision and product recommendation are delivered." }
+    }
+  },
+  usage: 850,
+  rating: 4.95,
+  createdBy: 'Banking Underwriting Team',
+  lastUpdated: '2025-06-09'
+},
+
+
+  //🛢️ Energy, Oil & Gas — Well Monitoring
+{
+  id: 'energy_oilgas_well_monitoring',
+  title: 'Well Monitoring & Production Optimization AI',
+  description: 'AI agents continuously monitor well performance and optimize extraction processes.',
+  industries: ['resources_energy', 'utilities'],
+  functionAreas: ['Asset Management', 'Environmental & Safety'],
+  difficulty: 'advanced',
+  estimatedTime: '60 minutes',
+  tags: ['#well-monitoring', '#oilgas', '#optimization'],
+  isPopular: true,
+  autogenStructure: {
+    provider: "autogen_agentchat.teams.SelectorGroupChat",
+    component_type: "team",
+    version: 1,
+    component_version: 1,
+    description: "Oil & Gas well performance optimization",
+    label: "Well Optimization AI",
+    config: {
+      participants: [
+        {
+          provider: "autogen_agentchat.agents.AssistantAgent",
+          component_type: "agent",
+          version: 1,
+          component_version: 1,
+          description: "Monitors well pressure and flow",
+          label: "Well Monitor",
+          config: {
+            name: "well_monitor",
+            model_client: { model_name: "gemini-1.5-pro" },
+            system_message: "Continuously monitor well parameters like pressure and flow.",
+            tools: [
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "well_data_reader" } }
+            ]
+          }
+        },
+        {
+          provider: "autogen_agentchat.agents.AssistantAgent",
+          component_type: "agent",
+          version: 1,
+          component_version: 1,
+          description: "Optimize extraction based on well conditions",
+          label: "Production Optimizer",
+          config: {
+            name: "production_optimizer",
+            model_client: { model_name: "gpt-4" },
+            system_message: "Optimize oil extraction rate based on real-time data.",
+            tools: [
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "extraction_optimizer" } }
+            ]
+          }
+        }
+      ],
+      tools: [
+        { name: "Well Sensor API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+        { name: "Oil Production Monitoring API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+        { name: "Reservoir Simulation API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+      ],
+      termination_condition: { description: "Terminate after daily production report generation." }
+    }
+  },
+  usage: 750,
+  rating: 4.8,
+  createdBy: 'Well Operations Team',
+  lastUpdated: '2025-06-06'
+} 
 ];
 
-// Helper functions to filter gallery data
-export const getUseCasesByIndustry = (industry: string): UseCaseTemplate[] => {
-  return industryFunctionGallery.filter(useCase => useCase.industry === industry);
+
+
+const filterUseCases = (options?: {
+  industry?: string;
+  functionAreas?: string[];
+  searchTerm?: string;
+}): UseCaseTemplate[] => {
+  const { industry, functionAreas, searchTerm } = options || {};
+  let filteredCases = [...industryFunctionGallery];
+
+  if (searchTerm) {
+    const lowercasedTerm = searchTerm.toLowerCase();
+    filteredCases = filteredCases.filter((useCase) => {
+      const inTitle = useCase.title.toLowerCase().includes(lowercasedTerm);
+      const inDescription = useCase.description.toLowerCase().includes(lowercasedTerm);
+      const inTags = useCase.tags.some((tag) => tag.toLowerCase().includes(lowercasedTerm));
+      return inTitle || inDescription || inTags;
+    });
+  }
+
+  if (industry) {
+    filteredCases = filteredCases.filter(
+      (useCase) => useCase.industry === industry
+    );
+  }
+
+  if (functionAreas && functionAreas.length > 0) {
+    filteredCases = filteredCases.filter((useCase) =>
+      useCase.functionAreas.some((area) => functionAreas.includes(area))
+    );
+  }
+
+  return filteredCases;
 };
 
-export const getUseCasesByFunction = (functionArea: string): UseCaseTemplate[] => {
-  return industryFunctionGallery.filter(useCase => 
-    useCase.functionAreas.includes(functionArea)
-  );
-};
-
-export const getUseCasesByIndustryAndFunction = (industry: string, functionAreas: string[]): UseCaseTemplate[] => {
-  return industryFunctionGallery.filter(useCase => 
-    useCase.industry === industry && 
-    functionAreas.some(area => useCase.functionAreas.includes(area))
-  );
-};
-
-export const getPopularUseCases = (limit: number = 5): UseCaseTemplate[] => {
+const getPopularUseCases = (): UseCaseTemplate[] => {
   return industryFunctionGallery
-    .sort((a, b) => b.usage - a.usage)
-    .slice(0, limit);
-};
-
-export const getUseCasesByDifficulty = (difficulty: 'beginner' | 'intermediate' | 'advanced'): UseCaseTemplate[] => {
-  return industryFunctionGallery.filter(useCase => useCase.difficulty === difficulty);
+    .filter((useCase) => useCase.isPopular)
+    .sort((a, b) => b.usage - a.usage);
 };

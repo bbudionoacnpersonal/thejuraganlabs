@@ -64,7 +64,7 @@ export const findUserByUsername = (username: string) => {
   return mockUsers.find(user => user.username.toLowerCase() === username.toLowerCase());
 };
 
-export const findUserByVerificationToken = (token: string) => {
+const findUserByVerificationToken = (token: string) => {
   return mockUsers.find(user => user.verificationToken === token);
 };
 
@@ -72,7 +72,7 @@ export const addUser = (user: StoredUser) => {
   mockUsers.push(user);
 };
 
-export const updateUser = (userId: string, updates: Partial<StoredUser>) => {
+const updateUser = (userId: string, updates: Partial<StoredUser>) => {
   const userIndex = mockUsers.findIndex(user => user.id === userId);
   if (userIndex !== -1) {
     mockUsers[userIndex] = { ...mockUsers[userIndex], ...updates };

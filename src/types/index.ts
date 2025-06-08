@@ -161,7 +161,7 @@ export interface ChatboxHandle {
 }
 
 // Agent Flow types for conversation visualization
-export interface AgentFlowStep {
+interface AgentFlowStep {
   id: string;
   type: 'user' | 'agent' | 'tool' | 'decision' | 'output';
   label: string;
@@ -171,7 +171,7 @@ export interface AgentFlowStep {
   duration?: number;
 }
 
-export interface ConversationState {
+interface ConversationState {
   state: 'idle' | 'listening' | 'processing' | 'responding';
   currentStep?: string;
   agentFlow: AgentFlowStep[];

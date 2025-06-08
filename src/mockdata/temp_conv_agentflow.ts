@@ -3,7 +3,7 @@
 
 import { TeamStructure } from '@/types';
 
-export interface TempTeamData {
+interface TempTeamData {
   id: string;
   name: string;
   description: string;
@@ -15,7 +15,7 @@ export interface TempTeamData {
   autogenStructure?: TeamStructure; // Full Autogen structure
 }
 
-export interface TempAgentData {
+interface TempAgentData {
   id: string;
   name: string;
   description: string;
@@ -57,7 +57,7 @@ export interface ConversationFlowState {
 }
 
 // Initial empty state
-export let conversationFlowState: ConversationFlowState = {
+let conversationFlowState: ConversationFlowState = {
   userInput: {
     shown: false,
     content: '',
@@ -85,7 +85,7 @@ export const updateUserInput = (content: string) => {
   conversationFlowState.pendingUpdates.push('user_input');
 };
 
-export const updateFromAutogenStructure = (autogenStructure: TeamStructure, analysis: any) => {
+const updateFromAutogenStructure = (autogenStructure: TeamStructure, analysis: any) => {
   const timestamp = Date.now();
   
   // Update conversation stage
@@ -137,7 +137,7 @@ export const updateFromAutogenStructure = (autogenStructure: TeamStructure, anal
 };
 
 // Legacy function for backward compatibility
-export const updateFromAnthropicAnalysis = (analysis: {
+const updateFromAnthropicAnalysis = (analysis: {
   teamIdentified: boolean;
   teamName?: string;
   teamDescription?: string;
@@ -201,7 +201,7 @@ export const updateFromAnthropicAnalysis = (analysis: {
   conversationFlowState.pendingUpdates = []; // Clear pending updates
 };
 
-export const updateTeamData = (teamData: Partial<TempTeamData>) => {
+const updateTeamData = (teamData: Partial<TempTeamData>) => {
   const timestamp = Date.now();
   
   if (!conversationFlowState.team) {
@@ -226,7 +226,7 @@ export const updateTeamData = (teamData: Partial<TempTeamData>) => {
   conversationFlowState.lastUpdate = timestamp;
 };
 
-export const addOrUpdateAgent = (agentData: Partial<TempAgentData> & { name: string }) => {
+const addOrUpdateAgent = (agentData: Partial<TempAgentData> & { name: string }) => {
   const timestamp = Date.now();
   const existingIndex = conversationFlowState.agents.findIndex(a => a.name === agentData.name);
   
@@ -292,28 +292,28 @@ const mergeTools = (
   return merged;
 };
 
-export const updateConversationState = (state: ConversationFlowState['conversationState']) => {
+const updateConversationState = (state: ConversationFlowState['conversationState']) => {
   conversationFlowState.conversationState = state;
   conversationFlowState.lastUpdate = Date.now();
 };
 
-export const setAnalysisInProgress = (inProgress: boolean) => {
+const setAnalysisInProgress = (inProgress: boolean) => {
   conversationFlowState.analysisInProgress = inProgress;
   conversationFlowState.lastUpdate = Date.now();
 };
 
-export const addPendingUpdate = (updateType: string) => {
+const addPendingUpdate = (updateType: string) => {
   if (!conversationFlowState.pendingUpdates.includes(updateType)) {
     conversationFlowState.pendingUpdates.push(updateType);
   }
 };
 
-export const hasPendingUpdates = (): boolean => {
+const hasPendingUpdates = (): boolean => {
   return conversationFlowState.pendingUpdates.length > 0 || 
          !conversationFlowState.userInput.processed;
 };
 
-export const shouldTriggerAnalysis = (): boolean => {
+const shouldTriggerAnalysis = (): boolean => {
   const now = Date.now();
   const timeSinceLastAnalysis = now - conversationFlowState.lastAnalysis;
   const hasUnprocessedInput = !conversationFlowState.userInput.processed && 
@@ -324,7 +324,7 @@ export const shouldTriggerAnalysis = (): boolean => {
          !conversationFlowState.analysisInProgress;
 };
 
-export const getAnalysisReadyData = () => {
+const getAnalysisReadyData = () => {
   return {
     userInput: conversationFlowState.userInput.content,
     currentTeam: conversationFlowState.team,
@@ -356,7 +356,7 @@ export const resetFlowState = () => {
 export const getFlowState = () => conversationFlowState;
 
 // Enhanced state getters for specific use cases
-export const getTeamProgress = () => {
+const getTeamProgress = () => {
   const state = conversationFlowState;
   return {
     hasTeam: !!state.team,
@@ -372,12 +372,12 @@ export const getTeamProgress = () => {
   };
 };
 
-export const getAgentsByConfidence = () => {
+const getAgentsByConfidence = () => {
   return conversationFlowState.agents
     .sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
 };
 
-export const getRecentUpdates = (timeWindow: number = 30000) => {
+const getRecentUpdates = (timeWindow: number = 30000) => {
   const cutoff = Date.now() - timeWindow;
   const updates = [];
   
@@ -411,12 +411,12 @@ export const getRecentUpdates = (timeWindow: number = 30000) => {
 };
 
 // Get current Autogen structure for export/deployment
-export const getCurrentAutogenStructure = (): TeamStructure | null => {
+const getCurrentAutogenStructure = (): TeamStructure | null => {
   return conversationFlowState.autogenStructure || null;
 };
 
 // Update flow state with new Autogen structure
-export const updateAutogenStructure = (structure: TeamStructure) => {
+const updateAutogenStructure = (structure: TeamStructure) => {
   conversationFlowState.autogenStructure = structure;
   conversationFlowState.lastUpdate = Date.now();
   

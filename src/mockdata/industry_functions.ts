@@ -1,6 +1,25 @@
 // Industry and Focus Area options with enhanced prompts and context
 export const industries = [
   { 
+    value: 'others',
+    label: 'Others Industry Services',
+    keyPrompts: {
+      agentConsiderations: [
+        'Process automation',
+        'Resource optimization',
+        'Service delivery',
+        'Quality management'
+      ],
+      systemInstructions: `You are a general business AI specialist. Emphasize:
+        - Process efficiency
+        - Service quality
+        - Resource management
+        - Performance optimization
+        - Customer satisfaction`,
+      toolPriorities: ['process_automator', 'resource_optimizer', 'quality_monitor']
+    }
+  },
+  { 
     value: 'banking',
     label: 'Banking & Financing',
     keyPrompts: {
@@ -22,22 +41,25 @@ export const industries = [
     }
   },
   { 
-    value: 'healthcare',
-    label: 'Healthcare & Life Sciences',
+    value: 'healthcare_public_sector',
+    label: 'Healthcare & Public Sector',
     keyPrompts: {
       agentConsiderations: [
-        'HIPAA compliance',
-        'Patient data privacy',
+        'HIPAA compliance & patient data privacy',
         'Electronic Health Records (EHR) integration',
-        'Clinical decision support'
+        'Clinical decision support',
+        'Public service automation',
+        'Government data security compliance (e.g., FISMA)',
+        'Citizen engagement and communication',
+        'Policy implementation and tracking'
       ],
-      systemInstructions: `You are a healthcare AI specialist. Prioritize:
-        - Patient data protection
-        - Clinical workflow integration
-        - Medical terminology accuracy
-        - Healthcare compliance standards
-        - Emergency response protocols`,
-      toolPriorities: ['ehr_connector', 'hipaa_validator', 'medical_nlp']
+      systemInstructions: `You are an AI specialist for healthcare and the public sector. Prioritize:
+        - Secure handling of sensitive data (HIPAA, PII)
+        - Clinical and public service workflow integration
+        - Medical terminology and policy accuracy
+        - Healthcare and government compliance standards
+        - Citizen and patient engagement protocols`,
+      toolPriorities: ['ehr_connector', 'hipaa_validator', 'service_automator', 'security_validator', 'policy_checker']
     }
   },
   { 
@@ -61,81 +83,46 @@ export const industries = [
     }
   },
   { 
-    value: 'manufacturing',
-    label: 'Manufacturing & Supply Chain',
+    value: 'consumergoods_manufacturing',
+    label: 'Consumer Goods & Manufacturing',
     keyPrompts: {
       agentConsiderations: [
-        'Production optimization',
-        'Quality control automation',
-        'Supply chain visibility',
-        'Predictive maintenance'
+        'Production optimization & Quality control',
+        'Supply chain visibility & Predictive maintenance',
+        'Brand management & Consumer insights',
+        'Market trend analysis & Sales management',
+        'Product lifecycle management from creation to consumer',
       ],
-      systemInstructions: `You are a manufacturing AI specialist. Emphasize:
-        - Production efficiency
-        - Quality assurance
-        - Supply chain optimization
-        - Equipment maintenance
-        - Resource planning`,
-      toolPriorities: ['production_monitor', 'quality_checker', 'maintenance_predictor']
+      systemInstructions: `You are an AI expert for the entire product lifecycle, from manufacturing to consumer goods. Focus on:
+        - Production efficiency and supply chain optimization
+        - Product quality assurance
+        - Consumer behavior analysis and brand reputation
+        - Market trend identification and sales strategies
+        - Integrating customer feedback into the product lifecycle`,
+      toolPriorities: ['production_monitor', 'quality_checker', 'market_analyzer', 'sentiment_analyzer', 'trend_predictor']
     }
   },
   { 
-    value: 'consumergoods',
-    label: 'Consumer Goods & Services',
+    value: 'telecom_technology',
+    label: 'Telecommunications & Technology',
     keyPrompts: {
       agentConsiderations: [
-        'Brand management',
-        'Consumer insights',
-        'Market trend analysis',
-        'Sales & distribution management',
-        'Product lifecycle management'
+        'Code analysis and generation',
+        'System integration and API management',
+        'Network optimization and monitoring',
+        'Service quality and SLA management',
+        'Product offering and pricing management',
+        'Technical documentation automation',
+        'Infrastructure management (Cloud & On-prem)'
       ],
-      systemInstructions: `You are a consumer goods AI expert. Focus on:
-        - Consumer behavior analysis
-        - Brand reputation management
-        - Market trend identification
-        - Sales and distribution
-        - Product development support
-        - Customer feedback analysis`,
-      toolPriorities: ['market_analyzer', 'sentiment_analyzer', 'trend_predictor']
-    }
-  },
-  { 
-    value: 'technology',
-    label: 'Technology & Software',
-    keyPrompts: {
-      agentConsiderations: [
-        'Technical documentation',
-        'Code analysis',
-        'System integration',
-        'Performance optimization'
-      ],
-      systemInstructions: `You are a technology sector AI specialist. Prioritize:
-        - Code quality assessment
-        - Technical documentation
-        - System architecture
-        - Performance optimization
-        - Security best practices`,
-      toolPriorities: ['code_analyzer', 'doc_generator', 'performance_monitor']
-    }
-  },
-  { 
-    value: 'telecom',
-    label: 'Telecommunications',
-    keyPrompts: {
-      agentConsiderations: [
-        'Network optimization',
-        'Service quality monitoring',
-        'Customer support automation',
-        'Infrastructure management'
-      ],
-      systemInstructions: `You are a telecommunications AI expert. Focus on:
-        - Network performance
-        - Service quality
-        - Customer support
-        - Infrastructure planning
-        - Technical troubleshooting`,
-      toolPriorities: ['network_analyzer', 'service_monitor', 'support_automator']
+      systemInstructions: `You are a technology and telecommunications AI specialist. Prioritize:
+        - Code quality and system architecture
+        - Network performance, reliability, and security
+        - Technical documentation and troubleshooting
+        - Performance optimization for software and networks
+        - Campaign and product personalization
+        - Automation of DevOps and NetOps processes`,
+      toolPriorities: ['code_analyzer', 'performance_monitor', 'network_analyzer', 'service_monitor', 'doc_generator', 'next_best_offer']
     }
   },
   { 
@@ -158,21 +145,21 @@ export const industries = [
     }
   },
   { 
-    value: 'resources energy',
+    value: 'resources_energy',
     label: 'Energy, Oil & Gas',
     keyPrompts: {
       agentConsiderations: [
-        'Renewable energy',
-        'Upstream management',
+        'Renewable energy integration',
+        'Upstream exploration and production management',
         'Well and Site Management',
-        'Downstream management'
+        'Downstream refining and distribution management'
       ],
       systemInstructions: `You are an energy, oil & gas AI expert. Focus on:
-        - Upstream process
-        - midstream process
-        - downstream process 
-        - asset invesment management
-        - well and asset management`,
+        - Upstream process efficiency
+        - Midstream logistics and storage
+        - Downstream processing and distribution 
+        - Asset investment and performance management
+        - Well and site safety and compliance`,
       toolPriorities: ['well_reader', 'asset_tracker', 'GIS_reader']
     }
   },
@@ -201,89 +188,17 @@ export const industries = [
         - Energy efficiency and sustainability`,
       toolPriorities: ['process_optimizer', 'safety_monitor', 'quality_analyzer', 'emissions_tracker', 'maintenance_scheduler']
     }
-  },
-  { 
-    value: 'education',
-    label: 'Education & Training',
-    keyPrompts: {
-      agentConsiderations: [
-        'Learning path customization',
-        'Student progress tracking',
-        'Content adaptation',
-        'Assessment automation'
-      ],
-      systemInstructions: `You are an education AI expert. Focus on:
-        - Personalized learning
-        - Student assessment
-        - Content management
-        - Progress tracking
-        - Educational analytics`,
-      toolPriorities: ['content_adapter', 'progress_tracker', 'assessment_generator']
-    }
-  },
-  { 
-    value: 'government',
-    label: 'Government & Public Sector',
-    keyPrompts: {
-      agentConsiderations: [
-        'Public service automation',
-        'Data security compliance',
-        'Citizen engagement',
-        'Policy implementation'
-      ],
-      systemInstructions: `You are a government sector AI specialist. Prioritize:
-        - Public service delivery
-        - Data security
-        - Policy compliance
-        - Citizen engagement
-        - Administrative efficiency`,
-      toolPriorities: ['service_automator', 'security_validator', 'policy_checker']
-    }
-  },
-  { 
-    value: 'consulting',
-    label: 'Professional Services & Consulting',
-    keyPrompts: {
-      agentConsiderations: [
-        'Business analysis',
-        'Project management',
-        'Client relationship management',
-        'Knowledge management'
-      ],
-      systemInstructions: `You are a consulting services AI expert. Focus on:
-        - Business analysis
-        - Project management
-        - Client relations
-        - Knowledge sharing
-        - Performance metrics`,
-      toolPriorities: ['analysis_helper', 'project_manager', 'knowledge_base']
-    }
-  },
-  { 
-    value: 'others',
-    label: 'General Industry Services',
-    keyPrompts: {
-      agentConsiderations: [
-        'Process automation',
-        'Resource optimization',
-        'Service delivery',
-        'Quality management'
-      ],
-      systemInstructions: `You are a general business AI specialist. Emphasize:
-        - Process efficiency
-        - Service quality
-        - Resource management
-        - Performance optimization
-        - Customer satisfaction`,
-      toolPriorities: ['process_automator', 'resource_optimizer', 'quality_monitor']
-    }
   }
 ];
 
 export const focusAreas = [
+  // =================================
+  // 1. Customer-Facing Functions
+  // =================================
   { 
     value: 'customer_service',
     label: 'Customer Service & Support',
+    function_group: 'Customer-Facing Functions',
     keyConsiderations: [
       'Response time optimization',
       'Query categorization',
@@ -295,6 +210,7 @@ export const focusAreas = [
   { 
     value: 'sales',
     label: 'Sales & Revenue Growth',
+    function_group: 'Customer-Facing Functions',
     keyConsiderations: [
       'Lead qualification',
       'Sales pipeline optimization',
@@ -304,7 +220,8 @@ export const focusAreas = [
   },
   { 
     value: 'marketing',
-    label: 'Marketing & Brand Management',
+    label: 'Marketing & Brand Mgmt.',
+    function_group: 'Customer-Facing Functions',
     keyConsiderations: [
       'Campaign optimization',
       'Market analysis',
@@ -313,28 +230,77 @@ export const focusAreas = [
     ]
   },
   { 
+    value: 'social_commerce',
+    label: 'Social Commerce',
+    function_group: 'Customer-Facing Functions',
+    keyConsiderations: [
+      'Social media Tiktok and Instragram integration',
+      'Influencer analytics',
+      'Engagement optimization',
+      'Conversion tracking'
+    ]
+  },
+  // =================================
+  // 2. Core Business Operations
+  // =================================
+  { 
     value: 'operations',
-    label: 'Operations & Process Optimization',
+    label: 'Ops & Process Engineering',
+    function_group: 'Core Business Operations',
     keyConsiderations: [
       'Workflow automation',
       'Resource allocation',
       'Quality control',
-      'Performance monitoring'
+      'Performance monitoring',
+      'Process simulation and modeling',
+      'Heat and mass transfer optimization',
+      'Reaction kinetics analysis',
+      'Process safety analysis'
     ]
   },
   { 
-    value: 'hr',
-    label: 'HR & Talent Management',
+    value: 'supply_chain',
+    label: 'Procurement & Supply Chain',
+    function_group: 'Core Business Operations',
     keyConsiderations: [
-      'Recruitment automation',
-      'Employee engagement',
-      'Performance evaluation',
-      'Training optimization'
+      'Feedstock procurement optimization',
+      'Chemical inventory management',
+      'Transportation and logistics',
+      'Supplier quality management',
+      'Market price analysis',
+      'Contract management'
     ]
   },
+    { 
+    value: 'asset',
+    label: 'Asset management',
+    function_group: 'Core Business Operations',
+    keyConsiderations: [
+      'Asset capital investment',
+      'Asset maintenance',
+      'Asset lifecycle management',
+      'Asset profitability analysis'
+    ]
+  },
+
+  { 
+    value: 'innovation',
+    label: 'Innovation and R&D',
+    function_group: 'Core Business Operations',
+    keyConsiderations: [
+      'Trend analysis',
+      'Research automation',
+      'Patent monitoring',
+      'Technology assessment'
+    ]
+  },
+  // =================================
+  // 3. Business & Corporate Functions
+  // =================================
   { 
     value: 'finance',
-    label: 'Financial Planning & Analysis',
+    label: 'Finance & Analysis',
+    function_group: 'Business & Corporate Functions',
     keyConsiderations: [
       'Budget optimization',
       'Financial forecasting',
@@ -344,7 +310,8 @@ export const focusAreas = [
   },
   { 
     value: 'risk',
-    label: 'Risk Management & Compliance',
+    label: 'Legal, Risk, & Policy',
+    function_group: 'Business & Corporate Functions',
     keyConsiderations: [
       'Risk assessment',
       'Compliance monitoring',
@@ -353,50 +320,20 @@ export const focusAreas = [
     ]
   },
   { 
-    value: 'innovation',
-    label: 'Innovation & R&D',
+    value: 'hr',
+    label: 'HR & Talent ',
+    function_group: 'Business & Corporate Functions',
     keyConsiderations: [
-      'Trend analysis',
-      'Research automation',
-      'Patent monitoring',
-      'Technology assessment'
-    ]
-  },
-  { 
-    value: 'data',
-    label: 'Data Analytics & Business Intelligence',
-    keyConsiderations: [
-      'Data processing',
-      'Pattern recognition',
-      'Predictive analytics',
-      'Reporting automation'
-    ]
-  },
-  { 
-    value: 'social_commerce',
-    label: 'Social Commerce',
-    keyConsiderations: [
-      'Social media Tiktok and Instragram integration',
-      'Influencer analytics',
-      'Engagement optimization',
-      'Conversion tracking'
-    ]
-  },
-  { 
-    value: 'process_engineering',
-    label: 'Process Engineering & Optimization',
-    keyConsiderations: [
-      'Chemical process design',
-      'Process simulation and modeling',
-      'Heat and mass transfer optimization',
-      'Reaction kinetics analysis',
-      'Equipment sizing and selection',
-      'Process safety analysis'
+      'Recruitment automation',
+      'Employee engagement',
+      'Performance evaluation',
+      'Training optimization'
     ]
   },
   { 
     value: 'environmental_compliance',
-    label: 'Environmental & Safety Compliance',
+    label: 'Environmental & Safety',
+    function_group: 'Business & Corporate Functions',
     keyConsiderations: [
       'Emissions monitoring and control',
       'Waste management optimization',
@@ -406,16 +343,16 @@ export const focusAreas = [
       'Incident management and prevention'
     ]
   },
-  { 
-    value: 'supply_chain',
-    label: 'Supply Chain Management',
+  
+    { 
+    value: 'data_it',
+    label: 'IT & Data',
+    function_group: 'Business & Corporate Functions',
     keyConsiderations: [
-      'Feedstock procurement optimization',
-      'Chemical inventory management',
-      'Transportation and logistics',
-      'Supplier quality management',
-      'Market price analysis',
-      'Contract management'
+      'Data engineering and quality',
+      'IT services and SLA management',
+      'IT support and ticketing ',
+      'Reporting automation'
     ]
   }
 ];

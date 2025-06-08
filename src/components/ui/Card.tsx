@@ -52,7 +52,7 @@ export const CardBody: React.FC<{ children: React.ReactNode; className?: string 
   );
 };
 
-export const CardFooter: React.FC<{ children: React.ReactNode; className?: string }> = ({ 
+const CardFooter: React.FC<{ children: React.ReactNode; className?: string }> = ({ 
   children, 
   className = '' 
 }) => {

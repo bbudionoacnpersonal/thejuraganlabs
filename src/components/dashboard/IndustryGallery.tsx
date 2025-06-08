@@ -1,129 +1,127 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Card, { CardBody } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
-import { 
-  SparklesIcon, 
-  ClockIcon, 
+import Select from '@/components/ui/Select'; 
+import { Library, Bot, Wrench } from 'lucide-react';
+import {
+  BuildingOffice2Icon,
+  UsersIcon,
+  XMarkIcon,
   UserGroupIcon,
-  StarIcon,
-  TagIcon,
-  DocumentArrowDownIcon,
-  PlayIcon
+  MagnifyingGlassIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
-import { 
-  getUseCasesByIndustryAndFunction, 
-  getPopularUseCases,
-  UseCaseTemplate 
-} from '@/mockdata/industryFunctionGallery';
 import { industries, focusAreas } from '@/mockdata/industry_functions';
+import { industryFunctionGallery } from '@/mockdata/industryFunctionGallery'; 
+import GalleryFlowVisualizer from './gallery_flow_visualizer';  // <<-- Fixed import path!
+
+
+interface UseCaseTemplate {
+  id: string;
+  title: string;
+  description: string;
+  industry: string;
+  functionAreas: string[];
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  estimatedTime: string;
+  tags: string[];
+  isPopular?: boolean;
+  autogenStructure: any;
+  usage: number;
+  rating: number;
+  createdBy: string;
+  lastUpdated: string;
+}
 
 interface IndustryGalleryProps {
   userIndustry: string;
   userFocusAreas: string[];
 }
 
-const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFocusAreas }) => {
+const IndustryGallery: React.FC<IndustryGalleryProps> = ({
+  userIndustry,
+  userFocusAreas,
+}) => {
   const [showGallery, setShowGallery] = useState(false);
   const [selectedUseCase, setSelectedUseCase] = useState<UseCaseTemplate | null>(null);
-  const [activeTab, setActiveTab] = useState<'recommended' | 'popular' | 'all'>('recommended');
+  const [showFlowModal, setShowFlowModal] = useState(false); // <-- New modal for flow
 
-  // Get industry and focus area details
-  const industryDetails = industries.find(i => i.value === userIndustry);
-  const focusAreaDetails = focusAreas.filter(f => userFocusAreas.includes(f.value));
 
-  // Get use cases based on user's industry and focus areas
-  const recommendedUseCases = getUseCasesByIndustryAndFunction(userIndustry, userFocusAreas);
-  const popularUseCases = getPopularUseCases();
+  const [currentFilterIndustry, setCurrentFilterIndustry] = useState('');
+  const [currentFilterFunctionArea, setCurrentFilterFunctionArea] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [submittedSearch, setSubmittedSearch] = useState({ industry: '', functionArea: '', term: '' });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  const filteredUseCases = useMemo(() => {
+    return (industryFunctionGallery || []).filter((useCase) => {
+      const matchIndustry = !submittedSearch.industry || useCase.industries.includes(submittedSearch.industry); // <-- Fix here
+      const matchFunctionArea = !submittedSearch.functionArea || useCase.functionAreas.includes(submittedSearch.functionArea);
+      const matchSearchTerm =
+        submittedSearch.term === '' ||
+        useCase.title.toLowerCase().includes(submittedSearch.term.toLowerCase()) ||
+        useCase.description.toLowerCase().includes(submittedSearch.term.toLowerCase()) ||
+        useCase.tags.some((tag) => tag.toLowerCase().includes(submittedSearch.term.toLowerCase()));
+  
+      return matchIndustry && matchFunctionArea && matchSearchTerm;
+    });
+  }, [submittedSearch]);
+
+  const totalPages = Math.ceil(filteredUseCases.length / pageSize);
+  const displayedUseCases = useMemo(() => {
+    const startIdx = (currentPage - 1) * pageSize;
+    return filteredUseCases.slice(startIdx, startIdx + pageSize);
+  }, [filteredUseCases, currentPage]);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'beginner': return 'text-success-600 bg-success-100';
-      case 'intermediate': return 'text-warning-600 bg-warning-100';
-      case 'advanced': return 'text-error-600 bg-error-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'beginner':
+        return 'text-success-600 bg-success-100';
+      case 'intermediate':
+        return 'text-warning-600 bg-warning-100';
+      case 'advanced':
+        return 'text-error-600 bg-error-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
     }
+  };
+
+  const getTeamName = (provider: string) => {
+    return provider || 'AI Team';
   };
 
   const handleUseCaseSelect = (useCase: UseCaseTemplate) => {
+     setShowGallery(false); // <-- CLOSE the Gallery Modal
     setSelectedUseCase(useCase);
+     setShowFlowModal(true); // Open the flow modal
   };
 
-  const handleUseTemplate = (useCase: UseCaseTemplate) => {
-    // Here you would typically navigate to create agent page with the template
-    console.log('Using template:', useCase.title);
-    // You could also copy the autogen structure to clipboard or pass it to the create agent page
-    setSelectedUseCase(null);
-    setShowGallery(false);
-  };
-
-  const exportTemplate = (useCase: UseCaseTemplate) => {
-    const dataStr = JSON.stringify(useCase.autogenStructure, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportFileDefaultName = `${useCase.id}_template.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  };
-
-  const getDisplayUseCases = () => {
-    switch (activeTab) {
-      case 'recommended': return recommendedUseCases;
-      case 'popular': return popularUseCases;
-      case 'all': return [...recommendedUseCases, ...popularUseCases].filter((useCase, index, self) => 
-        index === self.findIndex(u => u.id === useCase.id)
-      );
-      default: return recommendedUseCases;
-    }
+  const handleSearch = () => {
+    setSubmittedSearch({
+      industry: currentFilterIndustry,
+      functionArea: currentFilterFunctionArea,
+      term: searchTerm,
+    });
+    setCurrentPage(1);
   };
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
         <Card className="h-full">
-          <CardBody className="flex flex-col items-center text-center p-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Industry Use Case Gallery</h2>
-            <p className="text-gray-400 mb-6">
-              Explore pre-built AI agents templates tailored for {industryDetails?.label} industry
-              {focusAreaDetails.length > 0 && (
-                <span> focusing on {focusAreaDetails.map(f => f.label).join(', ')}</span>
-              )}
+          <CardBody className="flex flex-col items-center text-center p-4">
+            <h2 className="text-xl font-bold text-white mb-2">Use Case Gallery</h2>
+            <p className="text-gray-400 mb-4 text-sm px-4">
+              Explore AI agent templates by industry and function.
             </p>
-
-            <div className="w-full bg-dark-background rounded-lg p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="bg-dark-surface rounded-lg p-4 border border-dark-border">
-                  <div className="flex items-center gap-2 mb-2">
-                    <SparklesIcon className="h-5 w-5 text-secondary-600" />
-                    <span className="text-white font-medium">Recommended for You</span>
-                  </div>
-                  <p className="text-gray-400 text-sm">{recommendedUseCases.length} templates match your profile</p>
-                </div>
-                
-                <div className="bg-dark-surface rounded-lg p-4 border border-dark-border">
-                  <div className="flex items-center gap-2 mb-2">
-                    <StarIcon className="h-5 w-5 text-warning-500" />
-                    <span className="text-white font-medium">Popular Templates</span>
-                  </div>
-                  <p className="text-gray-400 text-sm">Most used across all industries</p>
-                </div>
-              </div>
-
-              <Button
-                size="lg"
-                leftIcon={<UserGroupIcon className="h-6 w-6" />}
-                onClick={() => setShowGallery(true)}
-                className="w-full"
-              >
-                Explore Use Case Gallery
+            <div className="w-full bg-dark-background rounded-lg p-4">
+              <Button size="sm" leftIcon={<Library className="h-4 w-4" />} onClick={() => setShowGallery(true)} className="w-full">
+                Explore Gallery ({industryFunctionGallery?.length || 0} templates)
               </Button>
             </div>
           </CardBody>
@@ -134,188 +132,208 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({ userIndustry, userFoc
       <Modal
         isOpen={showGallery}
         onClose={() => setShowGallery(false)}
-        title="Industry and Functional Use Case Gallery"
-        size="xl"
+        title="Industry & Functional Use Case Gallery"
+        size="3xl"
       >
-        <div className="space-y-6">
-          {/* Tabs */}
-          <div className="flex space-x-1 bg-dark-background rounded-lg p-1">
-            {[
-              { id: 'recommended', label: 'Recommended', count: recommendedUseCases.length },
-              { id: 'popular', label: 'Popular', count: popularUseCases.length },
-              { id: 'all', label: 'All Templates', count: getDisplayUseCases().length }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-secondary-600 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-dark-surface'
-                }`}
-              >
-                {tab.label} ({tab.count})
-              </button>
-            ))}
+        <div className="space-y-4">
+          {/* Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-dark-background rounded-lg items-end">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Industry</label>
+              <Select
+                value={currentFilterIndustry}
+                size="sm"
+                options={[
+                  { value: '', label: 'All Industries' },
+                  ...(industries?.map?.((industry) => ({
+                    value: industry.value,
+                    label: industry.label
+                  })) || [])
+                ]}
+                onChange={(value) => setCurrentFilterIndustry(value as string)}
+                selectClassName="bg-dark-surface border-dark-border text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Function Area</label>
+              <Select
+                value={currentFilterFunctionArea}
+                size="sm"
+                options={[
+                  { value: '', label: 'All Functions' },
+                  ...(focusAreas?.map?.((focus) => ({
+                    value: focus.value,
+                    label: focus.label
+                  })) || [])
+                ]}
+                onChange={(value) => setCurrentFilterFunctionArea(value as string)}
+                selectClassName="bg-dark-surface border-dark-border text-white"
+              />
+            </div>
+
+            <div className="relative">
+              <label className="block text-sm text-gray-400 mb-1">Search</label>
+              <input
+                type="text"
+                placeholder="Search by keyword..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full text-sm pl-3 pr-4 py-[0.5rem] h-[34px] bg-dark-surface border border-dark-border rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-secondary-600"
+              />
+            </div>
+
+            <div>
+              <Button size="sm" leftIcon={<MagnifyingGlassIcon className="h-3 w-3 mr-2" />} onClick={handleSearch} className="w-full">
+                Search
+              </Button>
+            </div>
           </div>
 
           {/* Use Cases Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-            {getDisplayUseCases().map((useCase) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto">
+            {displayedUseCases.map((useCase) => (
               <div
                 key={useCase.id}
-                className="bg-dark-surface rounded-lg p-4 border border-dark-border hover:border-secondary-600 cursor-pointer transition-colors"
+                className="bg-dark-background p-4 rounded-lg border border-dark-border hover:border-secondary-600 cursor-pointer transition-colors"
                 onClick={() => handleUseCaseSelect(useCase)}
               >
-                <div className="flex justify-between items-start mb-3">
+                <div className="flex justify-between items-start mb-2">
                   <h3 className="text-white font-medium text-sm">{useCase.title}</h3>
-                  <Badge className={getDifficultyColor(useCase.difficulty)} size="sm">
-                    {useCase.difficulty}
-                  </Badge>
+                  <div className="flex items-center gap-1">
+                    <Badge size="sm" className={getDifficultyColor(useCase.difficulty)}>
+                      {useCase.difficulty}
+                    </Badge>
+                  </div>
                 </div>
-                
+
                 <p className="text-gray-400 text-xs mb-3 line-clamp-2">{useCase.description}</p>
-                
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <div className="flex items-center gap-2">
-                    <ClockIcon className="h-3 w-3" />
-                    <span>{useCase.estimatedTime}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <UserGroupIcon className="h-3 w-3" />
-                    <span>{useCase.usage} uses</span>
-                  </div>
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {(useCase.tags || []).map((tag, idx) => (
+                    <Badge key={idx} size="sm" className="bg-gray-800 text-white">
+                      {tag}
+                    </Badge>
+                  ))}
                 </div>
                 
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {useCase.tags.slice(0, 2).map((tag) => (
-                    <span key={tag} className="text-xs bg-dark-background text-gray-400 px-2 py-1 rounded">
-                      {tag}
-                    </span>
-                  ))}
-                  {useCase.tags.length > 2 && (
-                    <span className="text-xs text-gray-500">+{useCase.tags.length - 2}</span>
-                  )}
+                {/* Industry and Usage */}
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <div className="flex items-center gap-2">
+                    <BuildingOffice2Icon className="h-3 w-3 text-gray-500" />
+                    <div className="flex flex-wrap gap-1">
+                      {(useCase.industries || []).map((industryValue, idx) => {
+                        const industryLabel = industries?.find((i) => i.value === industryValue)?.label || industryValue;
+                        return (
+                          <span
+                            key={idx}
+                            className="bg-dark-surface px-2 py-0.5 rounded text-gray-400 text-[10px]"
+                          >
+                            {industryLabel}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <UsersIcon className="h-2 w-2 text-gray-500" />
+                    <span className="text-gray-500">{useCase.usage} uses</span>
+                  </div>
+                </div>
+
+                {/* Team Section */}
+                <div className="bg-dark-800 p-2 rounded-lg mb-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <UserGroupIcon className="h-3 w-3 text-gray-500" />
+                    <span className="text-xs text-gray-500">{useCase.autogenStructure.provider?.split('.').pop()}</span>
+                  </div>
+                
+                 {/* Agents List */}
+                  <div className="inline-flex flex-wrap gap-1 text-xs items-start">
+                    <span className="text-gray-400 w-full">AI Agents:</span>
+                    {(useCase.autogenStructure?.config?.participants || []).map((participant: any, idx: number) => (
+                      <div key={idx} className="inline-flex items-center gap-1 bg-dark-400 p-1 rounded-lg">
+                        {/* Agent Name */}
+                        <div className="flex items-center gap-1">
+                          <Bot className="h-2 w-2 text-gray-400" />
+                          <span className="text-xs text-gray-300">{participant.label || 'Unnamed Agent'}</span>
+                        </div>
+                  
+                        {/* Model Name */}
+                        {participant.config?.model_client?.model_name && (
+                          <div className="bg-dark-300 text-white text-xs rounded-lg px-2 py-0.5 inline-flex items-center gap-1">
+                            <SparklesIcon className="h-2 w-2" />
+                            {participant.config.model_client.model_name}
+                          </div>
+                        )}
+                  
+                        {/* Tools */}
+                        <div className="flex flex-wrap gap-1 ml-4">
+                          {(participant.config?.tools || []).map((tool: any, toolIdx: number) => (
+                            <div key={toolIdx} className="bg-dark-300 text-white text-xs rounded-lg px-2 py-0.5 inline-flex items-center gap-1">
+                              <Wrench className="h-2 w-2" />
+                              {tool.config?.name || 'Unnamed Tool'}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+
+                  
                 </div>
               </div>
             ))}
           </div>
 
-          {getDisplayUseCases().length === 0 && (
+          {filteredUseCases.length === 0 && (
             <div className="text-center py-8">
-              <SparklesIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <Bot className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-white mb-2">No templates found</h3>
-              <p className="text-gray-400">Try selecting a different tab or check back later for new templates.</p>
+              <p className="text-gray-400">Try adjusting your search criteria</p>
             </div>
           )}
         </div>
+     
       </Modal>
 
-      {/* Use Case Detail Modal */}
-      {selectedUseCase && (
-        <Modal
-          isOpen={!!selectedUseCase}
-          onClose={() => setSelectedUseCase(null)}
-          title={selectedUseCase.title}
-          size="xl"
-        >
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Badge className={getDifficultyColor(selectedUseCase.difficulty)}>
-                  {selectedUseCase.difficulty}
-                </Badge>
-                <div className="flex items-center gap-1 text-sm text-gray-400">
-                  <ClockIcon className="h-4 w-4" />
-                  <span>{selectedUseCase.estimatedTime}</span>
-                </div>
-                <div className="flex items-center gap-1 text-sm text-gray-400">
-                  <StarIcon className="h-4 w-4" />
-                  <span>{selectedUseCase.rating}/5</span>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  leftIcon={<DocumentArrowDownIcon className="h-4 w-4" />}
-                  onClick={() => exportTemplate(selectedUseCase)}
-                >
-                  Export JSON
-                </Button>
-                <Button
-                  size="sm"
-                  leftIcon={<PlayIcon className="h-4 w-4" />}
-                  onClick={() => handleUseTemplate(selectedUseCase)}
-                >
-                  Use Template
-                </Button>
-              </div>
-            </div>
+        {/* -- Flow Visualizer Modal -- */}
+        {selectedUseCase && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-dark-background rounded-lg shadow-lg p-6 relative w-5/6 max-w-6xl h-[80vh]">
+              {/* Custom Close Button */}
+              <button
+                onClick={() => {
+                  setShowFlowModal(false);
+                  setSelectedUseCase(null);
+                  setShowGallery(true); // <-- Reopen Gallery Modal on close
+                }}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+  
+              <h3 className="text-white text-lg font-bold mb-4">{selectedUseCase.title}</h3>
+  
+              <div className="h-full">
 
-            <div>
-              <h4 className="text-white font-medium mb-2">Description</h4>
-              <p className="text-gray-400 text-sm">{selectedUseCase.description}</p>
-            </div>
-
-            <div>
-              <h4 className="text-white font-medium mb-2">Function Areas</h4>
-              <div className="flex flex-wrap gap-2">
-                {selectedUseCase.functionAreas.map((area) => {
-                  const areaDetails = focusAreas.find(f => f.value === area);
-                  return (
-                    <Badge key={area} variant="secondary" size="sm">
-                      {areaDetails?.label || area}
-                    </Badge>
-                  );
-                })}
+                <GalleryFlowVisualizer
+                  autogenStructure={selectedUseCase.autogenStructure}
+                  title={selectedUseCase.title}
+                  onApplyTemplate={(structure) => {
+                    // 🎯 update your code editor + visual editor
+                    //setEditorContent(JSON.stringify(structure, null, 2)); // assuming you have this
+                    //setTeamStructure(structure); // to update the main Visual Editor
+                  }}
+                />
+                                
               </div>
-            </div>
-
-            <div>
-              <h4 className="text-white font-medium mb-2">Tags</h4>
-              <div className="flex flex-wrap gap-2">
-                {selectedUseCase.tags.map((tag) => (
-                  <span key={tag} className="flex items-center gap-1 text-xs bg-dark-background text-gray-400 px-2 py-1 rounded">
-                    <TagIcon className="h-3 w-3" />
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-white font-medium mb-2">AI Agents Team Structure</h4>
-              <div className="bg-dark-background rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <UserGroupIcon className="h-5 w-5 text-secondary-600" />
-                  <span className="text-white font-medium">{selectedUseCase.autogenStructure.label}</span>
-                  <Badge size="sm">{selectedUseCase.autogenStructure.provider.split('.').pop()}</Badge>
-                </div>
-                <p className="text-gray-400 text-sm mb-3">{selectedUseCase.autogenStructure.description}</p>
-                
-                <div className="space-y-2">
-                  <h5 className="text-sm font-medium text-gray-300">Agents ({selectedUseCase.autogenStructure.config.participants.length})</h5>
-                  {selectedUseCase.autogenStructure.config.participants.map((participant, index) => (
-                    <div key={index} className="flex items-center justify-between bg-dark-surface rounded p-2">
-                      <div>
-                        <span className="text-white text-sm">{participant.label}</span>
-                        <p className="text-gray-400 text-xs">{participant.description}</p>
-                      </div>
-                      <Badge size="sm">{participant.config.tools?.length || 0} tools</Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-sm text-gray-400">
-              <span>Created by {selectedUseCase.createdBy}</span>
-              <span>Last updated: {selectedUseCase.lastUpdated}</span>
             </div>
           </div>
-        </Modal>
-      )}
+        )}
+      
     </>
   );
 };

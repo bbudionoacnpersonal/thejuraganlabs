@@ -192,7 +192,7 @@ export const getAllConversations = (): StoredConversationData[] => {
 };
 
 // Delete conversation data
-export const deleteConversationData = (conversationId: string): boolean => {
+const deleteConversationData = (conversationId: string): boolean => {
   try {
     const storageKey = `${STORAGE_PREFIX}${conversationId}`;
     const indexKey = 'juragan_conversation_index';
@@ -266,7 +266,7 @@ const updateConversationIndex = (conversationId: string, data: StoredConversatio
 };
 
 // Get conversation summary from index (faster than loading full data)
-export const getConversationSummary = (conversationId: string) => {
+const getConversationSummary = (conversationId: string) => {
   try {
     const indexKey = 'juragan_conversation_index';
     const indexData = localStorage.getItem(indexKey);
@@ -284,7 +284,7 @@ export const getConversationSummary = (conversationId: string) => {
 };
 
 // Export conversation data as JSON file
-export const exportConversationAsJSON = (conversationId: string): void => {
+const exportConversationAsJSON = (conversationId: string): void => {
   try {
     const conversationData = getConversationData(conversationId);
     if (!conversationData) {
@@ -319,7 +319,7 @@ export const exportConversationAsJSON = (conversationId: string): void => {
 };
 
 // Import conversation data from JSON file
-export const importConversationFromJSON = (jsonData: string): boolean => {
+const importConversationFromJSON = (jsonData: string): boolean => {
   try {
     const importedData = JSON.parse(jsonData);
     
@@ -358,7 +358,7 @@ export const importConversationFromJSON = (jsonData: string): boolean => {
 };
 
 // Clear all conversation data (for cleanup/reset)
-export const clearAllConversationData = (): void => {
+const clearAllConversationData = (): void => {
   try {
     const keysToDelete: string[] = [];
     

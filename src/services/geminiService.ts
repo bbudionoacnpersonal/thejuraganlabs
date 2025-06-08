@@ -392,7 +392,7 @@ const extractValidJSON = (text: string): string | null => {
 };
 
 // Legacy function for backward compatibility
-export const analyzeConversationForAutogenStructure = async (
+const analyzeConversationForAutogenStructure = async (
   messages: string[],
   currentStructure?: TeamStructure | null
 ): Promise<AnalysisResult> => {
