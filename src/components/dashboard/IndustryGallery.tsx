@@ -131,7 +131,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 size="sm"
                 options={[{ value: '', label: 'All Industries' }, ...industries]}
                 value={currentFilterIndustry}
-                onChange={(e) => setCurrentFilterIndustry(e.target.value)}
+                onChange={(value) => setCurrentFilterIndustry(value as string)}
               />
               <Select
                 label="Function Areas"
