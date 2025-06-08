@@ -318,7 +318,17 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
               <h3 className="text-white text-lg font-bold mb-4">{selectedUseCase.title}</h3>
   
               <div className="h-full">
-                <GalleryFlowVisualizer autogenStructure={selectedUseCase.autogenStructure} />
+
+                <GalleryFlowVisualizer
+                  autogenStructure={selectedUseCase.autogenStructure}
+                  title={selectedUseCase.title}
+                  onApplyTemplate={(structure) => {
+                    // 🎯 update your code editor + visual editor
+                    setEditorContent(JSON.stringify(structure, null, 2)); // assuming you have this
+                    setTeamStructure(structure); // to update the main Visual Editor
+                  }}
+                />
+                                
               </div>
             </div>
           </div>
