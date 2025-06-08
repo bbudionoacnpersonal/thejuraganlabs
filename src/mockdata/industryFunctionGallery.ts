@@ -443,11 +443,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
   rating: 4.8,
   createdBy: 'Well Operations Team',
   lastUpdated: '2025-06-06'
-}
-
-
-
-  
+} 
 ];
 
 
