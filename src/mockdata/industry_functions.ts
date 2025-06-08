@@ -64,7 +64,7 @@ export const industries = [
     }
   },
   { 
-    value: 'manufacturing_cpg', // MERGED
+    value: 'cpg_manufacturing', // MERGED
     label: 'Consumer Goods & Manufacturing', // MERGED
     keyPrompts: {
       agentConsiderations: [
