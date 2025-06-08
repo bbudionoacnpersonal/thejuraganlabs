@@ -47,7 +47,7 @@ export interface UseCaseTemplate {
   lastUpdated: string;
 }
 
-const industryFunctionGallery: UseCaseTemplate[] = [
+export const industryFunctionGallery: UseCaseTemplate[] = [
   // 1. General Industry Services - Strategy & Innovation
   {
     id: 'general_strategy_innovation',
