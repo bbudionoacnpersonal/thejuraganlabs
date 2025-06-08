@@ -148,7 +148,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
-                className="border border-dark-border h-[50%]"
+                className="border border-dark-border h-[50%] items-end"
                 onClick={() => {
                   setCurrentFilterIndustry('');
                   setCurrentFilterFunctionAreas([]);
