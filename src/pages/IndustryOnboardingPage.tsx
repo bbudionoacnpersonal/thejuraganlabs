@@ -127,7 +127,7 @@ const IndustryOnboardingPage: React.FC = () => {
                           {groupName}
                         </span>
                         <ChevronDownIcon
-                          className={`h-2 w-2 text-gray-400 transition-transform duration-300 ${
+                          className={`h-3 w-3 text-gray-400 transition-transform duration-300 ${
                             activeAccordion === groupName ? 'rotate-180' : ''
                           }`}
                         />
