@@ -1,7 +1,6 @@
 // Industry and Focus Area options with enhanced prompts and context
 export const industries = [
-  { 
-      { 
+  {  
     value: 'others',
     label: 'General Industry Services',
     keyPrompts: {
