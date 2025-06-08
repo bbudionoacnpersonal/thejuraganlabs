@@ -238,7 +238,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     
                     ))}
                   </div>
-                )}
+                )} {/*end of team type*/}
               </div>
             ))}
           </div>
