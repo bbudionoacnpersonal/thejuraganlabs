@@ -226,11 +226,9 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 {/* Team Type */}
                 {useCase.autogenStructure?.provider && (
                   <div className="flex items-center gap-2 text-xs text-secondary-400 mb-2">
-                    <UserGroupIcon className="h-3 w-3 text-secondary-400" />
                    <Badge key={idx} size="sm" className="bg-secondary-400 text-white ">
-                        <Badge key={idx} size="sm" className="bg-secondary-400 text-white ">
-                   {useCase.autogenStructure.provider.split('.').pop()}
-                     
+                      <UserGroupIcon className="h-3 w-3 text-secondary-400" />
+                      {useCase.autogenStructure.provider.split('.').pop()}
                     </Bagde>
                     
                     {/*agents*/}
