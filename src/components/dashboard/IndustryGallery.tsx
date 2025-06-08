@@ -185,9 +185,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                            {industryLabel}
                          </div>
                       </Badge>
-                      <Badge className={getDifficultyColor(useCase.difficulty)} size="sm">
-                        {useCase.difficulty}
-                      </Badge>
+                   
                     </div>
                   </div>
                   <p className="text-gray-400 text-xs mb-3 line-clamp-2">
