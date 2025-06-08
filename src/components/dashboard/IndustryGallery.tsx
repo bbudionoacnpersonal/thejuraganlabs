@@ -166,7 +166,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 placeholder="Search by title, description, or tag..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-dark-surface border border-dark-border rounded-md py-2 pl-12 pr-4 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-secondary-600"
+                className="w-full bg-dark-surface border border-dark-border rounded-md py-1.5 pl-12 pr-4 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-secondary-600"
               />
             </div>
         
