@@ -7,47 +7,44 @@ import Select from '@/components/ui/Select';
 import useAuthStore from '@/store/authStore';
 import { industries, focusAreas } from '@/mockdata/industry_functions';
 
-// Define a type for the grouped options structure
-type GroupedOption = {
-  label: string;
-  options: { value: string; label: string }[];
-};
-
 const IndustryOnboardingPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [selectedIndustry, setSelectedIndustry] = useState<string>('');
+  
+  // New state to manage the selected function group
+  const [selectedFunctionGroup, setSelectedFunctionGroup] = useState<string>('');
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([]);
+  
   const [error, setError] = useState<string | null>(null);
 
-  // Group focus areas into the structure required by the Select component for optgroups
-  const groupedFocusAreaOptions: GroupedOption[] = useMemo(() => {
-    const groups: Record<string, { value: string; label: string }[]> = {};
-    
-    // Create the groups
-    for (const area of focusAreas) {
-      const groupName = area.function_group || 'Other';
-      if (!groups[groupName]) {
-        groups[groupName] = [];
-      }
-      groups[groupName].push({ value: area.value, label: area.label });
-    }
-
-    // Format into the final array structure
-    return Object.keys(groups).map(groupName => ({
-      label: groupName,
-      options: groups[groupName],
-    }));
+  // Memoize the list of unique function groups for the first dropdown
+  const functionGroupOptions = useMemo(() => {
+    const groups = new Set(focusAreas.map(area => area.function_group));
+    return Array.from(groups).map(group => ({ value: group, label: group }));
   }, []);
 
+  // Memoize the available focus areas based on the selected group
+  const availableFocusAreas = useMemo(() => {
+    if (!selectedFunctionGroup) return [];
+    return focusAreas.filter(area => area.function_group === selectedFunctionGroup);
+  }, [selectedFunctionGroup]);
+
+  // Handler for when the function group changes
+  const handleGroupChange = (groupValue: string) => {
+    setSelectedFunctionGroup(groupValue);
+    // IMPORTANT: Clear the selected focus areas when the group changes
+    setSelectedFocusAreas([]); 
+  };
+  
   const handleSubmit = () => {
     if (!selectedIndustry) {
-      setError('Please select your industry');
+      setError('Please select your industry.');
       return;
     }
 
     if (selectedFocusAreas.length === 0) {
-      setError('Please select at least one focus area');
+      setError('Please select at least one focus area.');
       return;
     }
 
@@ -64,7 +61,7 @@ const IndustryOnboardingPage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-2xl" // Reverted to 2xl as checkbox layout is gone
+        className="w-full max-w-2xl"
       >
         <Card>
           <CardBody className="p-8">
@@ -82,34 +79,53 @@ const IndustryOnboardingPage: React.FC = () => {
                 </div>
               )}
 
-              <div>
+              <div className="space-y-6">
+                {/* Step 1: Industry Selection */}
                 <Select
                   label="What industry are you in?"
                   options={industries}
                   value={selectedIndustry}
                   onChange={(e) => setSelectedIndustry(e.target.value)}
-                  className="mb-6"
                 />
 
-                {/* --- UPDATED Grouped Select Dropdown --- */}
+                {/* Step 2: Function Group Selection */}
                 <Select
-                  label="What are your key focus areas?"
-                  // The options are now the grouped data structure
-                  options={groupedFocusAreaOptions} 
-                  // The value needs to be the full objects that are selected
-                  value={focusAreas.filter(area => selectedFocusAreas.includes(area.value))}
-                  // The onChange receives the full selected objects, so we map them back to values
-                  onChange={(selectedOptions) => 
-                    setSelectedFocusAreas(
-                      (selectedOptions as any[]).map(opt => opt.value)
-                    )
-                  }
-                  isMulti
-                  helperText="Select all that apply"
+                  label="First, select a Function Group"
+                  options={functionGroupOptions}
+                  value={selectedFunctionGroup}
+                  onChange={(e) => handleGroupChange(e.target.value)}
                 />
+
+                {/* Step 3: Focus Area Selection (appears after a group is chosen) */}
+                {selectedFunctionGroup && (
+                    <motion.div
+                        key="focus-area-select"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <Select
+                            label="Now, select your key focus areas"
+                            options={availableFocusAreas}
+                            value={focusAreas.filter(area => selectedFocusAreas.includes(area.value))}
+                            // This onChange is now safe
+                            onChange={(selectedOptions) => {
+                                if (!selectedOptions) {
+                                    setSelectedFocusAreas([]);
+                                } else {
+                                    setSelectedFocusAreas(
+                                        (selectedOptions as any[]).map(opt => opt.value)
+                                    );
+                                }
+                            }}
+                            isMulti
+                            helperText="Select all that apply from the chosen group"
+                        />
+                    </motion.div>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                 <Button
                   variant="ghost"
                   onClick={() => navigate('/dashboard')}
