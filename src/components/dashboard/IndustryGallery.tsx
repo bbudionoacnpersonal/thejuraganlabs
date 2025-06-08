@@ -255,17 +255,8 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                           <span className="text-xs text-gray-400">{participant.label || 'Unnamed Agent'}</span>
                         <span className="bg-blue-400 text-white text-xs font-semibold rounded-full px-2 py-0.5 inline-flex items-center gap-1 mb-1 self-start">
                             <SparklesIcon className="h-2 w-2" />
-                            {participant.config.model_client.model_name}</span>
-                        
+                            {participant.config.model_client.model_name}</span>    
                         </div>
-                
-                        {/* LLM Model */}
-                        {participant.config?.model_client?.model_name && (
-                          <div className="bg-blue-400 text-white text-xs font-semibold rounded-full px-2 py-0.5 inline-flex items-center gap-1 mb-1 self-start">
-                            <SparklesIcon className="h-2 w-2" />
-                            {participant.config.model_client.model_name}
-                          </div>
-                        )}
                 
                         {/* Tools List */}
                         <div className="flex flex-wrap gap-1">
