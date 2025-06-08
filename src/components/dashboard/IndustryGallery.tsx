@@ -101,7 +101,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
   return (
     <>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
-        <Card className="h-full">
+        <Card className="h-[80%]">
           <CardBody className="flex flex-col items-center text-center p-4">
             <h2 className="text-xl font-bold text-white mb-2">Use Case Gallery</h2>
             <p className="text-gray-400 mb-4 text-sm px-4">
