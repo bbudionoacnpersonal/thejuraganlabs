@@ -22,22 +22,25 @@ export const industries = [
     }
   },
   { 
-    value: 'healthcare',
-    label: 'Healthcare & Life Sciences',
+    value: 'healthcare_public_sector', // MERGED
+    label: 'Healthcare & Public Sector', // MERGED
     keyPrompts: {
       agentConsiderations: [
-        'HIPAA compliance',
-        'Patient data privacy',
+        'HIPAA compliance & patient data privacy',
         'Electronic Health Records (EHR) integration',
-        'Clinical decision support'
+        'Clinical decision support',
+        'Public service automation',
+        'Government data security compliance (e.g., FISMA)',
+        'Citizen engagement and communication',
+        'Policy implementation and tracking'
       ],
-      systemInstructions: `You are a healthcare AI specialist. Prioritize:
-        - Patient data protection
-        - Clinical workflow integration
-        - Medical terminology accuracy
-        - Healthcare compliance standards
-        - Emergency response protocols`,
-      toolPriorities: ['ehr_connector', 'hipaa_validator', 'medical_nlp']
+      systemInstructions: `You are an AI specialist for healthcare and the public sector. Prioritize:
+        - Secure handling of sensitive data (HIPAA, PII)
+        - Clinical and public service workflow integration
+        - Medical terminology and policy accuracy
+        - Healthcare and government compliance standards
+        - Citizen and patient engagement protocols`,
+      toolPriorities: ['ehr_connector', 'hipaa_validator', 'service_automator', 'security_validator', 'policy_checker']
     }
   },
   { 
@@ -101,41 +104,24 @@ export const industries = [
     }
   },
   { 
-    value: 'technology',
-    label: 'Technology & Software',
+    value: 'technology_telecom', // MERGED
+    label: 'Technology & Telecommunications', // MERGED
     keyPrompts: {
       agentConsiderations: [
-        'Technical documentation',
-        'Code analysis',
-        'System integration',
-        'Performance optimization'
+        'Code analysis and generation',
+        'System integration and API management',
+        'Network optimization and monitoring',
+        'Service quality and SLA management',
+        'Technical documentation automation',
+        'Infrastructure management (Cloud & On-prem)'
       ],
-      systemInstructions: `You are a technology sector AI specialist. Prioritize:
-        - Code quality assessment
-        - Technical documentation
-        - System architecture
-        - Performance optimization
-        - Security best practices`,
-      toolPriorities: ['code_analyzer', 'doc_generator', 'performance_monitor']
-    }
-  },
-  { 
-    value: 'telecom',
-    label: 'Telecommunications',
-    keyPrompts: {
-      agentConsiderations: [
-        'Network optimization',
-        'Service quality monitoring',
-        'Customer support automation',
-        'Infrastructure management'
-      ],
-      systemInstructions: `You are a telecommunications AI expert. Focus on:
-        - Network performance
-        - Service quality
-        - Customer support
-        - Infrastructure planning
-        - Technical troubleshooting`,
-      toolPriorities: ['network_analyzer', 'service_monitor', 'support_automator']
+      systemInstructions: `You are a technology and telecommunications AI specialist. Prioritize:
+        - Code quality and system architecture
+        - Network performance, reliability, and security
+        - Technical documentation and troubleshooting
+        - Performance optimization for software and networks
+        - Automation of DevOps and NetOps processes`,
+      toolPriorities: ['code_analyzer', 'performance_monitor', 'network_analyzer', 'service_monitor', 'doc_generator']
     }
   },
   { 
@@ -158,21 +144,21 @@ export const industries = [
     }
   },
   { 
-    value: 'resources energy',
+    value: 'resources_energy',
     label: 'Energy, Oil & Gas',
     keyPrompts: {
       agentConsiderations: [
-        'Renewable energy',
-        'Upstream management',
+        'Renewable energy integration',
+        'Upstream exploration and production management',
         'Well and Site Management',
-        'Downstream management'
+        'Downstream refining and distribution management'
       ],
       systemInstructions: `You are an energy, oil & gas AI expert. Focus on:
-        - Upstream process
-        - midstream process
-        - downstream process 
-        - asset invesment management
-        - well and asset management`,
+        - Upstream process efficiency
+        - Midstream logistics and storage
+        - Downstream processing and distribution 
+        - Asset investment and performance management
+        - Well and site safety and compliance`,
       toolPriorities: ['well_reader', 'asset_tracker', 'GIS_reader']
     }
   },
@@ -200,63 +186,6 @@ export const industries = [
         - Regulatory compliance (EPA, OSHA, DOT)
         - Energy efficiency and sustainability`,
       toolPriorities: ['process_optimizer', 'safety_monitor', 'quality_analyzer', 'emissions_tracker', 'maintenance_scheduler']
-    }
-  },
-  { 
-    value: 'education',
-    label: 'Education & Training',
-    keyPrompts: {
-      agentConsiderations: [
-        'Learning path customization',
-        'Student progress tracking',
-        'Content adaptation',
-        'Assessment automation'
-      ],
-      systemInstructions: `You are an education AI expert. Focus on:
-        - Personalized learning
-        - Student assessment
-        - Content management
-        - Progress tracking
-        - Educational analytics`,
-      toolPriorities: ['content_adapter', 'progress_tracker', 'assessment_generator']
-    }
-  },
-  { 
-    value: 'government',
-    label: 'Government & Public Sector',
-    keyPrompts: {
-      agentConsiderations: [
-        'Public service automation',
-        'Data security compliance',
-        'Citizen engagement',
-        'Policy implementation'
-      ],
-      systemInstructions: `You are a government sector AI specialist. Prioritize:
-        - Public service delivery
-        - Data security
-        - Policy compliance
-        - Citizen engagement
-        - Administrative efficiency`,
-      toolPriorities: ['service_automator', 'security_validator', 'policy_checker']
-    }
-  },
-  { 
-    value: 'consulting',
-    label: 'Professional Services & Consulting',
-    keyPrompts: {
-      agentConsiderations: [
-        'Business analysis',
-        'Project management',
-        'Client relationship management',
-        'Knowledge management'
-      ],
-      systemInstructions: `You are a consulting services AI expert. Focus on:
-        - Business analysis
-        - Project management
-        - Client relations
-        - Knowledge sharing
-        - Performance metrics`,
-      toolPriorities: ['analysis_helper', 'project_manager', 'knowledge_base']
     }
   },
   { 
