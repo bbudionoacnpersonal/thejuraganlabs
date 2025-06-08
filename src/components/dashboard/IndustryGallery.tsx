@@ -96,6 +96,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
 
   const handleUseCaseSelect = (useCase: UseCaseTemplate) => {
     setSelectedUseCase(useCase);
+     setShowFlowModal(true); // Open the flow modal
   };
 
   const handleSearch = () => {
