@@ -135,7 +135,7 @@ const IndustryOnboardingPage: React.FC = () => {
                             transition={{ duration: 0.3, ease: 'easeInOut' }}
                             className="overflow-hidden"
                           >
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 p-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 p-2">
                               {areas.map((area) => (
                                 <label
                                   key={area.value}
