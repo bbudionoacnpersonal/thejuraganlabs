@@ -15,7 +15,6 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import AutogenNode from '../create-agent/AutogenNode'; // <- your custom node
 import dagre from 'dagre'; // <- bring dagre here
-import { getAutoLayout } from '../../utils/dagreLayout'; // <- correct import
 
 interface GalleryFlowVisualizerProps {
   autogenStructure: any; // from useCase.autogenStructure
@@ -93,7 +92,7 @@ const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ au
       });
     });
 
-    const { nodes: layoutedNodes, edges: layoutedEdges } = getAutoLayout(nodes, edges);
+    const { nodes: layoutedNodes, edges: layoutedEdges } = applyAutoLayout(nodes, edges);
     setNodes(layoutedNodes);
     setEdges(layoutedEdges);
 
@@ -153,8 +152,45 @@ export default GalleryFlowVisualizer;
 
 // Helper to extract team type
 const extractTeamType = (provider: string) => {
-  if (!provider) return 'RoundRobinGroupChat';
-  
-  // Add logic to determine team type based on provider
-  return 'RoundRobinGroupChat';
+  if (!provider) return 'Unknown Team';
+  const parts = provider.split('.');
+  return parts[parts.length - 1]; // e.g., RoundRobinGroupChat
+};
+
+// 🚀 DAGRE LAYOUT LOGIC (horizontal, LR)
+const applyAutoLayout = (nodes: Node[], edges: Edge[]) => {
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+  dagreGraph.setGraph({
+    rankdir: 'LR', // Left to Right
+    nodesep: 120,
+    ranksep: 120,
+  });
+
+  const nodeWidth = 260;
+  const nodeHeight = 280;
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  const layoutedNodes = nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    return {
+      ...node,
+      position: {
+        x: nodeWithPosition.x - nodeWidth / 2,
+        y: nodeWithPosition.y - nodeHeight / 2,
+      },
+    };
+  });
+
+  return { nodes: layoutedNodes, edges };
 };
