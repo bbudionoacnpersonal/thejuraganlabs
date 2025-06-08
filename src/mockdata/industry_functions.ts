@@ -85,7 +85,7 @@ export const industries = [
   },
   { 
     value: 'telecom_technology',
-    label: 'Telecommunications & Technology & ',
+    label: 'Telecommunications & Technology',
     keyPrompts: {
       agentConsiderations: [
         'Code analysis and generation',
