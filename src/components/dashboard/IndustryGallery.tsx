@@ -235,6 +235,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     <Bot className="h-2 w-2 text-white-500" />
                     {participant.label || 'Unnamed Agent'}
                   </Badge>
+                    
                 ))}
                   </div>
                 )}
