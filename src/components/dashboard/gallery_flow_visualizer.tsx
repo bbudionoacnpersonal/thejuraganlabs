@@ -1,5 +1,3 @@
-// src/components/GalleryFlowVisualizer.tsx
-
 import React, { useEffect } from 'react';
 import ReactFlow, {
   Background,
@@ -11,38 +9,109 @@ import ReactFlow, {
   ReactFlowProvider,
   Node,
   Edge,
-  MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Bot, SparklesIcon, Wrench } from 'lucide-react';
+import dagre from 'dagre'; // 🚀 Dagre imported
+import AutogenNode from './AutogenNode'; // <-- use your custom AutogenNode
 
 interface GalleryFlowVisualizerProps {
   autogenStructure: any; // This comes from useCase.autogenStructure
 }
 
 const nodeTypes = {
-  default: ({ data }: any) => (
-    <div className="p-2 bg-dark-surface border border-dark-border rounded-lg text-white text-xs">
-      <div className="flex items-center gap-2 mb-1">
-        <Bot className="h-4 w-4" />
-        <span className="font-semibold">{data.label}</span>
-      </div>
-      {data.model && (
-        <div className="flex items-center gap-1 text-blue-400 mb-1">
-          <SparklesIcon className="h-3 w-3" />
-          {data.model}
-        </div>
-      )}
-      <div className="flex flex-wrap gap-1">
-        {data.tools?.map((tool: string, idx: number) => (
-          <div key={idx} className="bg-blue-700 text-white rounded px-2 py-0.5 text-xs inline-flex items-center gap-1">
-            <Wrench className="h-3 w-3" />
-            {tool}
-          </div>
-        ))}
-      </div>
-    </div>
-  ),
+  custom: AutogenNode,
+};
+
+// Layout Settings
+const dagreGraph = new dagre.graphlib.Graph();
+dagreGraph.setDefaultEdgeLabel(() => ({}));
+const NODE_WIDTH = 240;
+const NODE_HEIGHT = 160;
+
+// 🎯 Function to transform autogenStructure to nodes and edges
+const transformAutogenStructureToFlow = (autogenStructure: any) => {
+  if (!autogenStructure?.config?.participants) return { nodes: [], edges: [] };
+
+  const nodes: Node[] = [];
+  const edges: Edge[] = [];
+  const participants = autogenStructure.config.participants;
+  const teamProvider = autogenStructure.provider;
+
+  const TEAM_ID = 'team-node';
+
+  // Add Team Node
+  nodes.push({
+    id: TEAM_ID,
+    type: 'custom',
+    data: {
+      label: autogenStructure.label || 'AI Team',
+      type: 'team',
+      teamType: extractTeamType(teamProvider),
+      description: autogenStructure.description,
+      model: '', 
+      agents: participants.map((p: any) => ({
+        name: p.label,
+        model: { name: p.config?.model_client?.model_name, provider: 'LLM' },
+        tools: (p.config?.tools || []).map((tool: any) => ({
+          name: tool.config?.name || 'Unnamed Tool',
+          description: tool.config?.description || '',
+        })),
+      })),
+      terminations: autogenStructure.config.termination_condition ? [{ name: autogenStructure.config.termination_condition.description }] : [],
+    },
+    position: { x: 0, y: 0 }, // Temporary, Dagre will fix
+  });
+
+  // Add Agent Nodes
+  participants.forEach((participant: any, index: number) => {
+    const agentId = `agent-${index}`;
+
+    nodes.push({
+      id: agentId,
+      type: 'custom',
+      data: {
+        label: participant.label || `Agent ${index + 1}`,
+        type: 'agent',
+        model: participant.config?.model_client?.model_name || '',
+        tools: participant.config?.tools?.length || 0,
+        toolNames: (participant.config?.tools || []).map((tool: any) => tool.config?.name || 'Unnamed Tool'),
+        description: participant.description,
+      },
+      position: { x: 0, y: 0 }, // Temporary, Dagre will fix
+    });
+
+    edges.push({
+      id: `e-team-${agentId}`,
+      source: TEAM_ID,
+      target: agentId,
+      type: 'smoothstep',
+      animated: true,
+      style: { stroke: '#4D9CFF', strokeWidth: 2 },
+    });
+  });
+
+  // 🧩 Dagre Layout
+  dagreGraph.setGraph({ rankdir: 'TB' }); // Top-Bottom layout
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  nodes.forEach((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    node.position = {
+      x: nodeWithPosition.x - NODE_WIDTH / 2,
+      y: nodeWithPosition.y - NODE_HEIGHT / 2,
+    };
+  });
+
+  return { nodes, edges };
 };
 
 const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ autogenStructure }) => {
@@ -53,44 +122,7 @@ const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ au
   useEffect(() => {
     if (!autogenStructure) return;
 
-    const generatedNodes: Node[] = [];
-    const generatedEdges: Edge[] = [];
-
-    const participants = autogenStructure.config?.participants || [];
-
-    const startX = 0;
-    const startY = 0;
-    const horizontalSpacing = 250;
-
-    participants.forEach((participant: any, idx: number) => {
-      generatedNodes.push({
-        id: `agent-${idx}`,
-        type: 'default',
-        data: {
-          label: participant.label || `Agent ${idx + 1}`,
-          model: participant.config?.model_client?.model_name || '',
-          tools: participant.config?.tools?.map((tool: any) => tool.config?.name || 'Unnamed Tool') || [],
-        },
-        position: { x: startX + idx * horizontalSpacing, y: startY },
-      });
-
-      if (idx > 0) {
-        generatedEdges.push({
-          id: `edge-${idx - 1}-${idx}`,
-          source: `agent-${idx - 1}`,
-          target: `agent-${idx}`,
-          type: 'smoothstep',
-          animated: true,
-          style: { stroke: '#4D9CFF', strokeWidth: 2 },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            width: 12,
-            height: 12,
-            color: '#4D9CFF',
-          },
-        });
-      }
-    });
+    const { nodes: generatedNodes, edges: generatedEdges } = transformAutogenStructureToFlow(autogenStructure);
 
     setNodes(generatedNodes);
     setEdges(generatedEdges);
@@ -107,10 +139,10 @@ const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ au
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       nodeTypes={nodeTypes}
+      fitView
       defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
       minZoom={0.3}
       maxZoom={1}
-      fitViewOptions={{ padding: 0.2 }}
       proOptions={{ hideAttribution: true }}
     >
       <Background color="#333" gap={16} />
@@ -120,7 +152,7 @@ const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ au
       />
       <Panel position="top-left" className="bg-dark-surface/50 backdrop-blur-sm p-2 rounded-md border border-dark-border">
         <div className="flex items-center gap-2 text-xs text-gray-400">
-          <span>Flow - {extractTeamType(autogenStructure?.provider)}</span>
+          <span>Team Type: {formatTeamTypeName(extractTeamType(autogenStructure?.provider))}</span>
         </div>
       </Panel>
     </ReactFlow>
@@ -141,7 +173,17 @@ export default GalleryFlowVisualizer;
 
 // Helper to extract team type name
 const extractTeamType = (provider: string) => {
-  if (!provider) return 'Unknown Team';
+  if (!provider) return 'Unknown';
   const parts = provider.split('.');
   return parts[parts.length - 1]; // e.g., RoundRobinGroupChat
+};
+
+const formatTeamTypeName = (teamType: string) => {
+  if (!teamType) return 'Unknown';
+  return teamType
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
+    .replace(/Group Chat$/, 'Group')
+    .replace(/Chat$/, '')
+    .trim();
 };
