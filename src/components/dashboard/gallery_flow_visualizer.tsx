@@ -14,7 +14,7 @@ import ReactFlow, {
 } from 'reactflow';
 import dagre from 'dagre';
 import 'reactflow/dist/style.css';
-import AutogenNode from './create-agent/AutogenNode'; // Your custom node
+import AutogenNode from '../create-agent/AutogenNode'; // Your custom node
 import { extractTeamTypeFromProvider } from '@/utils/extractTeamType'; // helper to extract team name
 
 interface GalleryFlowVisualizerProps {
