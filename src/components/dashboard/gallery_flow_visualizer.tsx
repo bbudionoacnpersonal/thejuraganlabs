@@ -29,10 +29,14 @@ const g = new dagre.graphlib.Graph();
 g.setDefaultEdgeLabel(() => ({}));
 
 const nodeWidth = 240;
-const nodeHeight = 260;
+const nodeHeight = 300; // make this bigger, close to real node height
 
 const applyDagreLayout = (nodes: Node[], edges: Edge[]) => {
-  g.setGraph({ rankdir: 'TB', nodesep: 50, ranksep: 100 });
+  g.setGraph({ 
+    rankdir: 'TB',   // Top to Bottom
+    nodesep: 80,     // more separation between nodes horizontally
+    ranksep: 200     // more separation vertically
+  });
 
   nodes.forEach((node) => {
     g.setNode(node.id, { width: nodeWidth, height: nodeHeight });
