@@ -144,11 +144,16 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 <Select
                   label="Function Areas"
                   size="sm"
-                  options={focusAreas}
+                  options={[{ value: '', label: 'All Functions' }, ...focusAreas]}
                   value={currentFilterFunctionAreas}
-                  onChange={(selectedOptions) =>
-                    setCurrentFilterFunctionAreas(selectedOptions as string[])
-                  }
+                  onChange={(selectedOptions) => {
+                    if (selectedOptions.includes('')) {
+                      // User selected "All Functions", clear filter
+                      setCurrentFilterFunctionAreas([]);
+                    } else {
+                      setCurrentFilterFunctionAreas(selectedOptions as string[]);
+                    }
+                  }}
                 />
               </div>
               <div className="relative flex-grow min-w-[250px]">
