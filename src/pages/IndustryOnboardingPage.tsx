@@ -108,12 +108,12 @@ const IndustryOnboardingPage: React.FC = () => {
                 </label>
                 <p className="text-sm text-gray-500 mb-4">Select all that apply.</p>
                 
-                <div className="space-y-2 border border-dark-border rounded-lg p-1">
+                <div className="space-y-2 border border-dark-border rounded-lg p-2">
                   {Object.entries(groupedFocusAreas).map(([groupName, areas]) => (
                     <div key={groupName} className="border-b border-dark-border last:border-b-0">
                       <button
                         type="button"
-                        className="w-full flex justify-between items-center p-2 hover:bg-dark-surface rounded-md"
+                        className="w-full flex justify-between items-center hover:bg-dark-surface rounded-md"
                         onClick={() => handleAccordionClick(groupName)}
                       >
                         <span className="text-base font-semibold text-gray-300 text-left">
