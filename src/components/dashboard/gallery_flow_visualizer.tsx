@@ -35,7 +35,7 @@ const applyDagreLayout = (nodes: Node[], edges: Edge[]) => {
   g.setGraph({ 
     rankdir: 'TB',   // Top to Bottom
     nodesep: 80,     // more separation between nodes horizontally
-    ranksep: 200     // more separation vertically
+    ranksep: 220     // more separation vertically
   });
 
   nodes.forEach((node) => {
