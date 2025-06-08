@@ -17,8 +17,7 @@ export const industries = [
         - Performance optimization
         - Customer satisfaction`,
       toolPriorities: ['process_automator', 'resource_optimizer', 'quality_monitor']
-    }
-  },
+    },
     value: 'banking',
     label: 'Banking & Financing',
     keyPrompts: {
