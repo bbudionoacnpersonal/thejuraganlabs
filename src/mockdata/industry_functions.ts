@@ -310,7 +310,7 @@ export const focusAreas = [
   },
   { 
     value: 'risk',
-    label: 'Legal, Risk & Policy',
+    label: 'Legal, Risk, & Policy',
     function_group: 'Business & Corporate Functions',
     keyConsiderations: [
       'Risk assessment',
