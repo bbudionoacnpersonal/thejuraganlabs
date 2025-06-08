@@ -84,7 +84,22 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
               model_client: { model_name: "gpt-4" },
               system_message: "Analyze market trends and competitive landscape.",
               tools: [
-                { provider: "autogen_core.tools.FunctionTool", config: { name: "market_trend_analyzer" } },
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "market_trend_analyzer" } }
+              ]
+            }
+          },
+          {
+            provider: "autogen_agentchat.agents.AssistantAgent",
+            component_type: "agent",
+            version: 1,
+            component_version: 1,
+            description: "SWOT Strategy Generator",
+            label: "Strategy Synthesizer",
+            config: {
+              name: "strategy_synthesizer",
+              model_client: { model_name: "claude-3-sonnet" },
+              system_message: "Generate strategic SWOT options.",
+              tools: [
                 { provider: "autogen_core.tools.FunctionTool", config: { name: "swot_analysis" } }
               ]
             }
@@ -135,8 +150,23 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
               model_client: { model_name: "claude-3-sonnet" },
               system_message: "Check financial transactions for risks and compliance.",
               tools: [
-                { provider: "autogen_core.tools.FunctionTool", config: { name: "risk_evaluation" } },
-                { provider: "autogen_core.tools.FunctionTool", config: { name: "compliance_report_generator" } }
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "risk_evaluation" } }
+              ]
+            }
+          },
+          {
+            provider: "autogen_agentchat.agents.AssistantAgent",
+            component_type: "agent",
+            version: 1,
+            component_version: 1,
+            description: "Fraud Detection",
+            label: "Fraud Detector",
+            config: {
+              name: "fraud_detector",
+              model_client: { model_name: "gpt-4-turbo" },
+              system_message: "Detect fraudulent transactions using pattern analysis.",
+              tools: [
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "fraud_detection" } }
               ]
             }
           }
@@ -146,7 +176,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
           { name: "SAP DWC Integration", provider: "autogen_core.tools.ExternalAPI", config: {} },
           { name: "Salesforce Compliance API", provider: "autogen_core.tools.ExternalAPI", config: {} }
         ],
-        termination_condition: { description: "Terminate after compliance report is generated." }
+        termination_condition: { description: "Terminate after compliance and fraud checks are complete." }
       }
     },
     usage: 800,
@@ -187,8 +217,23 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
               model_client: { model_name: "gemini-1.5-pro" },
               system_message: "Help schedule patient appointments.",
               tools: [
-                { provider: "autogen_core.tools.FunctionTool", config: { name: "appointment_scheduler" } },
-                { provider: "autogen_core.tools.FunctionTool", config: { name: "patient_record_lookup" } }
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "appointment_scheduler" } }
+              ]
+            }
+          },
+          {
+            provider: "autogen_agentchat.agents.AssistantAgent",
+            component_type: "agent",
+            version: 1,
+            component_version: 1,
+            description: "Medical Query Handler",
+            label: "Query Handler",
+            config: {
+              name: "query_handler",
+              model_client: { model_name: "gpt-4" },
+              system_message: "Handle patient inquiries and FAQs.",
+              tools: [
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "patient_query_responder" } }
               ]
             }
           }
@@ -198,7 +243,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
           { name: "Workday API", provider: "autogen_core.tools.ExternalAPI", config: {} },
           { name: "Electronic Health Record API", provider: "autogen_core.tools.ExternalAPI", config: {} }
         ],
-        termination_condition: { description: "Terminate after scheduling is completed." }
+        termination_condition: { description: "Terminate after patient issues are resolved." }
       }
     },
     usage: 600,
@@ -239,7 +284,22 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
               model_client: { model_name: "gpt-4-turbo" },
               system_message: "Generate personalized marketing content.",
               tools: [
-                { provider: "autogen_core.tools.FunctionTool", config: { name: "generate_campaign_content" } },
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "generate_campaign_content" } }
+              ]
+            }
+          },
+          {
+            provider: "autogen_agentchat.agents.AssistantAgent",
+            component_type: "agent",
+            version: 1,
+            component_version: 1,
+            description: "Audience Segmenter",
+            label: "Audience Segmenter",
+            config: {
+              name: "audience_segmenter",
+              model_client: { model_name: "claude-3-sonnet" },
+              system_message: "Segment audience for better targeting.",
+              tools: [
                 { provider: "autogen_core.tools.FunctionTool", config: { name: "customer_segmentation" } }
               ]
             }
@@ -250,7 +310,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
           { name: "360 Customer API", provider: "autogen_core.tools.ExternalAPI", config: {} },
           { name: "Facebook Ads API", provider: "autogen_core.tools.ExternalAPI", config: {} }
         ],
-        termination_condition: { description: "Terminate after campaign creation." }
+        termination_condition: { description: "Terminate after marketing plan execution." }
       }
     },
     usage: 400,
