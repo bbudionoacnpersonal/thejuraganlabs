@@ -15,7 +15,7 @@ import ReactFlow, {
 import dagre from 'dagre';
 import 'reactflow/dist/style.css';
 import AutogenNode from '../create-agent/AutogenNode'; // <-- Updated Import
-import { extractTeamTypeFromProvider } from '@/utils/extractTeamType'; // Your utility function
+import { extractTeamTypeFromProvider } from '@/utils/visualEditorUtils'; // Your utility function
 
 interface GalleryFlowVisualizerProps {
   autogenStructure: any; // Structure from the selected use case
