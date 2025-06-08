@@ -101,6 +101,7 @@ export const industries = [
         - Network performance, reliability, and security
         - Technical documentation and troubleshooting
         - Performance optimization for software and networks
+        - Campaign and product personalization
         - Automation of DevOps and NetOps processes`,
       toolPriorities: ['code_analyzer', 'performance_monitor', 'network_analyzer', 'service_monitor', 'doc_generator']
     }
