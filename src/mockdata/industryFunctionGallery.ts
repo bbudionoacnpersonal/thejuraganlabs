@@ -1,7 +1,5 @@
 // src/mockdata/industryFunctionGallery.ts
 
-// src/mockdata/industryFunctionGallery.ts
-
 interface UseCaseTemplate {
   id: string;
   title: string;
