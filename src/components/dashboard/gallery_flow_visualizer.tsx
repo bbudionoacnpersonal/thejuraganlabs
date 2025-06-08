@@ -86,7 +86,7 @@ const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ au
         id: `edge-team-agent-${idx}`,
         source: 'team',
         target: `agent-${idx}`,
-        type: 'smoothstep',
+        type: 'bezier',
         animated: true,
         style: { stroke: '#4D9CFF', strokeWidth: 2 },
       });
