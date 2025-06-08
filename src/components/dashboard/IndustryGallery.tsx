@@ -219,7 +219,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     <div className="flex items-center gap-2">
                       <ClockIcon className="h-3 w-3" />
                       <span>{useCase.estimatedTime}</span>
-                        <Badge className={getDifficultyColor(useCase.difficulty)} size="sm">
+                      <Badge className={getDifficultyColor(useCase.difficulty)} size="sm">
                         {useCase.difficulty}
                       </Badge>
                     </div>
