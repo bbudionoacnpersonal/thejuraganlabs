@@ -1,5 +1,3 @@
-// src/pages/onboarding/IndustryOnboardingPage.tsx
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,7 +17,6 @@ const IndustryOnboardingPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
 
-  // Load saved preferences from localStorage only once when the component mounts
   useEffect(() => {
     const savedIndustry = localStorage.getItem('user_industry');
     const savedFocusAreas = localStorage.getItem('user_focus_areas');
@@ -31,7 +28,6 @@ const IndustryOnboardingPage: React.FC = () => {
     }
   }, []);
 
-  // Group focus areas for the accordion UI
   const groupedFocusAreas = useMemo(() => {
     return focusAreas.reduce((acc, area) => {
       const group = area.function_group || 'Other';
@@ -65,7 +61,6 @@ const IndustryOnboardingPage: React.FC = () => {
       setError('Please select at least one focus area.');
       return;
     }
-    // The values from state are only used here, when the user clicks "Continue"
     localStorage.setItem('user_industry', selectedIndustry);
     localStorage.setItem('user_focus_areas', JSON.stringify(selectedFocusAreas));
     navigate('/dashboard');
@@ -95,15 +90,13 @@ const IndustryOnboardingPage: React.FC = () => {
                 </div>
               )}
 
-              {/* This Select component is now "uncontrolled" to prevent errors */}
+              {/* 🎯 Corrected Industry Select */}
               <Select
                 label="What industry are you in?"
                 options={industries}
-                // The key ensures the component correctly displays the default value if it's loaded from localStorage
-                key={selectedIndustry} 
-                defaultValue={industries.find(i => i.value === selectedIndustry)}
+                value={selectedIndustry}
                 onChange={(value) => {
-                  setSelectedIndustry(value);
+                  setSelectedIndustry(value); // ✅ Direct value, not e.target.value
                   if (error) setError(null);
                 }}
               />

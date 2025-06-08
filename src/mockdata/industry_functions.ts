@@ -220,7 +220,7 @@ export const focusAreas = [
   },
   { 
     value: 'marketing',
-    label: 'Marketing & Brand Management',
+    label: 'Marketing & Brand Mgmt.',
     function_group: 'Customer-Facing Functions',
     keyConsiderations: [
       'Campaign optimization',
@@ -245,7 +245,7 @@ export const focusAreas = [
   // =================================
   { 
     value: 'operations',
-    label: 'Operations & Process Engineering',
+    label: 'Ops & Process Engineering',
     function_group: 'Core Business Operations',
     keyConsiderations: [
       'Workflow automation',
@@ -260,7 +260,7 @@ export const focusAreas = [
   },
   { 
     value: 'supply_chain',
-    label: 'Supply Chain Management',
+    label: 'Procurement & Supply Chain',
     function_group: 'Core Business Operations',
     keyConsiderations: [
       'Feedstock procurement optimization',
@@ -271,20 +271,21 @@ export const focusAreas = [
       'Contract management'
     ]
   },
-  { 
-    value: 'data',
-    label: 'Data Analytics & Business Intelligence',
+    { 
+    value: 'asset',
+    label: 'Asset management',
     function_group: 'Core Business Operations',
     keyConsiderations: [
-      'Data processing',
-      'Pattern recognition',
-      'Predictive analytics',
-      'Reporting automation'
+      'Asset capital investment',
+      'Asset maintenance',
+      'Asset lifecycle management',
+      'Asset profitability analysis'
     ]
   },
+
   { 
     value: 'innovation',
-    label: 'Innovation & R&D',
+    label: 'Innovation and R&D',
     function_group: 'Core Business Operations',
     keyConsiderations: [
       'Trend analysis',
@@ -298,7 +299,7 @@ export const focusAreas = [
   // =================================
   { 
     value: 'finance',
-    label: 'Financial Planning & Analysis',
+    label: 'Finance & Analysis',
     function_group: 'Business & Corporate Functions',
     keyConsiderations: [
       'Budget optimization',
@@ -309,7 +310,7 @@ export const focusAreas = [
   },
   { 
     value: 'risk',
-    label: 'Risk Management & Compliance',
+    label: 'Risk & Policy',
     function_group: 'Business & Corporate Functions',
     keyConsiderations: [
       'Risk assessment',
@@ -320,7 +321,7 @@ export const focusAreas = [
   },
   { 
     value: 'hr',
-    label: 'HR & Talent Management',
+    label: 'HR & Talent ',
     function_group: 'Business & Corporate Functions',
     keyConsiderations: [
       'Recruitment automation',
@@ -331,7 +332,7 @@ export const focusAreas = [
   },
   { 
     value: 'environmental_compliance',
-    label: 'Environmental & Safety Compliance',
+    label: 'Environmental & Safety',
     function_group: 'Business & Corporate Functions',
     keyConsiderations: [
       'Emissions monitoring and control',
@@ -340,6 +341,18 @@ export const focusAreas = [
       'Safety protocol enforcement',
       'Regulatory reporting automation',
       'Incident management and prevention'
+    ]
+  },
+  
+    { 
+    value: 'data',
+    label: 'Data  & Insights',
+    function_group: 'Business & Corporate Functions',
+    keyConsiderations: [
+      'Data processing',
+      'Pattern recognition',
+      'Predictive analytics',
+      'Reporting automation'
     ]
   }
 ];
