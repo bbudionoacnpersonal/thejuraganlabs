@@ -153,7 +153,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
             </div>
         
             {/* Search Input */}
-            <div className="relative flex-grow min-w-[250px] min-h-[100px]">
+            <div className="relative flex-grow min-w-[250px]">
               <label htmlFor="gallery-search" className="block text-sm font-medium text-gray-300 mb-1">
                 Search
               </label>
