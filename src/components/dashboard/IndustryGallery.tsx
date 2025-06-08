@@ -159,48 +159,65 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
 
           {/* Use Cases Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto p-1">
-            {displayedUseCases.map((useCase) => (
-              <div
-                key={useCase.id}
-                className="bg-dark-surface rounded-lg p-4 border border-dark-border hover:border-secondary-600 cursor-pointer transition-colors"
-                onClick={() => handleUseCaseSelect(useCase)}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-white font-medium text-sm">{useCase.title}</h3>
-                  <Badge className={getDifficultyColor(useCase.difficulty)} size="sm">
-                    {useCase.difficulty}
-                  </Badge>
-                </div>
-                <p className="text-gray-400 text-xs mb-3 line-clamp-2">
-                  {useCase.description}
-                </p>
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <div className="flex items-center gap-2">
-                    <ClockIcon className="h-3 w-3" />
-                    <span>{useCase.estimatedTime}</span>
+            {displayedUseCases.map((useCase) => {
+              const industryLabel =
+                industries.find((i) => i.value === useCase.industry)?.label ||
+                useCase.industry;
+              return (
+                <div
+                  key={useCase.id}
+                  className="bg-dark-surface rounded-lg p-4 border border-dark-border hover:border-secondary-600 cursor-pointer transition-colors"
+                  onClick={() => handleUseCaseSelect(useCase)}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-white font-medium text-sm pr-2">{useCase.title}</h3>
+                    {/* Wrapper for badges */}
+                    <div className="flex-shrink-0 flex items-center gap-2">
+                      <Badge
+                        className="text-primary-700 bg-primary-100"
+                        size="sm"
+                      >
+                         <div className="flex items-center gap-1">
+                           <BuildingOffice2Icon className="h-3 w-3" />
+                           {industryLabel}
+                         </div>
+                      </Badge>
+                      <Badge className={getDifficultyColor(useCase.difficulty)} size="sm">
+                        {useCase.difficulty}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <UserGroupIcon className="h-3 w-3" />
-                    <span>{useCase.usage} uses</span>
+                  <p className="text-gray-400 text-xs mb-3 line-clamp-2">
+                    {useCase.description}
+                  </p>
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <div className="flex items-center gap-2">
+                      <ClockIcon className="h-3 w-3" />
+                      <span>{useCase.estimatedTime}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <UserGroupIcon className="h-3 w-3" />
+                      <span>{useCase.usage} uses</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {useCase.tags.slice(0, 2).map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-xs bg-dark-background text-gray-400 px-2 py-1 rounded"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                    {useCase.tags.length > 2 && (
+                      <span className="text-xs text-gray-500">
+                        +{useCase.tags.length - 2}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {useCase.tags.slice(0, 2).map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-xs bg-dark-background text-gray-400 px-2 py-1 rounded"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {useCase.tags.length > 2 && (
-                    <span className="text-xs text-gray-500">
-                      +{useCase.tags.length - 2}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* No Results Message */}
