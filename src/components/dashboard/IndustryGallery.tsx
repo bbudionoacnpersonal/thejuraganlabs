@@ -203,7 +203,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 {/* Tags */}
                 <div className="flex flex-wrap gap-1 mb-2">
                   {(useCase.tags || []).map((tag, idx) => (
-                    <Badge key={idx} size="sm" className="bg-gray-500 text-white">
+                    <Badge key={idx} size="sm" className="bg-gray-100 text-white">
                       #{tag}
                     </Badge>
                   ))}
