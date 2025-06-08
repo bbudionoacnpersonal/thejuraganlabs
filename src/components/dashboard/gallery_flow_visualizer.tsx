@@ -15,6 +15,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import AutogenNode from '../create-agent/AutogenNode'; // <- your custom node
 import dagre from 'dagre'; // <- bring dagre here
+import { getAutoLayout } from '../../utils/dagreLayout'; // <- correct import
 
 interface GalleryFlowVisualizerProps {
   autogenStructure: any; // from useCase.autogenStructure
@@ -92,7 +93,7 @@ const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ au
       });
     });
 
-    const { nodes: layoutedNodes, edges: layoutedEdges } = applyAutoLayout(nodes, edges);
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getAutoLayout(nodes, edges);
     setNodes(layoutedNodes);
     setEdges(layoutedEdges);
 
@@ -152,4 +153,8 @@ export default GalleryFlowVisualizer;
 
 // Helper to extract team type
 const extractTeamType = (provider: string) => {
-  if (!provider) return '
+  if (!provider) return 'RoundRobinGroupChat';
+  
+  // Add logic to determine team type based on provider
+  return 'RoundRobinGroupChat';
+};
