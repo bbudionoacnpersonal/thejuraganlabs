@@ -198,7 +198,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     </div>
                   
                     <div className="flex items-center gap-2">
-                          <Badge className={getDifficultyColor(useCase.difficulty)} size="sm">
+                     <Badge className={getDifficultyColor(useCase.difficulty)} size="sm">
                         {useCase.difficulty}
                       </Badge>
                       <UserGroupIcon className="h-3 w-3" />
