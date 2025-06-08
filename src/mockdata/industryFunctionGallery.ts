@@ -1,5 +1,7 @@
 // src/mockdata/industryFunctionGallery.ts
 
+// src/mockdata/industryFunctionGallery.ts
+
 interface UseCaseTemplate {
   id: string;
   title: string;
@@ -27,17 +29,18 @@ interface UseCaseTemplate {
         label: string;
         config: {
           name: string;
-          model_client?: any;
-          tools?: any[];
-          model_context?: any;
-          description?: string;
           system_message?: string;
-          model_client_stream?: boolean;
-          reflect_on_tool_use?: boolean;
-          tool_call_summary_format?: string;
+          tools?: Array<{
+            provider: string;
+            config: { name: string };
+          }>;
         };
       }>;
-      model_client?: any;
+      tools?: Array<{
+        name: string;
+        provider: string;
+        config: Record<string, any>;
+      }>;
       termination_condition: any;
     };
   };
@@ -48,13 +51,13 @@ interface UseCaseTemplate {
 }
 
 export const industryFunctionGallery: UseCaseTemplate[] = [
-  // 1. General Industry Services - Strategy & Innovation
+  // 1. General Industry Services
   {
     id: 'general_strategy_innovation',
     title: 'Corporate Strategy Brainstorming Assistant',
-    description: 'Multi-agent system that helps executives brainstorm, evaluate, and refine corporate strategies based on market data and trends.',
+    description: 'AI system to brainstorm, evaluate, and refine corporate strategies.',
     industry: 'general_industry_services',
-    functionAreas: ['strategy_innovation'],
+    functionAreas: ['Innovation and R&D'],
     difficulty: 'intermediate',
     estimatedTime: '45 minutes',
     tags: ['strategy', 'innovation', 'market analysis'],
@@ -64,7 +67,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
       component_type: "team",
       version: 1,
       component_version: 1,
-      description: "Assist corporate strategy development with AI",
+      description: "Corporate strategy development with AI",
       label: "Strategy Assistant",
       config: {
         participants: [
@@ -73,44 +76,35 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
             component_type: "agent",
             version: 1,
             component_version: 1,
-            description: "Analyzes market trends and competitive landscape.",
+            description: "Market analysis expert",
             label: "Market Analyst",
             config: {
               name: "market_analyst",
-              system_message: "Analyze market trends and identify strategic opportunities.",
+              system_message: "Analyze market trends.",
               tools: [{ provider: "autogen_core.tools.FunctionTool", config: { name: "analyze_market_data" } }]
-            }
-          },
-          {
-            provider: "autogen_agentchat.agents.AssistantAgent",
-            component_type: "agent",
-            version: 1,
-            component_version: 1,
-            description: "Synthesizes strategic options and evaluates feasibility.",
-            label: "Strategy Synthesizer",
-            config: {
-              name: "strategy_synthesizer",
-              system_message: "Generate and evaluate strategic options for business growth.",
-              tools: [{ provider: "autogen_core.tools.FunctionTool", config: { name: "generate_strategy_options" } }]
             }
           }
         ],
-        termination_condition: { description: "Terminate after strategy recommendations are generated." }
+        tools: [
+          { name: "SAP DWC Integration", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "360 Customer API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+        ],
+        termination_condition: { description: "Terminate after strategy options are generated." }
       }
     },
     usage: 500,
     rating: 4.7,
-    createdBy: 'General Strategy Team',
+    createdBy: 'Corporate Strategy Team',
     lastUpdated: '2025-06-01'
   },
 
-  // 2. Banking & Financing - Risk & Compliance
+  // 2. Banking & Financing
   {
     id: 'banking_risk_compliance',
-    title: 'Automated Risk & Compliance Monitoring',
-    description: 'AI agents that monitor financial transactions for compliance breaches and assess risk exposure in real-time.',
+    title: 'Automated Risk & Compliance Monitor',
+    description: 'Monitor financial transactions for compliance breaches.',
     industry: 'banking_financing',
-    functionAreas: ['risk_compliance'],
+    functionAreas: ['Legal, Risk, & Policy'],
     difficulty: 'advanced',
     estimatedTime: '60 minutes',
     tags: ['risk monitoring', 'compliance', 'fraud detection'],
@@ -120,7 +114,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
       component_type: "team",
       version: 1,
       component_version: 1,
-      description: "Monitor financial risks and ensure regulatory compliance",
+      description: "Financial compliance monitoring",
       label: "Risk Compliance AI",
       config: {
         participants: [
@@ -129,29 +123,20 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
             component_type: "agent",
             version: 1,
             component_version: 1,
-            description: "Scans transactions for risk indicators.",
-            label: "Transaction Monitor",
+            description: "Compliance checker",
+            label: "Compliance Checker",
             config: {
-              name: "transaction_monitor",
-              system_message: "Analyze transactions to detect risk and compliance breaches.",
-              tools: [{ provider: "autogen_core.tools.FunctionTool", config: { name: "monitor_transactions" } }]
-            }
-          },
-          {
-            provider: "autogen_agentchat.agents.AssistantAgent",
-            component_type: "agent",
-            version: 1,
-            component_version: 1,
-            description: "Assesses compliance status.",
-            label: "Compliance Officer AI",
-            config: {
-              name: "compliance_officer_ai",
-              system_message: "Review flagged transactions and assess compliance with regulations.",
-              tools: [{ provider: "autogen_core.tools.FunctionTool", config: { name: "assess_compliance" } }]
+              name: "compliance_checker",
+              system_message: "Check financial transactions for risks.",
+              tools: [{ provider: "autogen_core.tools.FunctionTool", config: { name: "check_compliance" } }]
             }
           }
         ],
-        termination_condition: { description: "Terminate after risk report generation." }
+        tools: [
+          { name: "Workday API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "SAP DWC Integration", provider: "autogen_core.tools.ExternalAPI", config: {} }
+        ],
+        termination_condition: { description: "Terminate after compliance report is generated." }
       }
     },
     usage: 800,
@@ -160,24 +145,24 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
     lastUpdated: '2025-06-01'
   },
 
-  // 3. Healthcare & Public Sector - Customer Service
+  // 3. Healthcare & Public Sector
   {
-    id: 'healthcare_customer_service',
-    title: 'AI Healthcare Customer Support Assistant',
-    description: 'An AI assistant team that handles patient queries, appointment scheduling, and routing complex inquiries to human agents.',
+    id: 'healthcare_patient_support',
+    title: 'Healthcare AI Patient Support',
+    description: 'Handle patient queries, scheduling, and routing complex cases.',
     industry: 'healthcare_public_sector',
-    functionAreas: ['customer_service'],
+    functionAreas: ['Customer Service & Support'],
     difficulty: 'intermediate',
     estimatedTime: '30 minutes',
-    tags: ['customer service', 'patient support', 'healthcare assistant'],
+    tags: ['customer service', 'healthcare', 'support'],
     isPopular: true,
     autogenStructure: {
       provider: "autogen_agentchat.teams.RoundRobinGroupChat",
       component_type: "team",
       version: 1,
       component_version: 1,
-      description: "AI team for healthcare customer support",
-      label: "Healthcare Support AI",
+      description: "Healthcare customer service AI",
+      label: "Patient Support AI",
       config: {
         participants: [
           {
@@ -185,39 +170,123 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
             component_type: "agent",
             version: 1,
             component_version: 1,
-            description: "Handles patient appointment scheduling.",
-            label: "Appointment Scheduler",
+            description: "Schedules patient appointments",
+            label: "Scheduler",
             config: {
-              name: "appointment_scheduler",
-              system_message: "Help patients schedule, reschedule, and cancel appointments.",
+              name: "scheduler",
+              system_message: "Help schedule patient appointments.",
               tools: [{ provider: "autogen_core.tools.FunctionTool", config: { name: "schedule_appointment" } }]
             }
-          },
+          }
+        ],
+        tools: [
+          { name: "360 Customer API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Workday API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+        ],
+        termination_condition: { description: "Terminate after scheduling is completed." }
+      }
+    },
+    usage: 600,
+    rating: 4.6,
+    createdBy: 'Healthcare Support Team',
+    lastUpdated: '2025-06-01'
+  },
+
+  // 4. Retail & E-commerce
+  {
+    id: 'retail_personalized_marketing',
+    title: 'Retail Personalized Marketing AI',
+    description: 'Target marketing campaigns based on customer behavior.',
+    industry: 'retail_ecommerce',
+    functionAreas: ['Marketing & Brand Mgmt.'],
+    difficulty: 'beginner',
+    estimatedTime: '20 minutes',
+    tags: ['marketing', 'personalization', 'customer engagement'],
+    isPopular: true,
+    autogenStructure: {
+      provider: "autogen_agentchat.teams.RoundRobinGroupChat",
+      component_type: "team",
+      version: 1,
+      component_version: 1,
+      description: "AI personalized marketing campaigns",
+      label: "Marketing AI",
+      config: {
+        participants: [
           {
             provider: "autogen_agentchat.agents.AssistantAgent",
             component_type: "agent",
             version: 1,
             component_version: 1,
-            description: "Routes complex queries to human support.",
-            label: "Support Router",
+            description: "Generates campaign content",
+            label: "Content Generator",
             config: {
-              name: "support_router",
-              system_message: "Route complex patient inquiries to human agents.",
-              tools: [{ provider: "autogen_core.tools.FunctionTool", config: { name: "route_support_ticket" } }]
+              name: "content_generator",
+              system_message: "Generate personalized marketing content.",
+              tools: [{ provider: "autogen_core.tools.FunctionTool", config: { name: "generate_content" } }]
             }
           }
         ],
-        termination_condition: { description: "Terminate after ticket is closed." }
+        tools: [
+          { name: "Campaign API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "360 Customer API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+        ],
+        termination_condition: { description: "Terminate after campaign creation." }
       }
     },
-    usage: 600,
-    rating: 4.6,
-    createdBy: 'Healthcare Customer Experience Team',
+    usage: 400,
+    rating: 4.9,
+    createdBy: 'Retail Marketing Team',
     lastUpdated: '2025-06-01'
   },
 
-  // More entries here...
+  // 5. Telecommunications & Technology
+  {
+    id: 'telecom_network_analysis',
+    title: 'Telecom Network Traffic Analyzer',
+    description: 'Analyze and optimize telecom network traffic.',
+    industry: 'telecommunications_technology',
+    functionAreas: ['Ops & Process Engineering'],
+    difficulty: 'advanced',
+    estimatedTime: '75 minutes',
+    tags: ['network', 'telecom', 'optimization'],
+    isPopular: false,
+    autogenStructure: {
+      provider: "autogen_agentchat.teams.SelectorGroupChat",
+      component_type: "team",
+      version: 1,
+      component_version: 1,
+      description: "Optimize network traffic flows",
+      label: "Network Analyzer",
+      config: {
+        participants: [
+          {
+            provider: "autogen_agentchat.agents.AssistantAgent",
+            component_type: "agent",
+            version: 1,
+            component_version: 1,
+            description: "Analyze traffic patterns",
+            label: "Traffic Analyzer",
+            config: {
+              name: "traffic_analyzer",
+              system_message: "Optimize network traffic.",
+              tools: [{ provider: "autogen_core.tools.FunctionTool", config: { name: "optimize_traffic" } }]
+            }
+          }
+        ],
+        tools: [
+          { name: "Tiktok Video API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Campaign API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+        ],
+        termination_condition: { description: "Terminate after optimization plan is complete." }
+      }
+    },
+    usage: 300,
+    rating: 4.5,
+    createdBy: 'Telecom Network Team',
+    lastUpdated: '2025-06-01'
+  }
 ];
+
 
 const filterUseCases = (options?: {
   industry?: string;
