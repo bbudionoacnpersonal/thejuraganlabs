@@ -1,4 +1,6 @@
-import React, { useEffect, useCallback } from 'react';
+// src/components/GalleryFlowVisualizer.tsx
+
+import React, { useEffect, useState, useCallback } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -9,80 +11,53 @@ import ReactFlow, {
   ReactFlowProvider,
   Node,
   Edge,
-  MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import AutogenNode from '../create-agent/AutogenNode'; // your custom node
-import dagre from 'dagre';
-import Button from '@/components/ui/Button'; // 🧩 Your existing Button component
-import { ArrowPathIcon } from '@heroicons/react/24/outline';
+import AutogenNode from '../create-agent/AutogenNode'; // ← your custom node
+import { applyAutoLayout } from '@/utils/dagreLayout'; // ← dagre layout utility
 
 interface GalleryFlowVisualizerProps {
-  autogenStructure: any; // This comes from useCase.autogenStructure
+  autogenStructure: any; // from useCase.autogenStructure
+  title: string;
 }
 
 const nodeTypes = {
   custom: AutogenNode,
 };
 
-const g = new dagre.graphlib.Graph();
-g.setDefaultEdgeLabel(() => ({}));
-
-const nodeWidth = 240;
-const nodeHeight = 300; // make this bigger, close to real node height
-
-const applyDagreLayout = (nodes: Node[], edges: Edge[]) => {
-  g.setGraph({ 
-    rankdir: 'LR',   // Top to Bottom
-    nodesep: 120,     // more separation between nodes horizontally
-    ranksep: 120     // more separation vertically
-  });
-
-  nodes.forEach((node) => {
-    g.setNode(node.id, { width: nodeWidth, height: nodeHeight });
-  });
-
-  edges.forEach((edge) => {
-    g.setEdge(edge.source, edge.target);
-  });
-
-  dagre.layout(g);
-
-  return nodes.map((node) => {
-    const nodeWithPosition = g.node(node.id);
-    return {
-      ...node,
-      position: {
-        x: nodeWithPosition.x - nodeWidth / 2,
-        y: nodeWithPosition.y - nodeHeight / 2,
-          },
-        };
-      });
-    };
-
-const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ autogenStructure }) => {
+const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ autogenStructure, title }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
   const { fitView } = useReactFlow();
 
-  const initializeFlow = useCallback(() => {
+  const buildInitialFlow = useCallback(() => {
     if (!autogenStructure) return;
 
-    const generatedNodes: Node[] = [];
-    const generatedEdges: Edge[] = [];
+    const participants = autogenStructure.config?.participants || [];
+    const nodes: Node[] = [];
+    const edges: Edge[] = [];
 
-    // Team node
-    generatedNodes.push({
+    // Team Node
+    nodes.push({
       id: 'team',
       type: 'custom',
       data: {
         type: 'team',
         label: autogenStructure.label || 'AI Team',
         teamType: extractTeamType(autogenStructure?.provider),
-        description: autogenStructure.description,
+        description: autogenStructure.description || '',
         model: '',
-        agents: autogenStructure.config?.participants?.map((p: any) => ({
-          name: p.label || 'Unnamed Agent',
+        agents: participants.map((p: any) => ({
+          name: p.label,
+          description: p.description,
+          model: {
+            name: p.config?.model_client?.model_name || '',
+            provider: '',
+          },
+          tools: (p.config?.tools || []).map((tool: any) => ({
+            name: tool.config?.name,
+            description: tool.config?.description || '',
+          })),
         })),
         terminations: autogenStructure.config?.termination_condition
           ? [{ name: autogenStructure.config.termination_condition.description }]
@@ -91,62 +66,44 @@ const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ au
       position: { x: 0, y: 0 },
     });
 
-    const participants = autogenStructure.config?.participants || [];
-
+    // Agent Nodes
     participants.forEach((participant: any, idx: number) => {
-      const id = `agent-${idx}`;
-
-      generatedNodes.push({
-        id,
+      nodes.push({
+        id: `agent-${idx}`,
         type: 'custom',
         data: {
           type: 'agent',
           label: participant.label || `Agent ${idx + 1}`,
-          description: participant.description,
+          description: participant.description || '',
           model: participant.config?.model_client?.model_name || '',
           tools: participant.config?.tools?.length || 0,
-          toolNames: participant.config?.tools?.map((tool: any) => tool.config?.name) || [],
+          toolNames: participant.config?.tools?.map((tool: any) => tool.config?.name || 'Unnamed Tool') || [],
         },
         position: { x: 0, y: 0 },
       });
 
-      generatedEdges.push({
-        id: `edge-team-${id}`,
+      edges.push({
+        id: `edge-team-agent-${idx}`,
         source: 'team',
-        target: id,
+        target: `agent-${idx}`,
         type: 'smoothstep',
         animated: true,
         style: { stroke: '#4D9CFF', strokeWidth: 2 },
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          width: 12,
-          height: 12,
-          color: '#4D9CFF',
-        },
       });
     });
 
-    const layoutedNodes = applyDagreLayout(generatedNodes, generatedEdges);
-
+    const { nodes: layoutedNodes, edges: layoutedEdges } = applyAutoLayout(nodes, edges);
     setNodes(layoutedNodes);
-    setEdges(generatedEdges);
+    setEdges(layoutedEdges);
 
     setTimeout(() => {
-      fitView({ padding: 0.3, duration: 800 });
+      fitView({ padding: 0.2, duration: 800 });
     }, 100);
   }, [autogenStructure, setNodes, setEdges, fitView]);
 
   useEffect(() => {
-    initializeFlow();
-  }, [initializeFlow]);
-
-  const handleAutoLayout = () => {
-    const layoutedNodes = applyDagreLayout(nodes, edges);
-    setNodes(layoutedNodes);
-    setTimeout(() => {
-      fitView({ padding: 0.3, duration: 800 });
-    }, 100);
-  };
+    buildInitialFlow();
+  }, [buildInitialFlow]);
 
   return (
     <ReactFlow
@@ -156,9 +113,9 @@ const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ au
       onEdgesChange={onEdgesChange}
       nodeTypes={nodeTypes}
       defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
-      minZoom={0.3}
-      maxZoom={1.2}
       fitViewOptions={{ padding: 0.2 }}
+      minZoom={0.3}
+      maxZoom={1}
       proOptions={{ hideAttribution: true }}
     >
       <Background color="#333" gap={16} />
@@ -166,20 +123,16 @@ const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ au
         className="bg-dark-surface border border-dark-border rounded-md"
         showInteractive={false}
       />
-      {/* Panel with Auto Layout button */}
       <Panel position="top-left" className="bg-dark-surface/50 backdrop-blur-sm p-2 rounded-md border border-dark-border">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-gray-400">Flow - {extractTeamType(autogenStructure?.provider)}</span>
+        <div className="flex items-center justify-between text-xs text-white mb-2">
+          {title}
         </div>
-        <Button
-          size="xs"
-          variant="ghost"
-          onClick={handleAutoLayout}
-          className="text-xs px-2 py-1 border border-dark-border hover:bg-dark-400"
-          leftIcon={<ArrowPathIcon className="h-3 w-3" />}
+        <button
+          onClick={buildInitialFlow}
+          className="mt-2 bg-dark-400 text-white text-xs rounded-md px-3 py-1 hover:bg-dark-500 transition"
         >
           Auto Layout
-        </Button>
+        </button>
       </Panel>
     </ReactFlow>
   );
@@ -197,9 +150,9 @@ const GalleryFlowVisualizer: React.FC<GalleryFlowVisualizerProps> = (props) => {
 
 export default GalleryFlowVisualizer;
 
-// Helper to extract team type name
+// Helper to extract team type
 const extractTeamType = (provider: string) => {
   if (!provider) return 'Unknown Team';
   const parts = provider.split('.');
-  return parts[parts.length - 1];
+  return parts[parts.length - 1]; // e.g., RoundRobinGroupChat
 };
