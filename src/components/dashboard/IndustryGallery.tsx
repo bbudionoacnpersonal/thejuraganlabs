@@ -139,7 +139,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 options={[{ value: '', label: 'All Function Areas' }, ...focusAreas]}
                 value={currentFilterFunctionAreas}
                 onChange={(selectedOptions) =>
-                  setCurrentFilterFunctionAreas(selectedOptions.map((opt: any) => opt.value))
+                  setCurrentFilterFunctionAreas(Array.isArray(selectedOptions) ? selectedOptions : [selectedOptions])
                 }
               />
               <Button
