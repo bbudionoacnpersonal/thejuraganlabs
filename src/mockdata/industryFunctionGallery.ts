@@ -379,9 +379,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
 },
 
   //🛢️ Energy, Oil & Gas — Well Monitoring
-tsx
-Copy
-Edit
+
 
 
   
