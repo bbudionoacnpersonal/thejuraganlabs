@@ -213,9 +213,19 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 <div className="flex items-center justify-between text-xs mb-2">
                   <div className="flex items-center gap-2">
                     <BuildingOffice2Icon className="h-3 w-3 text-gray-500" />
-                    <span className="text-gray-500">
-                      {industries?.find(i => i.value === useCase.industry)?.label || useCase.industry}
-                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {(useCase.industries || []).map((industryValue, idx) => {
+                        const industryLabel = industries?.find((i) => i.value === industryValue)?.label || industryValue;
+                        return (
+                          <span
+                            key={idx}
+                            className="bg-dark-surface px-2 py-0.5 rounded text-gray-400 text-[10px]"
+                          >
+                            {industryLabel}
+                          </span>
+                        );
+                      })}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <UsersIcon className="h-3 w-3 text-gray-500" />
