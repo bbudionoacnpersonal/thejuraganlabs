@@ -2,7 +2,7 @@
 export const industries = [
   { 
     value: 'others',
-    label: 'General Industry Services',
+    label: 'Others Industry Services',
     keyPrompts: {
       agentConsiderations: [
         'Process automation',
