@@ -242,7 +242,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 <div className="bg-purple-200 p-2 rounded-lg mb-3">
                   <div className="flex items-center gap-2 mb-2">
                     <UsersIcon className="h-2 w-2 text-gray-500" />
-                    <span className="font-bold text-black">{getTeamName(useCase.autogenStructure?.provider)}</span>
+                    <span className="font-bold text-black">    {useCase.autogenStructure.provider?.split('.').pop()}</span>
                   </div>
                 
                   {/* Agents List */}
