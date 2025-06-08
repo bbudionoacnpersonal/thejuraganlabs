@@ -376,7 +376,13 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
   rating: 4.7,
   createdBy: 'Supply Chain Analytics Team',
   lastUpdated: '2025-06-06'
-}
+},
+
+  //🛢️ Energy, Oil & Gas — Well Monitoring
+tsx
+Copy
+Edit
+
 
   
 ];
