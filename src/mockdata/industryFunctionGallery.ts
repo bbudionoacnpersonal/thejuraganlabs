@@ -1,10 +1,10 @@
 // src/mockdata/industryFunctionGallery.ts
+
 interface UseCaseTemplate {
   id: string;
   title: string;
   description: string;
-- industry: string;
-+ industries: string[];
+  industries: string[]; // <- Now supports multiple industries!
   functionAreas: string[];
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   estimatedTime: string;
@@ -27,21 +27,12 @@ interface UseCaseTemplate {
         label: string;
         config: {
           name: string;
-          model_client: {
-            model_name: string;
-          };
+          model_client: { model_name: string };
           system_message?: string;
-          tools?: Array<{
-            provider: string;
-            config: { name: string };
-          }>;
+          tools?: Array<{ provider: string; config: { name: string } }>;
         };
       }>;
-      tools?: Array<{
-        name: string;
-        provider: string;
-        config: Record<string, any>;
-      }>;
+      tools?: Array<{ name: string; provider: string; config: Record<string, any> }>;
       termination_condition: any;
     };
   };
@@ -52,25 +43,24 @@ interface UseCaseTemplate {
 }
 
 export const industryFunctionGallery: UseCaseTemplate[] = [
-  // Example: Strategy AI — now applied to multiple industries
+  // BANKING
   {
-    id: 'strategy_innovation_assistant',
-    title: 'Corporate Strategy Brainstorming Assistant',
-    description: 'AI system to brainstorm, evaluate, and refine corporate strategies across industries.',
-   industry: 'general_industry_services',
-   industries: ['banking_financing', 'retail_ecommerce', 'telecommunications_technology'],
-    functionAreas: ['Innovation and R&D'],
+    id: 'banking_customer_support_ai',
+    title: 'Banking Customer Support AI',
+    description: 'AI agents for handling banking customer queries, fraud reporting, and issue resolution.',
+    industries: ['banking_financing', 'insurance_services'],
+    functionAreas: ['Customer Service & Support'],
     difficulty: 'intermediate',
-    estimatedTime: '45 minutes',
-    tags: ['#strategy', '#innovation', '#market-analysis'],
+    estimatedTime: '30 minutes',
+    tags: ['#banking', '#customer-support', '#fraud-detection'],
     isPopular: true,
     autogenStructure: {
       provider: "autogen_agentchat.teams.RoundRobinGroupChat",
       component_type: "team",
       version: 1,
       component_version: 1,
-      description: "Corporate strategy development with AI",
-      label: "Strategy Assistant",
+      description: "Banking AI Support Team",
+      label: "Bank Support AI",
       config: {
         participants: [
           {
@@ -78,14 +68,14 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
             component_type: "agent",
             version: 1,
             component_version: 1,
-            description: "Market analysis expert",
-            label: "Market Analyst",
+            description: "Handles general banking queries",
+            label: "Banking Assistant",
             config: {
-              name: "market_analyst",
+              name: "banking_assistant",
               model_client: { model_name: "gpt-4" },
-              system_message: "Analyze market trends and competitive landscape.",
+              system_message: "Assist customers with banking inquiries.",
               tools: [
-                { provider: "autogen_core.tools.FunctionTool", config: { name: "market_trend_analyzer" } }
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "query_handler" } }
               ]
             }
           },
@@ -94,32 +84,232 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
             component_type: "agent",
             version: 1,
             component_version: 1,
-            description: "SWOT Strategy Generator",
-            label: "Strategy Synthesizer",
+            description: "Fraud detection support",
+            label: "Fraud Specialist",
             config: {
-              name: "strategy_synthesizer",
+              name: "fraud_specialist",
               model_client: { model_name: "claude-3-sonnet" },
-              system_message: "Generate strategic SWOT options.",
+              system_message: "Detect and report fraudulent transactions.",
               tools: [
-                { provider: "autogen_core.tools.FunctionTool", config: { name: "swot_analysis" } }
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "fraud_detector" } }
               ]
             }
           }
         ],
         tools: [
-          { name: "SAP DWC Integration", provider: "autogen_core.tools.ExternalAPI", config: {} },
-          { name: "360 Customer API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+          { name: "Banking Core API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Fraud Detection API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Customer 360 API", provider: "autogen_core.tools.ExternalAPI", config: {} }
         ],
-        termination_condition: { description: "Terminate after strategy options are generated." }
+        termination_condition: { description: "Session ends after ticket is closed." }
+      }
+    },
+    usage: 1200,
+    rating: 4.8,
+    createdBy: 'Banking Customer Experience Team',
+    lastUpdated: '2025-06-05'
+  },
+
+  // HEALTHCARE
+  {
+    id: 'healthcare_appointment_scheduling',
+    title: 'Healthcare Appointment Scheduling Assistant',
+    description: 'AI agents automate appointment scheduling and patient triage.',
+    industries: ['healthcare_public_sector'],
+    functionAreas: ['Customer Service & Support', 'Ops & Process Engineering'],
+    difficulty: 'beginner',
+    estimatedTime: '20 minutes',
+    tags: ['#healthcare', '#patient-care', '#scheduling'],
+    isPopular: true,
+    autogenStructure: {
+      provider: "autogen_agentchat.teams.SelectorGroupChat",
+      component_type: "team",
+      version: 1,
+      component_version: 1,
+      description: "AI team for patient appointment management",
+      label: "Healthcare Scheduler",
+      config: {
+        participants: [
+          {
+            provider: "autogen_agentchat.agents.AssistantAgent",
+            component_type: "agent",
+            version: 1,
+            component_version: 1,
+            description: "Handles patient appointments",
+            label: "Appointment Bot",
+            config: {
+              name: "appointment_bot",
+              model_client: { model_name: "gemini-1.5-pro" },
+              system_message: "Manage appointment scheduling.",
+              tools: [
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "schedule_appointment" } }
+              ]
+            }
+          }
+        ],
+        tools: [
+          { name: "Hospital EHR API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Patient CRM API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+        ],
+        termination_condition: { description: "Session ends after appointment confirmation." }
+      }
+    },
+    usage: 700,
+    rating: 4.5,
+    createdBy: 'Healthcare Ops Team',
+    lastUpdated: '2025-06-05'
+  },
+
+  // RETAIL
+  {
+    id: 'retail_sales_recommendation',
+    title: 'Retail Sales Recommendation AI',
+    description: 'AI agents recommend personalized products based on user preferences and history.',
+    industries: ['retail_ecommerce', 'consumer_goods_manufacturing'],
+    functionAreas: ['Sales & Revenue Growth', 'Marketing & Brand Mgmt.'],
+    difficulty: 'intermediate',
+    estimatedTime: '35 minutes',
+    tags: ['#retail', '#sales', '#recommendation'],
+    isPopular: true,
+    autogenStructure: {
+      provider: "autogen_agentchat.teams.RoundRobinGroupChat",
+      component_type: "team",
+      version: 1,
+      component_version: 1,
+      description: "Retail recommendation AI team",
+      label: "Sales Recommender",
+      config: {
+        participants: [
+          {
+            provider: "autogen_agentchat.agents.AssistantAgent",
+            component_type: "agent",
+            version: 1,
+            component_version: 1,
+            description: "Generates personalized product suggestions",
+            label: "Product Recommender",
+            config: {
+              name: "product_recommender",
+              model_client: { model_name: "gpt-4" },
+              system_message: "Provide personalized product recommendations.",
+              tools: [
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "recommend_products" } }
+              ]
+            }
+          }
+        ],
+        tools: [
+          { name: "E-commerce API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Product Inventory API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Recommendation Engine API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+        ],
+        termination_condition: { description: "Session ends after recommendation is delivered." }
+      }
+    },
+    usage: 1500,
+    rating: 4.9,
+    createdBy: 'Retail Sales Team',
+    lastUpdated: '2025-06-05'
+  },
+
+  // TELECOMMUNICATIONS
+  {
+    id: 'telecom_network_ops',
+    title: 'Telecom Network Operations Optimizer',
+    description: 'Optimize telecom network performance with AI agents.',
+    industries: ['telecommunications_technology'],
+    functionAreas: ['Ops & Process Engineering', 'IT & Data'],
+    difficulty: 'advanced',
+    estimatedTime: '60 minutes',
+    tags: ['#telecom', '#network-optimization', '#ops'],
+    isPopular: false,
+    autogenStructure: {
+      provider: "autogen_agentchat.teams.SelectorGroupChat",
+      component_type: "team",
+      version: 1,
+      component_version: 1,
+      description: "Optimize telecom network operations",
+      label: "Telecom Network Ops AI",
+      config: {
+        participants: [
+          {
+            provider: "autogen_agentchat.agents.AssistantAgent",
+            component_type: "agent",
+            version: 1,
+            component_version: 1,
+            description: "Monitor network performance",
+            label: "Network Monitor",
+            config: {
+              name: "network_monitor",
+              model_client: { model_name: "claude-3-sonnet" },
+              system_message: "Monitor and optimize network traffic.",
+              tools: [
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "network_traffic_analysis" } }
+              ]
+            }
+          }
+        ],
+        tools: [
+          { name: "Network Monitoring API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Performance Analytics API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+        ],
+        termination_condition: { description: "Session ends after performance report generation." }
       }
     },
     usage: 500,
     rating: 4.7,
-    createdBy: 'Corporate Strategy Team',
-    lastUpdated: '2025-06-01'
+    createdBy: 'Telecom Ops Team',
+    lastUpdated: '2025-06-05'
   },
-
-  // Next use case also supports multiple industries...
+  
+  // UTILITIES
+  {
+    id: 'utilities_grid_optimizer',
+    title: 'Utilities Smart Grid Optimization',
+    description: 'Optimize energy grid performance using AI agents.',
+    industries: ['utilities'],
+    functionAreas: ['Ops & Process Engineering', 'Environmental & Safety'],
+    difficulty: 'advanced',
+    estimatedTime: '50 minutes',
+    tags: ['#utilities', '#grid-optimization', '#energy'],
+    isPopular: true,
+    autogenStructure: {
+      provider: "autogen_agentchat.teams.RoundRobinGroupChat",
+      component_type: "team",
+      version: 1,
+      component_version: 1,
+      description: "AI agents to optimize energy grids",
+      label: "Smart Grid Optimizer",
+      config: {
+        participants: [
+          {
+            provider: "autogen_agentchat.agents.AssistantAgent",
+            component_type: "agent",
+            version: 1,
+            component_version: 1,
+            description: "Optimize load distribution",
+            label: "Load Optimizer",
+            config: {
+              name: "load_optimizer",
+              model_client: { model_name: "gpt-4" },
+              system_message: "Optimize grid load balancing.",
+              tools: [
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "optimize_load_distribution" } }
+              ]
+            }
+          }
+        ],
+        tools: [
+          { name: "Smart Meter API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Grid Analytics API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+        ],
+        termination_condition: { description: "Optimization report generated." }
+      }
+    },
+    usage: 300,
+    rating: 4.5,
+    createdBy: 'Utility Grid Ops Team',
+    lastUpdated: '2025-06-05'
+  }
 ];
 
 
