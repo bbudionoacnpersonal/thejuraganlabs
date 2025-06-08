@@ -379,6 +379,71 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
 },
 
   //🛢️ Energy, Oil & Gas — Well Monitoring
+{
+  id: 'energy_oilgas_well_monitoring',
+  title: 'Well Monitoring & Production Optimization AI',
+  description: 'AI agents continuously monitor well performance and optimize extraction processes.',
+  industries: ['energy_oil_gas', 'utilities'],
+  functionAreas: ['Asset Management', 'Environmental & Safety'],
+  difficulty: 'advanced',
+  estimatedTime: '60 minutes',
+  tags: ['#well-monitoring', '#oilgas', '#optimization'],
+  isPopular: true,
+  autogenStructure: {
+    provider: "autogen_agentchat.teams.SelectorGroupChat",
+    component_type: "team",
+    version: 1,
+    component_version: 1,
+    description: "Oil & Gas well performance optimization",
+    label: "Well Optimization AI",
+    config: {
+      participants: [
+        {
+          provider: "autogen_agentchat.agents.AssistantAgent",
+          component_type: "agent",
+          version: 1,
+          component_version: 1,
+          description: "Monitors well pressure and flow",
+          label: "Well Monitor",
+          config: {
+            name: "well_monitor",
+            model_client: { model_name: "gemini-1.5-pro" },
+            system_message: "Continuously monitor well parameters like pressure and flow.",
+            tools: [
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "well_data_reader" } }
+            ]
+          }
+        },
+        {
+          provider: "autogen_agentchat.agents.AssistantAgent",
+          component_type: "agent",
+          version: 1,
+          component_version: 1,
+          description: "Optimize extraction based on well conditions",
+          label: "Production Optimizer",
+          config: {
+            name: "production_optimizer",
+            model_client: { model_name: "gpt-4" },
+            system_message: "Optimize oil extraction rate based on real-time data.",
+            tools: [
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "extraction_optimizer" } }
+            ]
+          }
+        }
+      ],
+      tools: [
+        { name: "Well Sensor API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+        { name: "Oil Production Monitoring API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+        { name: "Reservoir Simulation API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+      ],
+      termination_condition: { description: "Terminate after daily production report generation." }
+    }
+  },
+  usage: 750,
+  rating: 4.8,
+  createdBy: 'Well Operations Team',
+  lastUpdated: '2025-06-06'
+}
 
 
 
