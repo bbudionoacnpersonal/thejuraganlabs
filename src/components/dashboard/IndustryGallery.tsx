@@ -11,12 +11,9 @@ import { Library, FilterX, Bot } from 'lucide-react';
 import {
   SparklesIcon,
   CodeBracketIcon,
-  StarIcon,
   UserGroupIcon,
   UsersIcon,
   TagIcon,
-  DocumentArrowDownIcon,
-  PlayIcon,
   BuildingOffice2Icon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
@@ -38,14 +35,12 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
   const [showGallery, setShowGallery] = useState(false);
   const [selectedUseCase, setSelectedUseCase] = useState<UseCaseTemplate | null>(null);
 
-  // State for the filters
   const [currentFilterIndustry, setCurrentFilterIndustry] = useState(userIndustry);
   const [currentFilterFunctionAreas, setCurrentFilterFunctionAreas] = useState<string[]>(
     userFocusAreas
   );
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Memoize the filtered list to include the new search term
   const displayedUseCases = useMemo(
     () =>
       filterUseCases({
@@ -89,6 +84,15 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
     linkElement.click();
   };
 
+  // 🔥 Dynamic Labels
+  const industryLabel = currentFilterIndustry
+    ? industries.find((i) => i.value === currentFilterIndustry)?.label || 'All Industries'
+    : 'All Industries';
+
+  const functionAreasLabel = currentFilterFunctionAreas.length > 0
+    ? `Function Areas (${currentFilterFunctionAreas.length} selected)`
+    : 'All Functions';
+
   return (
     <>
       <motion.div
@@ -105,7 +109,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
             <div className="w-full bg-dark-background rounded-lg p-4">
               <Button
                 size="sm"
-                leftIcon={<Library className="h-4 w-4 " />}
+                leftIcon={<Library className="h-4 w-4" />}
                 onClick={() => setShowGallery(true)}
                 className="w-full"
               >
@@ -133,22 +137,21 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
             <div className="flex flex-wrap items-end gap-4">
               <div className="flex-1 min-w-[200px]">
                 <Select
-                  label="Industry"
+                  label={industryLabel}
                   size="sm"
                   options={[{ value: '', label: 'All Industries' }, ...industries]}
                   value={currentFilterIndustry}
-                  onChange={(value) => setCurrentFilterIndustry(value)} // ✅ FIXED
+                  onChange={(value) => setCurrentFilterIndustry(value)}
                 />
               </div>
               <div className="flex-1 min-w-[200px]">
                 <Select
-                  label="Function Areas"
+                  label={functionAreasLabel}
                   size="sm"
                   options={[{ value: '', label: 'All Functions' }, ...focusAreas]}
                   value={currentFilterFunctionAreas}
                   onChange={(selectedOptions) => {
                     if (selectedOptions.includes('')) {
-                      // User selected "All Functions", clear filter
                       setCurrentFilterFunctionAreas([]);
                     } else {
                       setCurrentFilterFunctionAreas(selectedOptions as string[]);
@@ -193,8 +196,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto p-1">
             {displayedUseCases.map((useCase) => {
               const industryLabel =
-                industries.find((i) => i.value === useCase.industry)?.label ||
-                useCase.industry;
+                industries.find((i) => i.value === useCase.industry)?.label || useCase.industry;
               const providerType = useCase.autogenStructure.provider.split('.').pop() || 'N/A';
               return (
                 <div
@@ -202,7 +204,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   className="bg-dark-surface rounded-lg p-4 border border-dark-border hover:border-secondary-600 cursor-pointer transition-colors flex flex-col"
                   onClick={() => handleUseCaseSelect(useCase)}
                 >
-                  <div className="flex justify-between items-start mb-3 gap-1 ">
+                  <div className="flex justify-between items-start mb-3 gap-1">
                     <div className="flex items-center gap-2">
                       <UserGroupIcon className="h-3 w-3 text-gray-400" />
                       <h3 className="text-white font-medium text-sm pr-2">{useCase.title}</h3>
@@ -273,7 +275,6 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
         </div>
       </Modal>
 
-      {/* Use Case Detail Modal */}
       {selectedUseCase && (
         <Modal
           isOpen={!!selectedUseCase}
@@ -281,7 +282,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
           title={selectedUseCase.title}
           size="xl"
         >
-          {/* ... modal content (assumed to be complete) ... */}
+          {/* Modal Content */}
         </Modal>
       )}
     </>
