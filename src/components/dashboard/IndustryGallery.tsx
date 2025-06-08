@@ -229,7 +229,6 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     <UserGroupIcon className="h-3 w-3 text-secondary-400" />
                    <Badge key={idx} size="sm" className="bg-secondary-400 text-white ">
                    {useCase.autogenStructure.provider.split('.').pop()}
-                     
                     </Bagde>
                     
                     {/*agents*/}
