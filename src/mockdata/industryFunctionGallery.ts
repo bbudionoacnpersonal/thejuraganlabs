@@ -427,4 +427,3 @@ const industryFunctionGallery: UseCaseTemplate[] = [
     lastUpdated: '2025-06-01'
   },
 ];
-
