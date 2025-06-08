@@ -252,7 +252,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                         {/* Agent Label */}
                         <div className="flex items-center gap-1 mb-1">
                           <Bot className="h-2 w-2 text-black" />
-                          <span className="text-xs text-gray-500">{participant.label || 'Unnamed Agent'}</span>
+                          <span className="text-xs text-gray-100">{participant.label || 'Unnamed Agent'}</span>
                         </div>
                 
                         {/* LLM Model */}
