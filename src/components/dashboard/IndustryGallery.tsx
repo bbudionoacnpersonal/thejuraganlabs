@@ -46,6 +46,8 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
 }) => {
   const [showGallery, setShowGallery] = useState(false);
   const [selectedUseCase, setSelectedUseCase] = useState<UseCaseTemplate | null>(null);
+  const [showFlowModal, setShowFlowModal] = useState(false); // <-- New modal for flow
+
 
   const [currentFilterIndustry, setCurrentFilterIndustry] = useState('');
   const [currentFilterFunctionArea, setCurrentFilterFunctionArea] = useState('');
