@@ -180,59 +180,59 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
           </div>
 
           {/* Use Cases Grid */}
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-  {displayedUseCases.map((useCase) => (
-    <div
-      key={useCase.id}
-      className="bg-dark-background p-4 rounded-lg border border-dark-border hover:border-secondary-600 cursor-pointer transition-colors"
-      onClick={() => handleUseCaseSelect(useCase)}
-    >
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-white font-medium text-sm">{useCase.title}</h3>
-        <div className="flex items-center gap-1">
-          {useCase.isPopular && (
-            <Badge size="sm" variant="accent">Popular</Badge>
-          )}
-          <Badge size="sm" className={getDifficultyColor(useCase.difficulty)}>
-            {useCase.difficulty}
-          </Badge>
-        </div>
-      </div>
-
-      <p className="text-gray-400 text-xs mb-3 line-clamp-2">{useCase.description}</p>
-
-      {/* Industry and Usage */}
-      <div className="flex items-center justify-between text-xs mb-2">
-        <div className="flex items-center gap-2">
-          <BuildingOffice2Icon className="h-3 w-3 text-gray-500" />
-          <span className="text-gray-500">
-            {industries?.find(i => i.value === useCase.industry)?.label || useCase.industry}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <UsersIcon className="h-3 w-3 text-gray-500" />
-          <span className="text-gray-500">{useCase.usage} uses</span>
-        </div>
-      </div>
-
-      {/* Provider */}
-      {useCase.autogenStructure?.provider && (
-        <div className="text-xs text-secondary-500 mb-2">
-          Team Type: {useCase.autogenStructure.provider}
-        </div>
-      )}
-
-      {/* Agents */}
-      <div className="flex flex-wrap gap-1 mt-2">
-        {(useCase.autogenStructure?.participants || []).map((participant: any, idx: number) => (
-          <Badge key={idx} size="sm" className="bg-primary-600 text-white">
-            {participant.label}
-          </Badge>
-        ))}
-      </div>
-    </div>
-  ))}
-</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+            {displayedUseCases.map((useCase) => (
+              <div
+                key={useCase.id}
+                className="bg-dark-background p-4 rounded-lg border border-dark-border hover:border-secondary-600 cursor-pointer transition-colors"
+                onClick={() => handleUseCaseSelect(useCase)}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-white font-medium text-sm">{useCase.title}</h3>
+                  <div className="flex items-center gap-1">
+                    {useCase.isPopular && (
+                      <Badge size="sm" variant="accent">Popular</Badge>
+                    )}
+                    <Badge size="sm" className={getDifficultyColor(useCase.difficulty)}>
+                      {useCase.difficulty}
+                    </Badge>
+                  </div>
+                </div>
+          
+                <p className="text-gray-400 text-xs mb-3 line-clamp-2">{useCase.description}</p>
+          
+                {/* Industry and Usage */}
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <div className="flex items-center gap-2">
+                    <BuildingOffice2Icon className="h-3 w-3 text-gray-500" />
+                    <span className="text-gray-500">
+                      {industries?.find(i => i.value === useCase.industry)?.label || useCase.industry}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <UsersIcon className="h-3 w-3 text-gray-500" />
+                    <span className="text-gray-500">{useCase.usage} uses</span>
+                  </div>
+                </div>
+          
+                {/* Provider */}
+                {useCase.autogenStructure?.provider && (
+                  <div className="text-xs text-secondary-500 mb-2">
+                    Team Type: {useCase.autogenStructure.provider}
+                  </div>
+                )}
+          
+                {/* Agents */}
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {(useCase.autogenStructure?.participants || []).map((participant: any, idx: number) => (
+                    <Badge key={idx} size="sm" className="bg-primary-600 text-white">
+                      {participant.label}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
 
 
           {filteredUseCases.length === 0 && (
