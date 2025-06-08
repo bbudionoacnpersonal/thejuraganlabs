@@ -86,6 +86,10 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
     }
   };
 
+  const getTeamName = (provider: string) => {
+    return provider || 'AI Team';
+  };
+
   const handleUseCaseSelect = (useCase: UseCaseTemplate) => {
     setSelectedUseCase(useCase);
   };
@@ -234,7 +238,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   </div>
                 </div>
 
-               {/* Team Section */}
+                {/* Team Section */}
                 <div className="bg-purple-200 p-2 rounded-lg mb-3">
                   <div className="flex items-center gap-2 mb-2">
                     <UsersIcon className="h-4 w-4 text-black" />
@@ -270,8 +274,9 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                         </div>
                       </div>
                     ))}
+                  </div>
                 </div>
-
+              </div>
             ))}
           </div>
 
