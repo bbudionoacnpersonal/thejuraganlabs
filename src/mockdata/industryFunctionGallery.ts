@@ -309,7 +309,75 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
     rating: 4.5,
     createdBy: 'Utility Grid Ops Team',
     lastUpdated: '2025-06-05'
-  }
+  },
+
+  {
+  id: 'consumer_goods_supply_chain_optimization',
+  title: 'Supply Chain Forecasting & Optimization AI',
+  description: 'AI agents for predictive inventory management and supplier risk analysis.',
+  industries: ['consumer_goods_manufacturing', 'retail_ecommerce'],
+  functionAreas: ['Procurement & Supply Chain', 'Ops & Process Engineering'],
+  difficulty: 'advanced',
+  estimatedTime: '55 minutes',
+  tags: ['#supply-chain', '#forecasting', '#inventory-management'],
+  isPopular: true,
+  autogenStructure: {
+    provider: "autogen_agentchat.teams.RoundRobinGroupChat",
+    component_type: "team",
+    version: 1,
+    component_version: 1,
+    description: "Supply chain optimization with AI",
+    label: "Supply Chain AI",
+    config: {
+      participants: [
+        {
+          provider: "autogen_agentchat.agents.AssistantAgent",
+          component_type: "agent",
+          version: 1,
+          component_version: 1,
+          description: "Forecast inventory demand",
+          label: "Demand Forecaster",
+          config: {
+            name: "demand_forecaster",
+            model_client: { model_name: "gpt-4" },
+            system_message: "Forecast product demand based on historical sales.",
+            tools: [
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "demand_forecasting" } }
+            ]
+          }
+        },
+        {
+          provider: "autogen_agentchat.agents.AssistantAgent",
+          component_type: "agent",
+          version: 1,
+          component_version: 1,
+          description: "Supplier risk evaluation",
+          label: "Risk Evaluator",
+          config: {
+            name: "risk_evaluator",
+            model_client: { model_name: "claude-3-sonnet" },
+            system_message: "Assess supplier risks based on reliability data.",
+            tools: [
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "supplier_risk_assessment" } }
+            ]
+          }
+        }
+      ],
+      tools: [
+        { name: "Inventory Management API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+        { name: "Supply Chain Risk API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+        { name: "Logistics Optimization API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+      ],
+      termination_condition: { description: "Session ends after optimized supply chain plan delivered." }
+    }
+  },
+  usage: 900,
+  rating: 4.7,
+  createdBy: 'Supply Chain Analytics Team',
+  lastUpdated: '2025-06-06'
+}
+
+  
 ];
 
 
