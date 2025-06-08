@@ -179,7 +179,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
           </div>
 
           {/* Use Cases Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-100 overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
             {displayedUseCases.map((useCase) => (
               <div
                 key={useCase.id}
