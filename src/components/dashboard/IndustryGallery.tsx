@@ -238,10 +238,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   </div>
                 )}
 
-       
-              <div className="flex flex-wrap gap-1 mt-2">
-          
-              </div>
+  
 
               </div>
             ))}
