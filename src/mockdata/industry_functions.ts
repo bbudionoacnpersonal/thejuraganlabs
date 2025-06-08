@@ -1,6 +1,6 @@
 // Industry and Focus Area options with enhanced prompts and context
 export const industries = [
-  {  
+  { 
     value: 'others',
     label: 'General Industry Services',
     keyPrompts: {
@@ -17,7 +17,9 @@ export const industries = [
         - Performance optimization
         - Customer satisfaction`,
       toolPriorities: ['process_automator', 'resource_optimizer', 'quality_monitor']
-    },
+    }
+  },
+  { 
     value: 'banking',
     label: 'Banking & Financing',
     keyPrompts: {
@@ -81,8 +83,8 @@ export const industries = [
     }
   },
   { 
-    value: 'cpg_manufacturing', // MERGED
-    label: 'Consumer Goods & Manufacturing', // MERGED
+    value: 'cpg_manufacturing',
+    label: 'Consumer Goods & Manufacturing',
     keyPrompts: {
       agentConsiderations: [
         'Production optimization & Quality control',
