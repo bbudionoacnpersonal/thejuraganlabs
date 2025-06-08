@@ -246,7 +246,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   </div>
                 
                   {/* Agents List */}
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-3 w-full">
                     {(useCase.autogenStructure?.config?.participants || []).map((participant: any, idx: number) => (
                       <div key={idx} className="bg-gray-700 rounded-lg p-2 flex flex-col w-40">
                         {/* Agent Label */}
