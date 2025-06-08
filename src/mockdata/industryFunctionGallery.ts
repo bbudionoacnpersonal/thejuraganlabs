@@ -48,7 +48,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
     id: 'banking_customer_support_ai',
     title: 'Banking Customer Support AI',
     description: 'AI agents for handling banking customer queries, fraud reporting, and issue resolution.',
-    industries: ['banking_financing', 'insurance_services'],
+    industries: ['banking'],
     functionAreas: ['Customer Service & Support'],
     difficulty: 'intermediate',
     estimatedTime: '30 minutes',
@@ -165,7 +165,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
     id: 'retail_sales_recommendation',
     title: 'Retail Sales Recommendation AI',
     description: 'AI agents recommend personalized products based on user preferences and history.',
-    industries: ['retail_ecommerce', 'consumer_goods_manufacturing'],
+    industries: ['retail', 'consumergoods_manufacturing'],
     functionAreas: ['Sales & Revenue Growth', 'Marketing & Brand Mgmt.'],
     difficulty: 'intermediate',
     estimatedTime: '35 minutes',
@@ -198,7 +198,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
           }
         ],
         tools: [
-          { name: "E-commerce API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Tiktok API", provider: "autogen_core.tools.ExternalAPI", config: {} },
           { name: "Product Inventory API", provider: "autogen_core.tools.ExternalAPI", config: {} },
           { name: "Recommendation Engine API", provider: "autogen_core.tools.ExternalAPI", config: {} }
         ],
@@ -216,7 +216,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
     id: 'telecom_network_ops',
     title: 'Telecom Network Operations Optimizer',
     description: 'Optimize telecom network performance with AI agents.',
-    industries: ['telecommunications_technology'],
+    industries: ['telecom_technology'],
     functionAreas: ['Ops & Process Engineering', 'IT & Data'],
     difficulty: 'advanced',
     estimatedTime: '60 minutes',
@@ -316,7 +316,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
   id: 'consumer_goods_supply_chain_optimization',
   title: 'Supply Chain Forecasting & Optimization AI',
   description: 'AI agents for predictive inventory management and supplier risk analysis.',
-  industries: ['consumer_goods_manufacturing', 'retail_ecommerce'],
+  industries: ['consumergoods_manufacturing', 'retail'],
   functionAreas: ['Procurement & Supply Chain', 'Ops & Process Engineering'],
   difficulty: 'advanced',
   estimatedTime: '55 minutes',
@@ -378,12 +378,99 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
   lastUpdated: '2025-06-06'
 },
 
+  //Bank underwriting automation
+{
+  id: 'banking_underwriting_automation',
+  title: 'Underwriting Automation AI',
+  description: 'AI-driven team to streamline and automate loan and insurance underwriting processes using risk modeling, document analysis, and personalized product recommendations.',
+  industries: ['banking'],
+  functionAreas: ['risk_compliance', 'operations', 'sales'],
+  difficulty: 'advanced',
+  estimatedTime: '75 minutes',
+  tags: ['#underwriting', '#risk-assessment', '#document-analysis', '#automation', '#product-recommendation'],
+  isPopular: true,
+  autogenStructure: {
+    provider: "autogen_agentchat.teams.SelectorGroupChat",
+    component_type: "team",
+    version: 1,
+    component_version: 1,
+    description: "Automate underwriting processes and suggest financial products with AI agents",
+    label: "Underwriting AI Team",
+    config: {
+      participants: [
+        {
+          provider: "autogen_agentchat.agents.AssistantAgent",
+          component_type: "agent",
+          version: 1,
+          component_version: 1,
+          description: "Analyzes customer risk profiles based on financial data",
+          label: "Risk Modeler",
+          config: {
+            name: "risk_modeler",
+            model_client: { model_name: "gpt-4" },
+            system_message: "Analyze financial data and generate customer risk scores.",
+            tools: [
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "risk_score_calculator" } },
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "credit_report_reader" } }
+            ]
+          }
+        },
+        {
+          provider: "autogen_agentchat.agents.AssistantAgent",
+          component_type: "agent",
+          version: 1,
+          component_version: 1,
+          description: "Performs automated document review for underwriting decisions",
+          label: "Document Reviewer",
+          config: {
+            name: "document_reviewer",
+            model_client: { model_name: "claude-3-haiku" },
+            system_message: "Review customer documents for underwriting validation.",
+            tools: [
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "document_analysis" } },
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "compliance_checker" } }
+            ]
+          }
+        },
+        {
+          provider: "autogen_agentchat.agents.AssistantAgent",
+          component_type: "agent",
+          version: 1,
+          component_version: 1,
+          description: "Recommends optimal financial products based on customer profile and risk assessment",
+          label: "Product Recommender",
+          config: {
+            name: "product_recommender",
+            model_client: { model_name: "gemini-1.5-pro" },
+            system_message: "Suggest best-fit loan or insurance products for the customer.",
+            tools: [
+              { provider: "autogen_core.tools.FunctionTool", config: { name: "recommendation_engine" } }
+            ]
+          }
+        }
+      ],
+      tools: [
+        { name: "Financial Data API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+        { name: "Document Validation API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+        { name: "Credit Bureau Integration", provider: "autogen_core.tools.ExternalAPI", config: {} },
+        { name: "Recommendation Engine API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+      ],
+      termination_condition: { description: "Terminate after underwriting decision and product recommendation are delivered." }
+    }
+  },
+  usage: 850,
+  rating: 4.95,
+  createdBy: 'Banking Underwriting Team',
+  lastUpdated: '2025-06-09'
+},
+
+
   //🛢️ Energy, Oil & Gas — Well Monitoring
 {
   id: 'energy_oilgas_well_monitoring',
   title: 'Well Monitoring & Production Optimization AI',
   description: 'AI agents continuously monitor well performance and optimize extraction processes.',
-  industries: ['energy_oil_gas', 'utilities'],
+  industries: ['resources_energy', 'utilities'],
   functionAreas: ['Asset Management', 'Environmental & Safety'],
   difficulty: 'advanced',
   estimatedTime: '60 minutes',

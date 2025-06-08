@@ -15,6 +15,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { industries, focusAreas } from '@/mockdata/industry_functions';
 import { industryFunctionGallery } from '@/mockdata/industryFunctionGallery'; 
+import GalleryFlowVisualizer from './gallery_flow_visualizer';  // <<-- Fixed import path!
+
 
 interface UseCaseTemplate {
   id: string;
@@ -55,14 +57,14 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
 
   const filteredUseCases = useMemo(() => {
     return (industryFunctionGallery || []).filter((useCase) => {
-      const matchIndustry = !submittedSearch.industry || useCase.industry === submittedSearch.industry;
+      const matchIndustry = !submittedSearch.industry || useCase.industries.includes(submittedSearch.industry); // <-- Fix here
       const matchFunctionArea = !submittedSearch.functionArea || useCase.functionAreas.includes(submittedSearch.functionArea);
       const matchSearchTerm =
         submittedSearch.term === '' ||
         useCase.title.toLowerCase().includes(submittedSearch.term.toLowerCase()) ||
         useCase.description.toLowerCase().includes(submittedSearch.term.toLowerCase()) ||
         useCase.tags.some((tag) => tag.toLowerCase().includes(submittedSearch.term.toLowerCase()));
-
+  
       return matchIndustry && matchFunctionArea && matchSearchTerm;
     });
   }, [submittedSearch]);
@@ -184,7 +186,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
           </div>
 
           {/* Use Cases Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[48vh] overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto">
             {displayedUseCases.map((useCase) => (
               <div
                 key={useCase.id}
@@ -194,9 +196,6 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="text-white font-medium text-sm">{useCase.title}</h3>
                   <div className="flex items-center gap-1">
-                    {useCase.isPopular && (
-                      <Badge size="sm\" variant="accent">Popular</Badge>
-                    )}
                     <Badge size="sm" className={getDifficultyColor(useCase.difficulty)}>
                       {useCase.difficulty}
                     </Badge>
@@ -209,7 +208,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 <div className="flex flex-wrap gap-1 mb-2">
                   {(useCase.tags || []).map((tag, idx) => (
                     <Badge key={idx} size="sm" className="bg-gray-800 text-white">
-                      #{tag}
+                      {tag}
                     </Badge>
                   ))}
                 </div>
@@ -233,36 +232,42 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <UsersIcon className="h-3 w-3 text-gray-500" />
+                    <UsersIcon className="h-2 w-2 text-gray-500" />
                     <span className="text-gray-500">{useCase.usage} uses</span>
                   </div>
                 </div>
 
                 {/* Team Section */}
-                <div className="bg-gray-800 p-2 rounded-lg mb-3">
+                <div className="bg-dark-800 p-2 rounded-lg mb-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <UsersIcon className="h-2 w-2 text-gray-500" />
+                    <UserGroupIcon className="h-3 w-3 text-gray-500" />
                     <span className="text-xs text-gray-500">{useCase.autogenStructure.provider?.split('.').pop()}</span>
                   </div>
                 
-                  {/* Agents List */}
-                  <div className="flex flex-wrap gap-3 w-full">
+                 {/* Agents List */}
+                  <div className="inline-flex flex-wrap gap-1 text-xs items-start">
+                    <span className="text-gray-400 w-full">AI Agents:</span>
                     {(useCase.autogenStructure?.config?.participants || []).map((participant: any, idx: number) => (
-                      <div key={idx} className="bg-gray-700 rounded-lg p-2 flex flex-col w-40">
-                        {/* Agent Label */}
-                        <div className="flex items-center gap-1 mb-1 w-full">
+                      <div key={idx} className="inline-flex items-center gap-1 bg-dark-400 p-1 rounded-lg">
+                        {/* Agent Name */}
+                        <div className="flex items-center gap-1">
                           <Bot className="h-2 w-2 text-gray-400" />
-                          <span className="text-xs text-gray-400">{participant.label || 'Unnamed Agent'}</span>
-                        <span className="bg-blue-400 text-white text-xs font-semibold rounded-full px-2 py-0.5 inline-flex items-center gap-1 mb-1 self-start">
-                            <SparklesIcon className="h-2 w-2" />
-                            {participant.config.model_client.model_name}</span>    
+                          <span className="text-xs text-gray-300">{participant.label || 'Unnamed Agent'}</span>
                         </div>
-                
-                        {/* Tools List */}
-                        <div className="flex flex-wrap gap-1">
+                  
+                        {/* Model Name */}
+                        {participant.config?.model_client?.model_name && (
+                          <div className="bg-dark-300 text-white text-xs rounded-lg px-2 py-0.5 inline-flex items-center gap-1">
+                            <SparklesIcon className="h-2 w-2" />
+                            {participant.config.model_client.model_name}
+                          </div>
+                        )}
+                  
+                        {/* Tools */}
+                        <div className="flex flex-wrap gap-1 ml-4">
                           {(participant.config?.tools || []).map((tool: any, toolIdx: number) => (
-                            <div key={toolIdx} className="bg-blue-700 text-white text-xs font-semibold rounded px-2 py-0.5 inline-flex items-center gap-1">
-                              <Wrench className="h-3 w-3" />
+                            <div key={toolIdx} className="bg-dark-300 text-white text-xs rounded-lg px-2 py-0.5 inline-flex items-center gap-1">
+                              <Wrench className="h-2 w-2" />
                               {tool.config?.name || 'Unnamed Tool'}
                             </div>
                           ))}
@@ -270,6 +275,9 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                       </div>
                     ))}
                   </div>
+
+
+                  
                 </div>
               </div>
             ))}
@@ -283,6 +291,9 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
             </div>
           )}
         </div>
+         <div className="p-4">
+            <GalleryFlowVisualizer autogenStructure={selectedUseCase.autogenStructure} />
+          </div>
       </Modal>
     </>
   );
