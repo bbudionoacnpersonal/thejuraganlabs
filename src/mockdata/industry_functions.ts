@@ -92,6 +92,7 @@ export const industries = [
         'System integration and API management',
         'Network optimization and monitoring',
         'Service quality and SLA management',
+        'Product offering and pricing management',
         'Technical documentation automation',
         'Infrastructure management (Cloud & On-prem)'
       ],
