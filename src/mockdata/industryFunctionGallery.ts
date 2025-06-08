@@ -47,7 +47,6 @@ export interface UseCaseTemplate {
   lastUpdated: string;
 }
 
-// ✅ UPDATED INDUSTRY + FUNCTION AREAS
 const industryFunctionGallery: UseCaseTemplate[] = [
   // 1. General Industry Services - Strategy & Innovation
   {
@@ -55,7 +54,7 @@ const industryFunctionGallery: UseCaseTemplate[] = [
     title: 'Corporate Strategy Brainstorming Assistant',
     description: 'Multi-agent system that helps executives brainstorm, evaluate, and refine corporate strategies based on market data and trends.',
     industry: 'general_industry_services',
-    functionAreas: ['innovation_rnd'],  // 🆕 Updated to match R&D function
+    functionAreas: ['strategy_innovation'],
     difficulty: 'intermediate',
     estimatedTime: '45 minutes',
     tags: ['strategy', 'innovation', 'market analysis'],
@@ -111,7 +110,7 @@ const industryFunctionGallery: UseCaseTemplate[] = [
     title: 'Automated Risk & Compliance Monitoring',
     description: 'AI agents that monitor financial transactions for compliance breaches and assess risk exposure in real-time.',
     industry: 'banking_financing',
-    functionAreas: ['legal_risk_policy'],  // 🆕 Updated to match Risk & Policy function
+    functionAreas: ['risk_compliance'],
     difficulty: 'advanced',
     estimatedTime: '60 minutes',
     tags: ['risk monitoring', 'compliance', 'fraud detection'],
@@ -167,7 +166,7 @@ const industryFunctionGallery: UseCaseTemplate[] = [
     title: 'AI Healthcare Customer Support Assistant',
     description: 'An AI assistant team that handles patient queries, appointment scheduling, and routing complex inquiries to human agents.',
     industry: 'healthcare_public_sector',
-    functionAreas: ['customer_service_support'],  // 🆕 Customer Support Function
+    functionAreas: ['customer_service'],
     difficulty: 'intermediate',
     estimatedTime: '30 minutes',
     tags: ['customer service', 'patient support', 'healthcare assistant'],
@@ -216,8 +215,8 @@ const industryFunctionGallery: UseCaseTemplate[] = [
     createdBy: 'Healthcare Customer Experience Team',
     lastUpdated: '2025-06-01'
   },
-  
-  // 🔥 (Optional) Add more examples here like Retail, Telecom, Energy if you want
+
+  // More entries here...
 ];
 
 export const filterUseCases = (options?: {

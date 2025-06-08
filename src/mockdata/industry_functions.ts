@@ -83,7 +83,7 @@ export const industries = [
     }
   },
   { 
-    value: 'cpg_manufacturing',
+    value: 'consumergoods_manufacturing',
     label: 'Consumer Goods & Manufacturing',
     keyPrompts: {
       agentConsiderations: [
@@ -345,13 +345,13 @@ export const focusAreas = [
   },
   
     { 
-    value: 'data',
-    label: 'Data  & Insights',
+    value: 'data_it',
+    label: 'IT & Data',
     function_group: 'Business & Corporate Functions',
     keyConsiderations: [
-      'Data processing',
-      'Pattern recognition',
-      'Predictive analytics',
+      'Data engineering and quality',
+      'IT services and SLA management',
+      'IT support and ticketing ',
       'Reporting automation'
     ]
   }
