@@ -96,6 +96,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
   };
 
   const handleUseCaseSelect = (useCase: UseCaseTemplate) => {
+     setShowGallery(false); // <-- CLOSE the Gallery Modal
     setSelectedUseCase(useCase);
      setShowFlowModal(true); // Open the flow modal
   };
