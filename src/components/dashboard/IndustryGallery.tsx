@@ -294,7 +294,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
      
       </Modal>
 
-        {/* -- Flow Visualizer Modal -- */}
+      {/* -- Flow Visualizer Modal -- */}
       {selectedUseCase && (
         <Modal
           isOpen={showFlowModal}
