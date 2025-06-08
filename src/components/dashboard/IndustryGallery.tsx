@@ -130,6 +130,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
               <label className="block text-sm text-gray-400 mb-1">Industry</label>
               <Select
                 value={currentFilterIndustry}
+                size="sm"
                 options={[
                   { value: '', label: 'All Industries' },
                   ...(industries?.map?.((industry) => ({
