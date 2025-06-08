@@ -108,7 +108,7 @@ const IndustryOnboardingPage: React.FC = () => {
                 </label>
                 <p className="text-sm text-gray-500 mb-4">Select all that apply.</p>
                 
-                <div className="space-y-2 border border-dark-border rounded-lg p-2">
+                <div className="space-y-2 border border-dark-border rounded-lg p-1">
                   {Object.entries(groupedFocusAreas).map(([groupName, areas]) => (
                     <div key={groupName} className="border-b border-dark-border last:border-b-0">
                       <button
