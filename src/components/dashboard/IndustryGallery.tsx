@@ -291,12 +291,25 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
             </div>
           )}
         </div>
-        {selectedUseCase && (
-          <div className="p-4">
+     
+      </Modal>
+
+        {/* -- Flow Visualizer Modal -- */}
+      {selectedUseCase && (
+        <Modal
+          isOpen={showFlowModal}
+          onClose={() => {
+            setShowFlowModal(false);
+            setSelectedUseCase(null);
+          }}
+          title={`Team Structure: ${selectedUseCase.title}`}
+          size="5xl"
+        >
+          <div className="p-4 h-[70vh]">
             <GalleryFlowVisualizer autogenStructure={selectedUseCase.autogenStructure} />
           </div>
-        )}
-      </Modal>
+        </Modal>
+      )}
     </>
   );
 };
