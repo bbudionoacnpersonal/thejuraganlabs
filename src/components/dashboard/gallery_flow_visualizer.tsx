@@ -55,10 +55,10 @@ const applyDagreLayout = (nodes: Node[], edges: Edge[]) => {
       position: {
         x: nodeWithPosition.x - nodeWidth / 2,
         y: nodeWithPosition.y - nodeHeight / 2,
-      },
+          },
+        };
+      });
     };
-  });
-};
 
 const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ autogenStructure }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
