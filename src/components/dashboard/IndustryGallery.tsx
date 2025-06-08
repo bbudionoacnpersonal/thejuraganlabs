@@ -234,35 +234,44 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   </div>
                 </div>
 
-                {/* Team Type */}
-                {useCase.autogenStructure?.provider && (
-                  <div className="flex items-center gap-2 text-xs text-secondary-400 mb-2">
-                   <Badge size="sm" className="bg-primary-400 text-white ">
-                      <UserGroupIcon className="h-2 w-2 text-white-500" />
-                      {useCase.autogenStructure.provider.split('.').pop()}
-                   </Badge>
-                    
-                    {/*agents*/}
-                    {(useCase.autogenStructure?.config?.participants || []).map((participant: any, idx: number) => (
-                    <Badge key={idx} size="sm" className="bg-secondary-400 text-white ">
-                      <Bot className="h-2 w-2 text-white-500" />
-                      {participant.label || 'Unnamed Agent'}
-                    </Badge>   
-                    ))}
+               {/* Team Section */}
+<div className="bg-purple-200 p-2 rounded-lg mb-3">
+  <div className="flex items-center gap-2 mb-2">
+    <UsersIcon className="h-4 w-4 text-black" />
+    <span className="font-bold text-black">{getTeamName(useCase.autogenStructure?.provider)}</span>
+  </div>
 
-                       
-                    {/* tools */}
-                    {(useCase.autogenStructure?.config?.tools || []).map((tool: any, idx: number) => (
-                      <Badge key={idx} size="sm" className="bg-primary-500 text-white">
-                        <Wrench className="h-2 w-2 text-white-500 mr-1" />
-                        {tool.name || 'Unnamed Tool'}
-                      </Badge>
-                    ))}
-  
-                  </div>
-                
-                )} {/*end of team type*/}
-              </div>
+  {/* Agents List */}
+  <div className="flex flex-wrap gap-3">
+    {(useCase.autogenStructure?.config?.participants || []).map((participant: any, idx: number) => (
+      <div key={idx} className="bg-gray-200 rounded-lg p-2 flex flex-col w-40">
+        {/* Agent Label */}
+        <div className="flex items-center gap-1 mb-1">
+          <Bot className="h-4 w-4 text-black" />
+          <span className="font-bold text-sm text-black">{participant.label || 'Unnamed Agent'}</span>
+        </div>
+
+        {/* LLM Model */}
+        {participant.config?.model_client?.model_name && (
+          <div className="bg-blue-400 text-white text-xs font-semibold rounded-full px-2 py-0.5 inline-flex items-center gap-1 mb-2 self-start">
+            <SparklesIcon className="h-3 w-3" />
+            {participant.config.model_client.model_name}
+          </div>
+        )}
+
+        {/* Tools List */}
+        <div className="flex flex-wrap gap-1">
+          {(participant.config?.tools || []).map((tool: any, toolIdx: number) => (
+            <div key={toolIdx} className="bg-blue-700 text-white text-xs font-semibold rounded px-2 py-0.5 inline-flex items-center gap-1">
+              <Wrench className="h-3 w-3" />
+              {tool.config?.name || 'Unnamed Tool'}
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
 
      
         
