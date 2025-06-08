@@ -192,9 +192,13 @@ export const industries = [
 ];
 
 export const focusAreas = [
+  // =================================
+  // 1. Customer-Facing Functions
+  // =================================
   { 
     value: 'customer_service',
     label: 'Customer Service & Support',
+    function_group: 'Customer-Facing Functions',
     keyConsiderations: [
       'Response time optimization',
       'Query categorization',
@@ -206,6 +210,7 @@ export const focusAreas = [
   { 
     value: 'sales',
     label: 'Sales & Revenue Growth',
+    function_group: 'Customer-Facing Functions',
     keyConsiderations: [
       'Lead qualification',
       'Sales pipeline optimization',
@@ -216,6 +221,7 @@ export const focusAreas = [
   { 
     value: 'marketing',
     label: 'Marketing & Brand Management',
+    function_group: 'Customer-Facing Functions',
     keyConsiderations: [
       'Campaign optimization',
       'Market analysis',
@@ -224,28 +230,76 @@ export const focusAreas = [
     ]
   },
   { 
+    value: 'social_commerce',
+    label: 'Social Commerce',
+    function_group: 'Customer-Facing Functions',
+    keyConsiderations: [
+      'Social media Tiktok and Instragram integration',
+      'Influencer analytics',
+      'Engagement optimization',
+      'Conversion tracking'
+    ]
+  },
+  // =================================
+  // 2. Core Business Operations
+  // =================================
+  { 
     value: 'operations',
-    label: 'Operations & Process Optimization',
+    label: 'Operations & Process Engineering',
+    function_group: 'Core Business Operations',
     keyConsiderations: [
       'Workflow automation',
       'Resource allocation',
       'Quality control',
-      'Performance monitoring'
+      'Performance monitoring',
+      'Process simulation and modeling',
+      'Heat and mass transfer optimization',
+      'Reaction kinetics analysis',
+      'Process safety analysis'
     ]
   },
   { 
-    value: 'hr',
-    label: 'HR & Talent Management',
+    value: 'supply_chain',
+    label: 'Supply Chain Management',
+    function_group: 'Core Business Operations',
     keyConsiderations: [
-      'Recruitment automation',
-      'Employee engagement',
-      'Performance evaluation',
-      'Training optimization'
+      'Feedstock procurement optimization',
+      'Chemical inventory management',
+      'Transportation and logistics',
+      'Supplier quality management',
+      'Market price analysis',
+      'Contract management'
     ]
   },
+  { 
+    value: 'data',
+    label: 'Data Analytics & Business Intelligence',
+    function_group: 'Core Business Operations',
+    keyConsiderations: [
+      'Data processing',
+      'Pattern recognition',
+      'Predictive analytics',
+      'Reporting automation'
+    ]
+  },
+  { 
+    value: 'innovation',
+    label: 'Innovation & R&D',
+    function_group: 'Core Business Operations',
+    keyConsiderations: [
+      'Trend analysis',
+      'Research automation',
+      'Patent monitoring',
+      'Technology assessment'
+    ]
+  },
+  // =================================
+  // 3. Business & Corporate Functions
+  // =================================
   { 
     value: 'finance',
     label: 'Financial Planning & Analysis',
+    function_group: 'Business & Corporate Functions',
     keyConsiderations: [
       'Budget optimization',
       'Financial forecasting',
@@ -256,6 +310,7 @@ export const focusAreas = [
   { 
     value: 'risk',
     label: 'Risk Management & Compliance',
+    function_group: 'Business & Corporate Functions',
     keyConsiderations: [
       'Risk assessment',
       'Compliance monitoring',
@@ -264,50 +319,20 @@ export const focusAreas = [
     ]
   },
   { 
-    value: 'innovation',
-    label: 'Innovation & R&D',
+    value: 'hr',
+    label: 'HR & Talent Management',
+    function_group: 'Business & Corporate Functions',
     keyConsiderations: [
-      'Trend analysis',
-      'Research automation',
-      'Patent monitoring',
-      'Technology assessment'
-    ]
-  },
-  { 
-    value: 'data',
-    label: 'Data Analytics & Business Intelligence',
-    keyConsiderations: [
-      'Data processing',
-      'Pattern recognition',
-      'Predictive analytics',
-      'Reporting automation'
-    ]
-  },
-  { 
-    value: 'social_commerce',
-    label: 'Social Commerce',
-    keyConsiderations: [
-      'Social media Tiktok and Instragram integration',
-      'Influencer analytics',
-      'Engagement optimization',
-      'Conversion tracking'
-    ]
-  },
-  { 
-    value: 'process_engineering',
-    label: 'Process Engineering & Optimization',
-    keyConsiderations: [
-      'Chemical process design',
-      'Process simulation and modeling',
-      'Heat and mass transfer optimization',
-      'Reaction kinetics analysis',
-      'Equipment sizing and selection',
-      'Process safety analysis'
+      'Recruitment automation',
+      'Employee engagement',
+      'Performance evaluation',
+      'Training optimization'
     ]
   },
   { 
     value: 'environmental_compliance',
     label: 'Environmental & Safety Compliance',
+    function_group: 'Business & Corporate Functions',
     keyConsiderations: [
       'Emissions monitoring and control',
       'Waste management optimization',
@@ -315,18 +340,6 @@ export const focusAreas = [
       'Safety protocol enforcement',
       'Regulatory reporting automation',
       'Incident management and prevention'
-    ]
-  },
-  { 
-    value: 'supply_chain',
-    label: 'Supply Chain Management',
-    keyConsiderations: [
-      'Feedstock procurement optimization',
-      'Chemical inventory management',
-      'Transportation and logistics',
-      'Supplier quality management',
-      'Market price analysis',
-      'Contract management'
     ]
   }
 ];
