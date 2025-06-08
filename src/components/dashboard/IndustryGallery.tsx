@@ -297,28 +297,28 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
      
       </Modal>
 
-      {/* -- Flow Visualizer Modal -- */}
-            {selectedUseCase && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                <div className="bg-dark-background rounded-lg shadow-lg p-6 relative w-5/6 max-w-6xl h-[80vh]">
-                  {/* Custom Close Button */}
-                  <button
-                    onClick={() => {
-                      setShowFlowModal(false);
-                      setSelectedUseCase(null);
-                    }}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-white"
-                  >
-                    <XMarkIcon className="h-6 w-6" />
-                  </button>
-      
-                  <h3 className="text-white text-lg font-bold mb-4">{selectedUseCase.title}</h3>
-      
-                  <div className="h-full">
-                    <GalleryFlowVisualizer autogenStructure={selectedUseCase.autogenStructure} />
-                  </div>
-                </div>
+        {/* -- Flow Visualizer Modal -- */}
+        {selectedUseCase && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-dark-background rounded-lg shadow-lg p-6 relative w-5/6 max-w-6xl h-[80vh]">
+              {/* Custom Close Button */}
+              <button
+                onClick={() => {
+                  setShowFlowModal(false);
+                  setSelectedUseCase(null);
+                }}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+  
+              <h3 className="text-white text-lg font-bold mb-4">{selectedUseCase.title}</h3>
+  
+              <div className="h-full">
+                <GalleryFlowVisualizer autogenStructure={selectedUseCase.autogenStructure} />
               </div>
+            </div>
+          </div>
         )}
       
     </>
