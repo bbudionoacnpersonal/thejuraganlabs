@@ -226,12 +226,12 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 {/* Team Type */}
                 {useCase.autogenStructure?.provider && (
                   <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                    <UserGroupIcon className="h-3 w-3 text-secondary-400" />
+                    <UserGroupIcon className="h-3 w-3 text-secondary-200" />
                    {useCase.autogenStructure.provider.split('.').pop()}
                     
                     {/*agents*/}
                     {(useCase.autogenStructure?.config?.participants || []).map((participant: any, idx: number) => (
-                    <Badge key={idx} size="sm" className="bg-secondary-200 text-white ">
+                    <Badge key={idx} size="sm" className="bg-secondary-400 text-white ">
                       <Bot className="h-2 w-2 text-white-500" />
                       {participant.label || 'Unnamed Agent'}
                     </Badge>
