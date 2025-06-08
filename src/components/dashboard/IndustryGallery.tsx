@@ -5,7 +5,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
 import Select from '@/components/ui/Select'; 
-import { Library, Bot } from 'lucide-react';
+import { Library, Bot, Wrench } from 'lucide-react';
 import {
   BuildingOffice2Icon,
   UsersIcon,
