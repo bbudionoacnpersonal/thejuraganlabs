@@ -250,7 +250,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     {(useCase.autogenStructure?.config?.participants || []).map((participant: any, idx: number) => (
                       <div key={idx} className="bg-gray-700 rounded-lg p-2 flex flex-col w-40">
                         {/* Agent Label */}
-                        <div className="flex items-center gap-1 mb-1">
+                        <div className="flex items-center gap-1 mb-1 w-full">
                           <Bot className="h-2 w-2 text-gray-400" />
                           <span className="text-xs text-gray-400">{participant.label || 'Unnamed Agent'}</span>
                         <span className="bg-blue-400 text-white text-xs font-semibold rounded-full px-2 py-0.5 inline-flex items-center gap-1 mb-1 self-start">
