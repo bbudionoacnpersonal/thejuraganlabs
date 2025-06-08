@@ -248,13 +248,8 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                       {participant.label || 'Unnamed Agent'}
                     </Badge>   
                     ))}
-  
-                  </div>
-                
-                )} {/*end of team type*/}
-              </div>
 
-        
+                       
                     {/* tools */}
                     {(useCase.autogenStructure?.config?.tools || []).map((tool: any, idx: number) => (
                       <Badge key={idx} size="sm" className="bg-primary-500 text-white">
@@ -262,6 +257,13 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                         {tool.name || 'Unnamed Tool'}
                       </Badge>
                     ))}
+  
+                  </div>
+                
+                )} {/*end of team type*/}
+              </div>
+
+     
         
             ))}
           </div>
