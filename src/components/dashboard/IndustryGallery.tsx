@@ -229,7 +229,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                    <Badge size="sm" className="bg-secondary-400 text-white ">
                       <UserGroupIcon className="h-3 w-3 text-secondary-400" />
                       {useCase.autogenStructure.provider.split('.').pop()}
-                   </Bagde>
+                   </Badge>
                     
                     {/*agents*/}
                     {(useCase.autogenStructure?.config?.participants || []).map((participant: any, idx: number) => (
