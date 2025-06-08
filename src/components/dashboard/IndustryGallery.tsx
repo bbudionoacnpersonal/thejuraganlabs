@@ -170,8 +170,8 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
             </div>
 
             <div>
-              <Button onClick={handleSearch} className="w-full">
-                <MagnifyingGlassIcon className="h-2 w-2 mr-2" />
+              <Button leftIcon={  <MagnifyingGlassIcon className="h-2 w-2 mr-2" />} onClick={handleSearch} className="w-full">
+              
                 Search
               </Button>
             </div>
