@@ -113,7 +113,7 @@ const IndustryOnboardingPage: React.FC = () => {
                     <div key={groupName} className="border-b border-dark-border last:border-b-0">
                       <button
                         type="button"
-                        className="w-full flex justify-between items-center hover:bg-dark-surface rounded-md"
+                        className="w-full flex justify-between items-center p-1 hover:bg-dark-surface rounded-md"
                         onClick={() => handleAccordionClick(groupName)}
                       >
                         <span className="text-base font-semibold text-gray-300 text-left">
