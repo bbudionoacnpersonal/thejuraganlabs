@@ -14,8 +14,8 @@ import ReactFlow, {
 } from 'reactflow';
 import dagre from 'dagre';
 import 'reactflow/dist/style.css';
-import AutogenNode from '../create-agent/AutogenNode'; // Your custom node
-import { extractTeamTypeFromProvider } from '@/utils/extractTeamType'; // helper to extract team name
+import AutogenNode from '../create-agent/AutogenNode'; // <-- Updated Import
+import { extractTeamTypeFromProvider } from '@/utils/extractTeamType'; // Your utility function
 
 interface GalleryFlowVisualizerProps {
   autogenStructure: any; // Structure from the selected use case
@@ -33,7 +33,6 @@ dagreGraph.setDefaultEdgeLabel(() => ({}));
 const NODE_WIDTH = 300;
 const NODE_HEIGHT = 200;
 
-// 🧩 Improved Layout
 dagreGraph.setGraph({
   rankdir: 'TB',   // Top to Bottom
   ranksep: 100,    // Vertical separation
