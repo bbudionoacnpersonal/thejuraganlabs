@@ -1,6 +1,6 @@
 // src/mockdata/industryFunctionGallery.ts
 
-export interface UseCaseTemplate {
+interface UseCaseTemplate {
   id: string;
   title: string;
   description: string;
@@ -219,7 +219,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
   // More entries here...
 ];
 
-export const filterUseCases = (options?: {
+const filterUseCases = (options?: {
   industry?: string;
   functionAreas?: string[];
   searchTerm?: string;
@@ -252,7 +252,7 @@ export const filterUseCases = (options?: {
   return filteredCases;
 };
 
-export const getPopularUseCases = (): UseCaseTemplate[] => {
+const getPopularUseCases = (): UseCaseTemplate[] => {
   return industryFunctionGallery
     .filter((useCase) => useCase.isPopular)
     .sort((a, b) => b.usage - a.usage);

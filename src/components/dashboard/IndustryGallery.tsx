@@ -4,19 +4,15 @@ import Card, { CardBody } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
-import Select from '@/components/ui/Select';
-import { Library, FilterX, Bot } from 'lucide-react';
+import Select from '@/components/ui/Select'; // <-- assumes it's from your UI components
+import { Library, Bot } from 'lucide-react';
 import {
-  SparklesIcon,
-  CodeBracketIcon,
-  UserGroupIcon,
-  UsersIcon,
-  TagIcon,
   BuildingOffice2Icon,
+  UsersIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import { industries, focusAreas } from '@/mockdata/industry_functions';
-import { industryFunctionGallery } from '@/mockdata/industryFunctionGallery';
+import { industryFunctionGallery } from '@/mockdata/industryFunctionGallery'; // <-- make sure this is not undefined
 
 interface UseCaseTemplate {
   id: string;
@@ -33,6 +29,7 @@ interface UseCaseTemplate {
   rating: number;
   createdBy: string;
   lastUpdated: string;
+  agents: string[];
 }
 
 interface IndustryGalleryProps {
@@ -47,31 +44,28 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
   const [showGallery, setShowGallery] = useState(false);
   const [selectedUseCase, setSelectedUseCase] = useState<UseCaseTemplate | null>(null);
 
-  const [currentFilterIndustry, setCurrentFilterIndustry] = useState(userIndustry);
-  const [currentFilterFunctionAreas, setCurrentFilterFunctionAreas] = useState<string[]>(userFocusAreas);
+  const [currentFilterIndustry, setCurrentFilterIndustry] = useState('');
+  const [currentFilterFunctionArea, setCurrentFilterFunctionArea] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [submittedSearch, setSubmittedSearch] = useState({ industry: '', functionArea: '', term: '' });
 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  // 🔥 Filtering Logic
   const filteredUseCases = useMemo(() => {
-    return industryFunctionGallery.filter((useCase) => {
-      const matchIndustry = !currentFilterIndustry || useCase.industry === currentFilterIndustry;
-      const matchFunctionAreas =
-        currentFilterFunctionAreas.length === 0 ||
-        currentFilterFunctionAreas.some((area) => useCase.functionAreas.includes(area));
+    return (industryFunctionGallery || []).filter((useCase) => {
+      const matchIndustry = !submittedSearch.industry || useCase.industry === submittedSearch.industry;
+      const matchFunctionArea = !submittedSearch.functionArea || useCase.functionAreas.includes(submittedSearch.functionArea);
       const matchSearchTerm =
-        searchTerm === '' ||
-        useCase.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        useCase.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        useCase.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+        submittedSearch.term === '' ||
+        useCase.title.toLowerCase().includes(submittedSearch.term.toLowerCase()) ||
+        useCase.description.toLowerCase().includes(submittedSearch.term.toLowerCase()) ||
+        useCase.tags.some((tag) => tag.toLowerCase().includes(submittedSearch.term.toLowerCase()));
 
-      return matchIndustry && matchFunctionAreas && matchSearchTerm;
+      return matchIndustry && matchFunctionArea && matchSearchTerm;
     });
-  }, [currentFilterIndustry, currentFilterFunctionAreas, searchTerm]);
+  }, [submittedSearch]);
 
-  // Pagination
   const totalPages = Math.ceil(filteredUseCases.length / pageSize);
   const displayedUseCases = useMemo(() => {
     const startIdx = (currentPage - 1) * pageSize;
@@ -95,42 +89,27 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
     setSelectedUseCase(useCase);
   };
 
-  const handleUseTemplate = (useCase: UseCaseTemplate) => {
-    console.log('Using template:', useCase.title);
-    setSelectedUseCase(null);
-    setShowGallery(false);
+  const handleSearch = () => {
+    setSubmittedSearch({
+      industry: currentFilterIndustry,
+      functionArea: currentFilterFunctionArea,
+      term: searchTerm,
+    });
+    setCurrentPage(1);
   };
-
-  const exportTemplate = (useCase: UseCaseTemplate) => {
-    const dataStr = JSON.stringify(useCase.autogenStructure, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    const exportFileDefaultName = `${useCase.id}_template.json`;
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  };
-
-  const industryLabel = currentFilterIndustry
-    ? industries.find((i) => i.value === currentFilterIndustry)?.label || 'All Industries'
-    : 'All Industries';
-
-  const functionAreasLabel = currentFilterFunctionAreas.length > 0
-    ? `Function Areas (${currentFilterFunctionAreas.length} selected)`
-    : 'All Functions';
 
   return (
     <>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
         <Card className="h-full">
           <CardBody className="flex flex-col items-center text-center p-4">
-            <h2 className="text-xl font-bold text-white mb-2">Industry Use Case Gallery</h2>
+            <h2 className="text-xl font-bold text-white mb-2">Use Case Gallery</h2>
             <p className="text-gray-400 mb-4 text-sm px-4">
-              Explore pre-built AI agent templates tailored for your industry and focus areas.
+              Explore AI agent templates by industry and function.
             </p>
             <div className="w-full bg-dark-background rounded-lg p-4">
               <Button size="sm" leftIcon={<Library className="h-4 w-4" />} onClick={() => setShowGallery(true)} className="w-full">
-                Explore Use Case Gallery ({industryFunctionGallery.length} templates)
+                Explore Gallery ({industryFunctionGallery?.length || 0} templates)
               </Button>
             </div>
           </CardBody>
@@ -146,50 +125,55 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
       >
         <div className="space-y-4">
           {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-dark-background rounded-lg">
-            <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search templates..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-dark-surface border border-dark-border rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-secondary-600"
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-dark-background rounded-lg items-end">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Industry</label>
+              <Select
+                value={currentFilterIndustry}
+                options={[
+                  { value: '', label: 'All Industries' },
+                  ...(industries?.map?.((industry) => ({
+                    value: industry.value,
+                    label: industry.label
+                  })) || [])
+                ]}
+                onChange={(value) => setCurrentFilterIndustry(value as string)}
+                selectClassName="bg-dark-surface border-dark-border text-white"
               />
             </div>
-            
-            <Select
-              value={currentFilterIndustry}
-              options={[
-                { value: '', label: 'All Industries' },
-                ...industries.map(industry => ({
-                  value: industry.value,
-                  label: industry.label
-                }))
-              ]}
-              onChange={(value) => setCurrentFilterIndustry(value as string)}
-              selectClassName="bg-dark-surface border-dark-border text-white"
-            />
-            
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-400">
-                {filteredUseCases.length} of {industryFunctionGallery.length} templates
-              </span>
-              {(currentFilterIndustry || currentFilterFunctionAreas.length > 0 || searchTerm) && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    setCurrentFilterIndustry('');
-                    setCurrentFilterFunctionAreas([]);
-                    setSearchTerm('');
-                    setCurrentPage(1);
-                  }}
-                  leftIcon={<FilterX className="h-3 w-3" />}
-                >
-                  Clear
-                </Button>
-              )}
+
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Function Area</label>
+              <Select
+                value={currentFilterFunctionArea}
+                options={[
+                  { value: '', label: 'All Functions' },
+                  ...(focusAreas?.map?.((focus) => ({
+                    value: focus.value,
+                    label: focus.label
+                  })) || [])
+                ]}
+                onChange={(value) => setCurrentFilterFunctionArea(value as string)}
+                selectClassName="bg-dark-surface border-dark-border text-white"
+              />
+            </div>
+
+            <div className="relative">
+              <label className="block text-sm text-gray-400 mb-1">Search</label>
+              <input
+                type="text"
+                placeholder="Search by keyword..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-3 pr-4 py-2 bg-dark-surface border border-dark-border rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-secondary-600"
+              />
+            </div>
+
+            <div>
+              <Button onClick={handleSearch} className="w-full">
+                <MagnifyingGlassIcon className="h-4 w-4 mr-2" />
+                Search
+              </Button>
             </div>
           </div>
 
@@ -212,14 +196,14 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     </Badge>
                   </div>
                 </div>
-                
+
                 <p className="text-gray-400 text-xs mb-3 line-clamp-2">{useCase.description}</p>
-                
+
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <BuildingOffice2Icon className="h-3 w-3 text-gray-500" />
                     <span className="text-gray-500">
-                      {industries.find(i => i.value === useCase.industry)?.label || useCase.industry}
+                      {industries?.find(i => i.value === useCase.industry)?.label || useCase.industry}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -227,16 +211,14 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     <span className="text-gray-500">{useCase.usage} uses</span>
                   </div>
                 </div>
-                
+
+                {/* Agents badges */}
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {useCase.tags.slice(0, 3).map((tag) => (
-                    <span key={tag} className="text-xs bg-dark-surface px-2 py-1 rounded text-gray-400">
-                      {tag}
-                    </span>
+                  {(useCase.agents || []).map((agent) => (
+                    <Badge key={agent} size="sm" className="bg-primary-600 text-white">
+                      {agent}
+                    </Badge>
                   ))}
-                  {useCase.tags.length > 3 && (
-                    <span className="text-xs text-gray-500">+{useCase.tags.length - 3}</span>
-                  )}
                 </div>
               </div>
             ))}
@@ -249,93 +231,8 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
               <p className="text-gray-400">Try adjusting your search criteria</p>
             </div>
           )}
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex justify-between items-center pt-4">
-              <Button
-                size="sm"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              >
-                Previous
-              </Button>
-              <span className="text-gray-400 text-sm">
-                Page {currentPage} of {totalPages}
-              </span>
-              <Button
-                size="sm"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              >
-                Next
-              </Button>
-            </div>
-          )}
         </div>
       </Modal>
-
-      {/* Modal for Selected Use Case */}
-      {selectedUseCase && (
-        <Modal isOpen={!!selectedUseCase} onClose={() => setSelectedUseCase(null)} title={selectedUseCase.title} size="xl">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Badge className={getDifficultyColor(selectedUseCase.difficulty)}>
-                  {selectedUseCase.difficulty}
-                </Badge>
-                <span className="text-sm text-gray-400">{selectedUseCase.estimatedTime}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400">⭐ {selectedUseCase.rating}/5</span>
-                <span className="text-sm text-gray-400">({selectedUseCase.usage} uses)</span>
-              </div>
-            </div>
-            
-            <p className="text-gray-300">{selectedUseCase.description}</p>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h4 className="text-sm font-medium text-white mb-2">Industry</h4>
-                <p className="text-sm text-gray-400">
-                  {industries.find(i => i.value === selectedUseCase.industry)?.label || selectedUseCase.industry}
-                </p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-white mb-2">Function Areas</h4>
-                <div className="flex flex-wrap gap-1">
-                  {selectedUseCase.functionAreas.map((area) => (
-                    <span key={area} className="text-xs bg-dark-surface px-2 py-1 rounded text-gray-400">
-                      {focusAreas.find(f => f.value === area)?.label || area}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-white mb-2">Tags</h4>
-              <div className="flex flex-wrap gap-1">
-                {selectedUseCase.tags.map((tag) => (
-                  <span key={tag} className="text-xs bg-dark-surface px-2 py-1 rounded text-gray-400">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-            
-            <div className="flex gap-2 pt-4">
-              <Button onClick={() => handleUseTemplate(selectedUseCase)} className="flex-1">
-                Use This Template
-              </Button>
-              <Button variant="ghost" onClick={() => exportTemplate(selectedUseCase)}>
-                <CodeBracketIcon className="h-4 w-4 mr-2" />
-                Export JSON
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
     </>
   );
 };
