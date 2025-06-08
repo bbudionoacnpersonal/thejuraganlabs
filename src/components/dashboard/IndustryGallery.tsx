@@ -16,6 +16,7 @@ import {
   TagIcon,
   DocumentArrowDownIcon,
   PlayIcon,
+  BuildingOffice2Icon, // Import a relevant icon for industry
 } from '@heroicons/react/24/outline';
 import {
   filterUseCases,
@@ -125,21 +126,24 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
             animate={{ opacity: 1 }}
             className="bg-dark-surface p-4 rounded-lg border border-dark-border"
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-top">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <Select
                 label="Industry"
                 size="sm"
                 options={[{ value: '', label: 'All Industries' }, ...industries]}
                 value={currentFilterIndustry}
-                onChange={(value) => setCurrentFilterIndustry(value as string)}
+                onChange={(e) => setCurrentFilterIndustry(e.target.value)}
               />
               <Select
                 label="Function Areas"
                 size="sm"
                 options={[{ value: '', label: 'All Function Areas' }, ...focusAreas]}
+                isMulti
                 value={currentFilterFunctionAreas}
                 onChange={(selectedOptions) =>
-                  setCurrentFilterFunctionAreas(Array.isArray(selectedOptions) ? selectedOptions : [selectedOptions])
+                  setCurrentFilterFunctionAreas(
+                    (selectedOptions as any[]).map((opt) => opt.value)
+                  )
                 }
               />
               <Button
@@ -150,7 +154,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   setCurrentFilterIndustry('');
                   setCurrentFilterFunctionAreas([]);
                 }}
-                leftIcon={<FilterX className="h-2 w-2" />}
+                leftIcon={<FilterX className="h-4 w-4" />}
               >
                 Clear Filters
               </Button>
