@@ -1,5 +1,4 @@
 // src/components/GalleryFlowVisualizer.tsx
-
 import React, { useEffect, useState, useCallback } from 'react';
 import ReactFlow, {
   Background,
@@ -13,22 +12,24 @@ import ReactFlow, {
   Edge,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import AutogenNode from '../create-agent/AutogenNode'; // <- your custom node
-import dagre from 'dagre'; // <- bring dagre here
+import AutogenNode from '../create-agent/AutogenNode'; // Your custom node
+import dagre from 'dagre';
 
 interface GalleryFlowVisualizerProps {
   autogenStructure: any; // from useCase.autogenStructure
   title: string;
+  onApplyTemplate: (structure: any) => void; // 🎯 callback to parent
 }
 
 const nodeTypes = {
   custom: AutogenNode,
 };
 
-const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ autogenStructure, title }) => {
+const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ autogenStructure, title, onApplyTemplate }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
   const { fitView } = useReactFlow();
+  const [showConfirm, setShowConfirm] = useState(false); // 🎯 Confirmation State
 
   const buildInitialFlow = useCallback(() => {
     if (!autogenStructure) return;
@@ -37,7 +38,6 @@ const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ au
     const nodes: Node[] = [];
     const edges: Edge[] = [];
 
-    // Team Node
     nodes.push({
       id: 'team',
       type: 'custom',
@@ -66,7 +66,6 @@ const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ au
       position: { x: 0, y: 0 },
     });
 
-    // Agent Nodes
     participants.forEach((participant: any, idx: number) => {
       nodes.push({
         id: `agent-${idx}`,
@@ -86,7 +85,7 @@ const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ au
         id: `edge-team-agent-${idx}`,
         source: 'team',
         target: `agent-${idx}`,
-        type: 'bezier',
+        type: 'smoothstep',
         animated: true,
         style: { stroke: '#4D9CFF', strokeWidth: 2 },
       });
@@ -105,36 +104,78 @@ const GalleryFlowVisualizerContent: React.FC<GalleryFlowVisualizerProps> = ({ au
     buildInitialFlow();
   }, [buildInitialFlow]);
 
+  const handleApplyTemplate = () => {
+    setShowConfirm(true); // 🎯 show confirmation popup
+  };
+
+  const confirmApplyTemplate = () => {
+    setShowConfirm(false);
+    onApplyTemplate(autogenStructure); // 🎯 pass to parent
+  };
+
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      nodeTypes={nodeTypes}
-      defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
-      fitViewOptions={{ padding: 0.2 }}
-      minZoom={0.3}
-      maxZoom={1}
-      proOptions={{ hideAttribution: true }}
-    >
-      <Background color="#333" gap={16} />
-      <Controls
-        className="bg-dark-surface border border-dark-border rounded-md"
-        showInteractive={false}
-      />
-      <Panel position="top-left" className="bg-dark-surface/50 backdrop-blur-sm p-2 rounded-md border border-dark-border">
-        <div className="flex items-center justify-between text-xs text-white mb-2">
-          {title}
+    <div className="relative h-full w-full">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
+        defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
+        fitViewOptions={{ padding: 0.2 }}
+        minZoom={0.3}
+        maxZoom={1}
+        proOptions={{ hideAttribution: true }}
+      >
+        <Background color="#333" gap={16} />
+        <Controls
+          className="bg-dark-surface border border-dark-border rounded-md"
+          showInteractive={false}
+        />
+        <Panel position="top-left" className="bg-dark-surface/50 backdrop-blur-sm p-2 rounded-md border border-dark-border">
+          <div className="flex flex-col gap-2 text-xs text-white mb-2">
+            {title}
+          </div>
+          <button
+            onClick={buildInitialFlow}
+            className="mt-2 bg-dark-400 text-white text-xs rounded-md px-3 py-1 hover:bg-dark-500 transition"
+          >
+            Auto Layout
+          </button>
+          <button
+            onClick={handleApplyTemplate}
+            className="mt-2 bg-primary-600 text-white text-xs rounded-md px-3 py-1 hover:bg-primary-700 transition"
+          >
+            Apply Template
+          </button>
+        </Panel>
+      </ReactFlow>
+
+      {/* Confirmation Popup */}
+      {showConfirm && (
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[300px] shadow-lg flex flex-col items-center gap-4">
+            <div className="text-gray-800 text-center">
+              Are you sure you want to apply this template?
+            </div>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-2 rounded bg-gray-300 text-gray-700 hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmApplyTemplate}
+                className="px-4 py-2 rounded bg-primary-600 text-white hover:bg-primary-700"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
         </div>
-        <button
-          onClick={buildInitialFlow}
-          className="mt-2 bg-dark-400 text-white text-xs rounded-md px-3 py-1 hover:bg-dark-500 transition"
-        >
-          Auto Layout
-        </button>
-      </Panel>
-    </ReactFlow>
+      )}
+    </div>
   );
 };
 
@@ -157,7 +198,7 @@ const extractTeamType = (provider: string) => {
   return parts[parts.length - 1]; // e.g., RoundRobinGroupChat
 };
 
-// 🚀 DAGRE LAYOUT LOGIC (horizontal, LR)
+// DAGRE LAYOUT
 const applyAutoLayout = (nodes: Node[], edges: Edge[]) => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
