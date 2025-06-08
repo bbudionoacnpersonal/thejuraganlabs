@@ -308,7 +308,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 onClick={() => {
                   setShowFlowModal(false);
                   setSelectedUseCase(null);
-                   setShowGallery(true); // <-- Reopen Gallery Modal on close
+                  setShowGallery(true); // <-- Reopen Gallery Modal on close
                 }}
                 className="absolute top-4 right-4 text-gray-400 hover:text-white"
               >
