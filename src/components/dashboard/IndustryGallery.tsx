@@ -144,7 +144,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     (selectedOptions as any[]).map((opt) => opt.value)
                   )
                 }
-              />Clear
+              />
               <Button
                 variant="ghost"
                 size="sm"
