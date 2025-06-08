@@ -291,9 +291,11 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
             </div>
           )}
         </div>
-         <div className="p-4">
+        {selectedUseCase && (
+          <div className="p-4">
             <GalleryFlowVisualizer autogenStructure={selectedUseCase.autogenStructure} />
           </div>
+        )}
       </Modal>
     </>
   );
