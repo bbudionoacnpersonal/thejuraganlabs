@@ -13,8 +13,8 @@ import ReactFlow, {
   Edge,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import AutogenNode from '../create-agent/AutogenNode'; // ← your custom node
-import { applyAutoLayout } from '@/utils/dagreLayout'; // ← dagre layout utility
+import AutogenNode from '../create-agent/AutogenNode'; // <- your custom node
+import dagre from 'dagre'; // <- bring dagre here
 
 interface GalleryFlowVisualizerProps {
   autogenStructure: any; // from useCase.autogenStructure
@@ -152,7 +152,4 @@ export default GalleryFlowVisualizer;
 
 // Helper to extract team type
 const extractTeamType = (provider: string) => {
-  if (!provider) return 'Unknown Team';
-  const parts = provider.split('.');
-  return parts[parts.length - 1]; // e.g., RoundRobinGroupChat
-};
+  if (!provider) return '
