@@ -152,23 +152,26 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
               />
             </div>
         
-            {/* Search Input */}
-            <div className="relative flex-grow min-w-[250px]">
-              <label htmlFor="gallery-search" className="block text-sm font-medium text-gray-300 mb-1">
-                Search
-              </label>
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none top-7">
-                <MagnifyingGlassIcon className="h-2 w-2 text-gray-400" />
-              </div>
-              <input
-                id="gallery-search"
-                type="text"
-                placeholder="Search by title, description, or tag..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-dark-surface border border-dark-border rounded-md py-2 pl-12 pr-4 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-secondary-600"
-              />
-            </div>
+          {/* Search Input */}
+<div className="relative flex-grow min-w-[250px]">
+  {/* The label has been removed to reduce the component's total height */}
+  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+    {/* The "top-7" class was removed to vertically center the icon */}
+    <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
+  </div>
+  <input
+    id="gallery-search"
+    type="text"
+    placeholder="Search by title, description, or tag..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    /*
+      - py-2 is changed to py-1.5 for a smaller height that matches "sm" selects.
+      - pl-12 is changed to pl-9 to account for the icon.
+    */
+    className="w-full bg-dark-surface border border-dark-border rounded-md py-1.5 pl-9 pr-4 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-secondary-600"
+  />
+</div>
         
             {/* Clear Button */}
             <div className="flex-shrink-0">
