@@ -33,9 +33,9 @@ const nodeHeight = 300; // make this bigger, close to real node height
 
 const applyDagreLayout = (nodes: Node[], edges: Edge[]) => {
   g.setGraph({ 
-    rankdir: 'TB',   // Top to Bottom
-    nodesep: 80,     // more separation between nodes horizontally
-    ranksep: 220     // more separation vertically
+    rankdir: 'LR',   // Top to Bottom
+    nodesep: 120,     // more separation between nodes horizontally
+    ranksep: 120     // more separation vertically
   });
 
   nodes.forEach((node) => {
