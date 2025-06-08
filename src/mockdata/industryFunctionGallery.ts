@@ -311,6 +311,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
     lastUpdated: '2025-06-05'
   },
 
+  //Consumer Goods & Manufacturing — Supply Chain Optimization
   {
   id: 'consumer_goods_supply_chain_optimization',
   title: 'Supply Chain Forecasting & Optimization AI',
