@@ -246,9 +246,17 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     <Badge key={idx} size="sm" className="bg-secondary-400 text-white ">
                       <Bot className="h-2 w-2 text-white-500" />
                       {participant.label || 'Unnamed Agent'}
-                    </Badge>
-                    
+                    </Badge>   
                     ))}
+
+                    {/* tools */}
+                    {(useCase.autogenStructure?.config?.tools || []).map((tool: any, idx: number) => (
+                      <Badge key={idx} size="sm" className="bg-primary-500 text-white">
+                        <CodeBracketIcon className="h-2 w-2 text-white-500 mr-1" />
+                        {tool.name || 'Unnamed Tool'}
+                      </Badge>
+                    ))}
+                    
                   </div>
                 )} {/*end of team type*/}
               </div>
