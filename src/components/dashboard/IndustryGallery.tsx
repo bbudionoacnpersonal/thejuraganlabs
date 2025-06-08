@@ -229,7 +229,6 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     <UserGroupIcon className="h-3 w-3 text-gray-500" />
                    {useCase.autogenStructure.provider.split('.').pop()}
                     {(useCase.autogenStructure?.config?.participants || []).map((participant: any, idx: number) => (
-                  
                     <Badge key={idx} size="sm" className="bg-secondary-600 text-white">
                     <Bot className="h-2 w-2 text-white-500" />
                     {participant.label || 'Unnamed Agent'}
