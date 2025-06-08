@@ -310,6 +310,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
           </div>
         </Modal>
       )}
+      
     </>
   );
 };
