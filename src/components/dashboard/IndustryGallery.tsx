@@ -225,7 +225,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
 
                 {/* Team Type */}
                 {useCase.autogenStructure?.provider && (
-                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                  <div className="flex items-center gap-2 text-xs text-secondary-400 mb-2">
                     <UserGroupIcon className="h-3 w-3 text-secondary-400" />
                    {useCase.autogenStructure.provider.split('.').pop()}
                     
