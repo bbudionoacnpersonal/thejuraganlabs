@@ -27,6 +27,9 @@ interface UseCaseTemplate {
         label: string;
         config: {
           name: string;
+          model_client: {
+            model_name: string;
+          };
           system_message?: string;
           tools?: Array<{
             provider: string;
@@ -58,7 +61,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
     functionAreas: ['Innovation and R&D'],
     difficulty: 'intermediate',
     estimatedTime: '45 minutes',
-    tags: ['strategy', 'innovation', 'market analysis'],
+    tags: ['#strategy', '#innovation', '#market-analysis'],
     isPopular: true,
     autogenStructure: {
       provider: "autogen_agentchat.teams.RoundRobinGroupChat",
@@ -78,8 +81,12 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
             label: "Market Analyst",
             config: {
               name: "market_analyst",
-              system_message: "Analyze market trends.",
-              tools: [{ provider: "autogen_core.tools.FunctionTool", config: { name: "analyze_market_data" } }]
+              model_client: { model_name: "gpt-4" },
+              system_message: "Analyze market trends and competitive landscape.",
+              tools: [
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "market_trend_analyzer" } },
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "swot_analysis" } }
+              ]
             }
           }
         ],
@@ -105,7 +112,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
     functionAreas: ['Legal, Risk, & Policy'],
     difficulty: 'advanced',
     estimatedTime: '60 minutes',
-    tags: ['risk monitoring', 'compliance', 'fraud detection'],
+    tags: ['#risk-monitoring', '#compliance', '#fraud-detection'],
     isPopular: true,
     autogenStructure: {
       provider: "autogen_agentchat.teams.SelectorGroupChat",
@@ -125,14 +132,19 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
             label: "Compliance Checker",
             config: {
               name: "compliance_checker",
-              system_message: "Check financial transactions for risks.",
-              tools: [{ provider: "autogen_core.tools.FunctionTool", config: { name: "check_compliance" } }]
+              model_client: { model_name: "claude-3-sonnet" },
+              system_message: "Check financial transactions for risks and compliance.",
+              tools: [
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "risk_evaluation" } },
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "compliance_report_generator" } }
+              ]
             }
           }
         ],
         tools: [
           { name: "Workday API", provider: "autogen_core.tools.ExternalAPI", config: {} },
-          { name: "SAP DWC Integration", provider: "autogen_core.tools.ExternalAPI", config: {} }
+          { name: "SAP DWC Integration", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Salesforce Compliance API", provider: "autogen_core.tools.ExternalAPI", config: {} }
         ],
         termination_condition: { description: "Terminate after compliance report is generated." }
       }
@@ -152,7 +164,7 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
     functionAreas: ['Customer Service & Support'],
     difficulty: 'intermediate',
     estimatedTime: '30 minutes',
-    tags: ['customer service', 'healthcare', 'support'],
+    tags: ['#patient-support', '#healthcare', '#customer-service'],
     isPopular: true,
     autogenStructure: {
       provider: "autogen_agentchat.teams.RoundRobinGroupChat",
@@ -172,14 +184,19 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
             label: "Scheduler",
             config: {
               name: "scheduler",
+              model_client: { model_name: "gemini-1.5-pro" },
               system_message: "Help schedule patient appointments.",
-              tools: [{ provider: "autogen_core.tools.FunctionTool", config: { name: "schedule_appointment" } }]
+              tools: [
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "appointment_scheduler" } },
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "patient_record_lookup" } }
+              ]
             }
           }
         ],
         tools: [
           { name: "360 Customer API", provider: "autogen_core.tools.ExternalAPI", config: {} },
-          { name: "Workday API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+          { name: "Workday API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Electronic Health Record API", provider: "autogen_core.tools.ExternalAPI", config: {} }
         ],
         termination_condition: { description: "Terminate after scheduling is completed." }
       }
@@ -194,12 +211,12 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
   {
     id: 'retail_personalized_marketing',
     title: 'Retail Personalized Marketing AI',
-    description: 'Target marketing campaigns based on customer behavior.',
+    description: 'Create targeted marketing campaigns based on customer behavior.',
     industry: 'retail_ecommerce',
     functionAreas: ['Marketing & Brand Mgmt.'],
     difficulty: 'beginner',
     estimatedTime: '20 minutes',
-    tags: ['marketing', 'personalization', 'customer engagement'],
+    tags: ['#marketing', '#personalization', '#customer-engagement'],
     isPopular: true,
     autogenStructure: {
       provider: "autogen_agentchat.teams.RoundRobinGroupChat",
@@ -219,14 +236,19 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
             label: "Content Generator",
             config: {
               name: "content_generator",
+              model_client: { model_name: "gpt-4-turbo" },
               system_message: "Generate personalized marketing content.",
-              tools: [{ provider: "autogen_core.tools.FunctionTool", config: { name: "generate_content" } }]
+              tools: [
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "generate_campaign_content" } },
+                { provider: "autogen_core.tools.FunctionTool", config: { name: "customer_segmentation" } }
+              ]
             }
           }
         ],
         tools: [
           { name: "Campaign API", provider: "autogen_core.tools.ExternalAPI", config: {} },
-          { name: "360 Customer API", provider: "autogen_core.tools.ExternalAPI", config: {} }
+          { name: "360 Customer API", provider: "autogen_core.tools.ExternalAPI", config: {} },
+          { name: "Facebook Ads API", provider: "autogen_core.tools.ExternalAPI", config: {} }
         ],
         termination_condition: { description: "Terminate after campaign creation." }
       }
@@ -235,55 +257,9 @@ export const industryFunctionGallery: UseCaseTemplate[] = [
     rating: 4.9,
     createdBy: 'Retail Marketing Team',
     lastUpdated: '2025-06-01'
-  },
-
-  // 5. Telecommunications & Technology
-  {
-    id: 'telecom_network_analysis',
-    title: 'Telecom Network Traffic Analyzer',
-    description: 'Analyze and optimize telecom network traffic.',
-    industry: 'telecommunications_technology',
-    functionAreas: ['Ops & Process Engineering'],
-    difficulty: 'advanced',
-    estimatedTime: '75 minutes',
-    tags: ['network', 'telecom', 'optimization'],
-    isPopular: false,
-    autogenStructure: {
-      provider: "autogen_agentchat.teams.SelectorGroupChat",
-      component_type: "team",
-      version: 1,
-      component_version: 1,
-      description: "Optimize network traffic flows",
-      label: "Network Analyzer",
-      config: {
-        participants: [
-          {
-            provider: "autogen_agentchat.agents.AssistantAgent",
-            component_type: "agent",
-            version: 1,
-            component_version: 1,
-            description: "Analyze traffic patterns",
-            label: "Traffic Analyzer",
-            config: {
-              name: "traffic_analyzer",
-              system_message: "Optimize network traffic.",
-              tools: [{ provider: "autogen_core.tools.FunctionTool", config: { name: "optimize_traffic" } }]
-            }
-          }
-        ],
-        tools: [
-          { name: "Tiktok Video API", provider: "autogen_core.tools.ExternalAPI", config: {} },
-          { name: "Campaign API", provider: "autogen_core.tools.ExternalAPI", config: {} }
-        ],
-        termination_condition: { description: "Terminate after optimization plan is complete." }
-      }
-    },
-    usage: 300,
-    rating: 4.5,
-    createdBy: 'Telecom Network Team',
-    lastUpdated: '2025-06-01'
   }
 ];
+
 
 
 const filterUseCases = (options?: {
