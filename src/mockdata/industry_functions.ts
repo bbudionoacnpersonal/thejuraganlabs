@@ -103,7 +103,7 @@ export const industries = [
         - Performance optimization for software and networks
         - Campaign and product personalization
         - Automation of DevOps and NetOps processes`,
-      toolPriorities: ['code_analyzer', 'performance_monitor', 'network_analyzer', 'service_monitor', 'doc_generator']
+      toolPriorities: ['code_analyzer', 'performance_monitor', 'network_analyzer', 'service_monitor', 'doc_generator', 'next_best_offer']
     }
   },
   { 
