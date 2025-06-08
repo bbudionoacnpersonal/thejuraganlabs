@@ -150,7 +150,7 @@ const IndustryOnboardingPage: React.FC = () => {
                                 >
                                   <input
                                     type="checkbox"
-                                    className="h-4 w-4 rounded bg-dark-surface border-dark-border text-primary-500 focus:ring-primary-500"
+                                    className="h-3 w-3 rounded bg-dark-surface border-dark-border text-primary-500 focus:ring-primary-500"
                                     checked={selectedFocusAreas.includes(area.value)}
                                     onChange={() => handleFocusAreaChange(area.value)}
                                   />
