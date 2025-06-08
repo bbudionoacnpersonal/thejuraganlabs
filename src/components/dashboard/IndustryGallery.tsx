@@ -324,8 +324,8 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   title={selectedUseCase.title}
                   onApplyTemplate={(structure) => {
                     // 🎯 update your code editor + visual editor
-                    setEditorContent(JSON.stringify(structure, null, 2)); // assuming you have this
-                    setTeamStructure(structure); // to update the main Visual Editor
+                    //setEditorContent(JSON.stringify(structure, null, 2)); // assuming you have this
+                    //setTeamStructure(structure); // to update the main Visual Editor
                   }}
                 />
                                 
