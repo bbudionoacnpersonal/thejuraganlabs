@@ -257,7 +257,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                 
                         {/* LLM Model */}
                         {participant.config?.model_client?.model_name && (
-                          <div className="bg-blue-400 text-white text-xs font-semibold rounded-full px-2 py-0.5 inline-flex items-center gap-1 mb-2 self-start">
+                          <div className="bg-blue-400 text-white text-xs font-semibold rounded-full px-2 py-0.5 inline-flex items-center gap-1 mb-1 self-start">
                             <SparklesIcon className="h-2 w-2" />
                             {participant.config.model_client.model_name}
                           </div>
