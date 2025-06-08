@@ -204,11 +204,7 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
     // 🎯 CRITICAL FIX: Only create edges if both source and target nodes exist
     const userInputNode = newNodes.find(n => n.id === 'user-input');
     const teamNode = newNodes.find(n => n.id === 'team');
-
-    console('Edge user input: ', userInputNode.id);
-     console('Team Node : ', teamNode.id);
     
-  
 
     // Edge 1: User Input → Team (only if both nodes exist)
     if (userInputNode && teamNode) {
