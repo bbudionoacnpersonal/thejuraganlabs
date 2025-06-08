@@ -162,6 +162,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
               <label className="block text-sm text-gray-400 mb-1">Search</label>
               <input
                 type="text"
+                size="sm"
                 placeholder="Search by keyword..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
