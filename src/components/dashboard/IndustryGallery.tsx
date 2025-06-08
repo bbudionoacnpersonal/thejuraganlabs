@@ -189,7 +189,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   <h3 className="text-white font-medium text-sm">{useCase.title}</h3>
                   <div className="flex items-center gap-1">
                     {useCase.isPopular && (
-                      <Badge size="sm\" variant="accent">Popular</Badge>
+                      <Badge size="sm" variant="accent">Popular</Badge>
                     )}
                     <Badge size="sm" className={getDifficultyColor(useCase.difficulty)}>
                       {useCase.difficulty}
