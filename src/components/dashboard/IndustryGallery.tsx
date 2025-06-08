@@ -137,7 +137,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   size="sm"
                   options={[{ value: '', label: 'All Industries' }, ...industries]}
                   value={currentFilterIndustry}
-                  onChange={(e) => setCurrentFilterIndustry(e.target.value)}
+                  onChange={(value) => setCurrentFilterIndustry(value)} // ✅ FIXED
                 />
               </div>
               <div className="flex-1 min-w-[200px]">
@@ -147,7 +147,6 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   options={focusAreas}
                   value={currentFilterFunctionAreas}
                   onChange={(selectedOptions) =>
-                    // Fixed: selectedOptions is already an array of strings, not objects
                     setCurrentFilterFunctionAreas(selectedOptions as string[])
                   }
                 />
@@ -191,7 +190,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
               const industryLabel =
                 industries.find((i) => i.value === useCase.industry)?.label ||
                 useCase.industry;
-                const providerType = useCase.autogenStructure.provider.split('.').pop() || 'N/A';
+              const providerType = useCase.autogenStructure.provider.split('.').pop() || 'N/A';
               return (
                 <div
                   key={useCase.id}
@@ -199,15 +198,13 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   onClick={() => handleUseCaseSelect(useCase)}
                 >
                   <div className="flex justify-between items-start mb-3 gap-1 ">
-                     {/* Group 1: All elements that should be on the left */}
                     <div className="flex items-center gap-2">
-                     <UserGroupIcon className="h-3 w-3 text-gray-400" /> 
-                    <h3 className="text-white font-medium text-sm pr-2">{useCase.title}</h3>
+                      <UserGroupIcon className="h-3 w-3 text-gray-400" />
+                      <h3 className="text-white font-medium text-sm pr-2">{useCase.title}</h3>
                       <Badge className={getDifficultyColor(useCase.difficulty)} size="sm">
                         {useCase.difficulty}
                       </Badge>
                     </div>
-                    
                     <div className="flex-shrink-0 flex gap-2 justify-end">
                       <Badge className="text-primary-700 bg-primary-100" size="sm">
                         <div className="flex items-center gap-1">
@@ -221,7 +218,6 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                     {useCase.description}
                   </p>
                   <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                      {/* THIS SECTION IS UPDATED */}
                     <div className="flex items-center gap-2" title={useCase.autogenStructure.provider}>
                       <CodeBracketIcon className="h-2 w-2" />
                       <span>{providerType}</span>
@@ -231,32 +227,28 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                       <span>{useCase.usage} uses</span>
                     </div>
                   </div>
-                  
-                   {/* Agent Participant Tags */}
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {useCase.autogenStructure.config.participants.map((participant) => (
-                        <span
-                          key={participant.label}
-                          className="flex items-center gap-1 text-xs bg-blue-900/60 text-blue-300 px-2 py-0.5 rounded"
-                        >
-                          <Bot className="h-2 w-2" />
-                          {participant.label}
-                        </span>
-                      ))}
-                    </div>
-                  {/* Tags and Agents Section */}
+
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {useCase.autogenStructure.config.participants.map((participant) => (
+                      <span
+                        key={participant.label}
+                        className="flex items-center gap-1 text-xs bg-blue-900/60 text-blue-300 px-2 py-0.5 rounded"
+                      >
+                        <Bot className="h-2 w-2" />
+                        {participant.label}
+                      </span>
+                    ))}
+                  </div>
+
                   <div className="mt-auto pt-2 border-t border-dark-border/50 space-y-2">
-                  
-                    {/* Use Case Tags */}
                     <div className="flex flex-wrap gap-1">
                       {useCase.tags.slice(0, 3).map((tag) => (
                         <span key={tag} className="flex items-center gap-1 text-xs bg-dark-background text-gray-400 px-2 py-0.5 rounded">
-                          <TagIcon className="h-2 w-2"/>
+                          <TagIcon className="h-2 w-2" />
                           {tag}
                         </span>
                       ))}
                     </div>
-          
                   </div>
                 </div>
               );
