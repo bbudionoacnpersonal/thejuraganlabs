@@ -319,7 +319,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   </div>
                 </div>
               </div>
-            )}
+        )}
       
     </>
   );
