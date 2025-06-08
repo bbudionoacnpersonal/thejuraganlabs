@@ -149,7 +149,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
                   setCurrentFilterIndustry('');
                   setCurrentFilterFunctionAreas([]);
                 }}
-                leftIcon={<FilterX className="h-4 w-4" />}
+                leftIcon={<FilterX className="h-2 w-2" />}
               >
                 Clear Filters
               </Button>
