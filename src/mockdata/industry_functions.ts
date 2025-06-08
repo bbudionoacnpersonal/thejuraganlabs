@@ -22,8 +22,8 @@ export const industries = [
     }
   },
   { 
-    value: 'healthcare_public_sector', // MERGED
-    label: 'Healthcare & Public Sector', // MERGED
+    value: 'healthcare_public_sector',
+    label: 'Healthcare & Public Sector',
     keyPrompts: {
       agentConsiderations: [
         'HIPAA compliance & patient data privacy',
@@ -64,48 +64,28 @@ export const industries = [
     }
   },
   { 
-    value: 'manufacturing',
-    label: 'Manufacturing & Supply Chain',
+    value: 'manufacturing_cpg', // MERGED
+    label: 'Manufacturing & Consumer Goods', // MERGED
     keyPrompts: {
       agentConsiderations: [
-        'Production optimization',
-        'Quality control automation',
-        'Supply chain visibility',
-        'Predictive maintenance'
+        'Production optimization & Quality control',
+        'Supply chain visibility & Predictive maintenance',
+        'Brand management & Consumer insights',
+        'Market trend analysis & Sales management',
+        'Product lifecycle management from creation to consumer',
       ],
-      systemInstructions: `You are a manufacturing AI specialist. Emphasize:
-        - Production efficiency
-        - Quality assurance
-        - Supply chain optimization
-        - Equipment maintenance
-        - Resource planning`,
-      toolPriorities: ['production_monitor', 'quality_checker', 'maintenance_predictor']
+      systemInstructions: `You are an AI expert for the entire product lifecycle, from manufacturing to consumer goods. Focus on:
+        - Production efficiency and supply chain optimization
+        - Product quality assurance
+        - Consumer behavior analysis and brand reputation
+        - Market trend identification and sales strategies
+        - Integrating customer feedback into the product lifecycle`,
+      toolPriorities: ['production_monitor', 'quality_checker', 'market_analyzer', 'sentiment_analyzer', 'trend_predictor']
     }
   },
   { 
-    value: 'consumergoods',
-    label: 'Consumer Goods & Services',
-    keyPrompts: {
-      agentConsiderations: [
-        'Brand management',
-        'Consumer insights',
-        'Market trend analysis',
-        'Sales & distribution management',
-        'Product lifecycle management'
-      ],
-      systemInstructions: `You are a consumer goods AI expert. Focus on:
-        - Consumer behavior analysis
-        - Brand reputation management
-        - Market trend identification
-        - Sales and distribution
-        - Product development support
-        - Customer feedback analysis`,
-      toolPriorities: ['market_analyzer', 'sentiment_analyzer', 'trend_predictor']
-    }
-  },
-  { 
-    value: 'technology_telecom', // MERGED
-    label: 'Technology & Telecommunications', // MERGED
+    value: 'technology_telecom',
+    label: 'Technology & Telecommunications',
     keyPrompts: {
       agentConsiderations: [
         'Code analysis and generation',
