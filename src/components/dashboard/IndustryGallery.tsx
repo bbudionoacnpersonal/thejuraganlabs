@@ -146,6 +146,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
               <label className="block text-sm text-gray-400 mb-1">Function Area</label>
               <Select
                 value={currentFilterFunctionArea}
+                size="sm"
                 options={[
                   { value: '', label: 'All Functions' },
                   ...(focusAreas?.map?.((focus) => ({
