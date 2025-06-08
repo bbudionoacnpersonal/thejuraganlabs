@@ -65,7 +65,7 @@ export const industries = [
   },
   { 
     value: 'manufacturing_cpg', // MERGED
-    label: 'Manufacturing & Consumer Goods', // MERGED
+    label: 'Consumer Goods & Manufacturing & ', // MERGED
     keyPrompts: {
       agentConsiderations: [
         'Production optimization & Quality control',
