@@ -7,34 +7,39 @@ import Select from '@/components/ui/Select';
 import useAuthStore from '@/store/authStore';
 import { industries, focusAreas } from '@/mockdata/industry_functions';
 
+// Define a type for the grouped options structure that the Select component will use
+type GroupedOption = {
+  label: string;
+  options: { value: string; label: string }[];
+};
+
 const IndustryOnboardingPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [selectedIndustry, setSelectedIndustry] = useState<string>('');
-  
-  // State for the cascading selection
-  const [selectedFunctionGroup, setSelectedFunctionGroup] = useState<string>('');
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([]);
-  
   const [error, setError] = useState<string | null>(null);
 
-  // Memoize the list of unique function groups for the first dropdown
-  const functionGroupOptions = useMemo(() => {
-    const groups = new Set(focusAreas.map(area => area.function_group));
-    return Array.from(groups).map(group => ({ value: group, label: group }));
+  // Memoize the transformation of the flat focusAreas array into a grouped structure
+  // This is what the <Select> component will use to create the <optgroup> UI
+  const groupedFocusAreaOptions: GroupedOption[] = useMemo(() => {
+    const groups: Record<string, { value: string; label: string }[]> = {};
+    
+    // Create the groups from the flat array
+    for (const area of focusAreas) {
+      const groupName = area.function_group || 'Other';
+      if (!groups[groupName]) {
+        groups[groupName] = [];
+      }
+      groups[groupName].push({ value: area.value, label: area.label });
+    }
+
+    // Format into the final array structure that the Select component expects
+    return Object.keys(groups).map(groupName => ({
+      label: groupName,
+      options: groups[groupName],
+    }));
   }, []);
-
-  // Memoize the available focus areas based on the selected group
-  const availableFocusAreas = useMemo(() => {
-    if (!selectedFunctionGroup) return [];
-    return focusAreas.filter(area => area.function_group === selectedFunctionGroup);
-  }, [selectedFunctionGroup]);
-
-  // Handler for when the function group changes
-  const handleGroupChange = (groupValue: string) => {
-    setSelectedFunctionGroup(groupValue);
-    setSelectedFocusAreas([]); 
-  };
   
   const handleSubmit = () => {
     if (!selectedIndustry) {
@@ -78,7 +83,7 @@ const IndustryOnboardingPage: React.FC = () => {
               )}
 
               <div className="space-y-6">
-                {/* Step 1: Industry Selection */}
+                {/* Industry Selection (unchanged) */}
                 <Select
                   label="What industry are you in?"
                   options={industries}
@@ -86,45 +91,25 @@ const IndustryOnboardingPage: React.FC = () => {
                   onChange={(e) => setSelectedIndustry(e.target.value)}
                 />
 
-                {/* Step 2: Function Group Selection */}
+                {/* Single, Grouped Multi-Select for Focus Areas */}
                 <Select
-                  label="First, select a Function Group"
-                  options={functionGroupOptions}
-                  value={selectedFunctionGroup}
-                  onChange={(e) => handleGroupChange(e.target.value)}
+                  label="What are your key focus areas?"
+                  options={groupedFocusAreaOptions}
+                  value={focusAreas.filter(area => selectedFocusAreas.includes(area.value))}
+                  // ===============================================
+                  // 🎯 THIS IS THE FIX 
+                  // This robust handler prevents the error when clearing the selection.
+                  // ===============================================
+                  onChange={(selectedOptions) => {
+                    // If selectedOptions is null or not an array, treat it as an empty array
+                    const newValues = Array.isArray(selectedOptions)
+                      ? selectedOptions.map(opt => opt.value)
+                      : [];
+                    setSelectedFocusAreas(newValues);
+                  }}
+                  isMulti
+                  helperText="Select all that apply"
                 />
-
-                {/* Step 3: Focus Area Selection (appears after a group is chosen) */}
-                {selectedFunctionGroup && (
-                    <motion.div
-                        key="focus-area-select"
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <Select
-                            label="Now, select your key focus areas"
-                            options={availableFocusAreas}
-                            value={focusAreas.filter(area => selectedFocusAreas.includes(area.value))}
-                            // ===============================================
-                            // 🎯 THIS IS THE FIX 
-                            // ===============================================
-                            onChange={(selectedOptions) => {
-                                // Ensure selectedOptions is an array before mapping
-                                const validOptions = Array.isArray(selectedOptions) ? selectedOptions : [];
-                                
-                                // Filter out any potential null/undefined items before mapping
-                                const newValues = validOptions
-                                    .filter(opt => opt && typeof opt.value !== 'undefined')
-                                    .map(opt => opt.value);
-                                    
-                                setSelectedFocusAreas(newValues);
-                            }}
-                            isMulti
-                            helperText="Select all that apply from the chosen group"
-                        />
-                    </motion.div>
-                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
