@@ -205,8 +205,8 @@ export const generateProgressiveFlow = (options: FlowGenerationOptions) => {
     const userInputNode = newNodes.find(n => n.id === 'user-input');
     const teamNode = newNodes.find(n => n.id === 'team');
 
-    console('Edge user input: ', userInputNode);
-     console('Team Node : ', userInputNode);
+    console('Edge user input: ', userInputNode.id);
+     console('Team Node : ', teamNode.id);
     
   
 
