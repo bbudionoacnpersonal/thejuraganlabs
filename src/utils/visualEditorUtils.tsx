@@ -167,8 +167,8 @@ const extractToolsFromParticipant = (participant: any): string[] => {
   return tools;
 };
 
-// 🎯 CRITICAL: Extract team type from provider attribute
-const extractTeamTypeFromProvider = (provider: string): string => {
+// 🎯 CRITICAL: Extract team type from provider attribute - NOW EXPORTED
+export const extractTeamTypeFromProvider = (provider: string): string => {
   if (!provider || typeof provider !== 'string') {
     console.log('⚠️ No provider found in utils, using default RoundRobinGroupChat');
     return 'RoundRobinGroupChat';
