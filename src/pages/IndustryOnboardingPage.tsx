@@ -7,6 +7,12 @@ import Select from '@/components/ui/Select';
 import useAuthStore from '@/store/authStore';
 import { industries, focusAreas } from '@/mockdata/industry_functions';
 
+// Define a type for the grouped options structure
+type GroupedOption = {
+  label: string;
+  options: { value: string; label: string }[];
+};
+
 const IndustryOnboardingPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -14,25 +20,25 @@ const IndustryOnboardingPage: React.FC = () => {
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Group focus areas by their 'function_group' property
-  const groupedFocusAreas = useMemo(() => {
-    return focusAreas.reduce((acc, area) => {
-      const group = area.function_group || 'Other';
-      if (!acc[group]) {
-        acc[group] = [];
+  // Group focus areas into the structure required by the Select component for optgroups
+  const groupedFocusAreaOptions: GroupedOption[] = useMemo(() => {
+    const groups: Record<string, { value: string; label: string }[]> = {};
+    
+    // Create the groups
+    for (const area of focusAreas) {
+      const groupName = area.function_group || 'Other';
+      if (!groups[groupName]) {
+        groups[groupName] = [];
       }
-      acc[group].push(area);
-      return acc;
-    }, {} as Record<string, typeof focusAreas>);
-  }, []);
+      groups[groupName].push({ value: area.value, label: area.label });
+    }
 
-  const handleFocusAreaChange = (value: string) => {
-    setSelectedFocusAreas((prev) =>
-      prev.includes(value)
-        ? prev.filter((item) => item !== value)
-        : [...prev, value]
-    );
-  };
+    // Format into the final array structure
+    return Object.keys(groups).map(groupName => ({
+      label: groupName,
+      options: groups[groupName],
+    }));
+  }, []);
 
   const handleSubmit = () => {
     if (!selectedIndustry) {
@@ -58,7 +64,7 @@ const IndustryOnboardingPage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-3xl" // Increased max-width for better layout
+        className="w-full max-w-2xl" // Reverted to 2xl as checkbox layout is gone
       >
         <Card>
           <CardBody className="p-8">
@@ -82,45 +88,28 @@ const IndustryOnboardingPage: React.FC = () => {
                   options={industries}
                   value={selectedIndustry}
                   onChange={(e) => setSelectedIndustry(e.target.value)}
-                  className="mb-8" // Add more margin to separate from the next section
+                  className="mb-6"
                 />
 
-                {/* --- NEW Grouped Focus Area Selection --- */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-200 mb-1">
-                    What are your key focus areas?
-                  </label>
-                  <p className="text-sm text-gray-500 mb-4">Select all that apply.</p>
-                  
-                  <div className="space-y-4">
-                    {Object.entries(groupedFocusAreas).map(([groupName, areas]) => (
-                      <div key={groupName}>
-                        <h4 className="text-base font-semibold text-gray-300 mb-3 border-b border-dark-border pb-2">
-                          {groupName}
-                        </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                          {areas.map((area) => (
-                            <label
-                              key={area.value}
-                              className="flex items-center space-x-3 p-2 rounded-md hover:bg-dark-surface cursor-pointer"
-                            >
-                              <input
-                                type="checkbox"
-                                className="h-4 w-4 rounded bg-dark-surface border-dark-border text-primary-500 focus:ring-primary-500"
-                                checked={selectedFocusAreas.includes(area.value)}
-                                onChange={() => handleFocusAreaChange(area.value)}
-                              />
-                              <span className="text-sm text-gray-300">{area.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                {/* --- UPDATED Grouped Select Dropdown --- */}
+                <Select
+                  label="What are your key focus areas?"
+                  // The options are now the grouped data structure
+                  options={groupedFocusAreaOptions} 
+                  // The value needs to be the full objects that are selected
+                  value={focusAreas.filter(area => selectedFocusAreas.includes(area.value))}
+                  // The onChange receives the full selected objects, so we map them back to values
+                  onChange={(selectedOptions) => 
+                    setSelectedFocusAreas(
+                      (selectedOptions as any[]).map(opt => opt.value)
+                    )
+                  }
+                  isMulti
+                  helperText="Select all that apply"
+                />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
                 <Button
                   variant="ghost"
                   onClick={() => navigate('/dashboard')}
