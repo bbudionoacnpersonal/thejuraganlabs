@@ -9,6 +9,7 @@ import { Library, Bot, Wrench } from 'lucide-react';
 import {
   BuildingOffice2Icon,
   UsersIcon,
+  XMarkIcon,
   UserGroupIcon,
   MagnifyingGlassIcon,
   SparklesIcon,
