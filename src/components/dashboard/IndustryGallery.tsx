@@ -235,7 +235,7 @@ const IndustryGallery: React.FC<IndustryGalleryProps> = ({
               <div className="flex flex-wrap gap-1 mt-2">
                 {(useCase.autogenStructure?.config?.participants || []).map((participant: any, idx: number) => (
                   <Badge key={idx} size="sm" className="bg-secondary-600 text-white">
-                    <Bot className="h-2 w-2 text-white-500 p-2" />
+                    <Bot className="h-2 w-2 text-white-500 gap-1" />
                     {participant.label || 'Unnamed Agent'}
                   </Badge>
                 ))}
