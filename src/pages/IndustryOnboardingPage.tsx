@@ -12,7 +12,7 @@ const IndustryOnboardingPage: React.FC = () => {
   const { user } = useAuthStore();
   const [selectedIndustry, setSelectedIndustry] = useState<string>('');
   
-  // New state to manage the selected function group
+  // State for the cascading selection
   const [selectedFunctionGroup, setSelectedFunctionGroup] = useState<string>('');
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([]);
   
@@ -33,7 +33,6 @@ const IndustryOnboardingPage: React.FC = () => {
   // Handler for when the function group changes
   const handleGroupChange = (groupValue: string) => {
     setSelectedFunctionGroup(groupValue);
-    // IMPORTANT: Clear the selected focus areas when the group changes
     setSelectedFocusAreas([]); 
   };
   
@@ -48,7 +47,6 @@ const IndustryOnboardingPage: React.FC = () => {
       return;
     }
 
-    // Save preferences
     localStorage.setItem('user_industry', selectedIndustry);
     localStorage.setItem('user_focus_areas', JSON.stringify(selectedFocusAreas));
 
@@ -108,15 +106,19 @@ const IndustryOnboardingPage: React.FC = () => {
                             label="Now, select your key focus areas"
                             options={availableFocusAreas}
                             value={focusAreas.filter(area => selectedFocusAreas.includes(area.value))}
-                            // This onChange is now safe
+                            // ===============================================
+                            // 🎯 THIS IS THE FIX 
+                            // ===============================================
                             onChange={(selectedOptions) => {
-                                if (!selectedOptions) {
-                                    setSelectedFocusAreas([]);
-                                } else {
-                                    setSelectedFocusAreas(
-                                        (selectedOptions as any[]).map(opt => opt.value)
-                                    );
-                                }
+                                // Ensure selectedOptions is an array before mapping
+                                const validOptions = Array.isArray(selectedOptions) ? selectedOptions : [];
+                                
+                                // Filter out any potential null/undefined items before mapping
+                                const newValues = validOptions
+                                    .filter(opt => opt && typeof opt.value !== 'undefined')
+                                    .map(opt => opt.value);
+                                    
+                                setSelectedFocusAreas(newValues);
                             }}
                             isMulti
                             helperText="Select all that apply from the chosen group"
